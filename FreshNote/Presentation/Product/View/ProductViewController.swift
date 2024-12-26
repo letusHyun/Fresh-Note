@@ -115,14 +115,18 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
     return tv
   }()
   
-  private let saveButton: UIButton = {
+  private var saveButton: UIButton = {
     let btn = UIButton()
     btn.setTitle("저장", for: .normal)
     btn.setTitleColor(UIColor(fnColor: .gray0), for: .normal)
     btn.titleLabel?.font = UIFont.pretendard(size: 20, weight: ._600)
     btn.isEnabled = false
     return btn
-  }()
+  }() {
+    didSet {
+      print("saveButton isEnabled changed to: \(saveButton.isEnabled)")
+    }
+  }
   
   var transformView: UIView { self.view }
   
@@ -155,6 +159,7 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   
   override func viewWillDisappear(_ animated: Bool) {
     super.viewWillDisappear(animated)
+    ActivityIndicatorView.shared.stopIndicating()
     self.tabBarController?.tabBar.isHidden = false
   }
   
@@ -229,7 +234,8 @@ private extension ProductViewController {
   private func bind() {
     self.viewModel.errorPublisher
       .receive(on: DispatchQueue.main)
-      .sink { error in
+      .sink { [weak self] error in
+        ActivityIndicatorView.shared.stopIndicating()
         // TODO: - error handling
       }
       .store(in: &self.subscriptions)
@@ -331,6 +337,9 @@ private extension ProductViewController {
     
     self.saveButton.publisher(for: .touchUpInside)
       .sink { [weak self] _ in
+        print("is enabled?: \(self?.saveButton.isEnabled)")
+        ActivityIndicatorView.shared.startIndicating()
+        
         guard let self = self,
               let name = self.titleTextField.text,
               let expiration = self.expirationTextField.text,

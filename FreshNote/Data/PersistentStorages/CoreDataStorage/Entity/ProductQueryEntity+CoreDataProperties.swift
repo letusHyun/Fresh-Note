@@ -17,6 +17,12 @@ extension ProductQueryEntity {
   @NSManaged public var createdAt: Date
   @NSManaged public var keyword: String
   @NSManaged public var uuidString: String
+  
+  enum PropertyName: String {
+    case createdAt
+    case keyword
+    case uuidString
+  }
 }
 
 extension ProductQueryEntity : Identifiable { }

@@ -27,7 +27,7 @@ final class CalendarViewController: BaseViewController {
   
   private lazy var collectionView: UICollectionView = {
     let cv = UICollectionView()
-    // TODO: - register
+    // TODO: - register 및 collectionView의 layour 지정해야 한다.
     cv.dataSource = self
     cv.delegate = self
     return cv
@@ -45,6 +45,7 @@ final class CalendarViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    self.viewModel.viewDidLoad()
   }
   
   // MARK: - UI
@@ -80,27 +81,32 @@ extension CalendarViewController: UICollectionViewDataSource {
     _ collectionView: UICollectionView,
     numberOfItemsInSection section: Int
   ) -> Int {
-    // TODO: - vm 연동
-    return .zero
+    return self.viewModel.numberOfItemsInSection()
   }
   
   func collectionView(
     _ collectionView: UICollectionView,
     cellForItemAt indexPath: IndexPath
   ) -> UICollectionViewCell {
-    // TODO: - vm 연동
-    return UICollectionViewCell()
+    guard let cell = collectionView.dequeueReusableCell(
+      withReuseIdentifier: CalendarProductCell.id,
+      for: indexPath
+    ) as? CalendarProductCell else { return UICollectionViewCell() }
+    
+    let product = self.viewModel.cellForItem(at: indexPath)
+    cell.configure(with: product)
+    
+    return cell
   }
 }
 
-// MARK: - UICollectionViewDelegate
+// MARK: - UICollectionViewDelegateFlowLayout
 extension CalendarViewController: UICollectionViewDelegateFlowLayout {
   func collectionView(
     _ collectionView: UICollectionView,
     layout collectionViewLayout: UICollectionViewLayout,
     sizeForItemAt indexPath: IndexPath
   ) -> CGSize {
-    // TODO: - 설정하기
-    return .init(width: 10, height: 10)
+    return .init(width: 140, height: 310)
   }
 }

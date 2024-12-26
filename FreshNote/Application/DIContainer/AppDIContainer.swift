@@ -8,10 +8,6 @@
 import UIKit
 
 final class AppDIContainer {
-  // MARK: - Network
-  // 프로퍼티
-  
-//  // MARK: - DIContainers of Scene
   private func makeMainSceneDIContainer() -> MainSceneDIContainer {
     return MainSceneDIContainer(dependencies: MainSceneDIContainer.Dependencies())
   }
@@ -19,20 +15,32 @@ final class AppDIContainer {
   private func makeOnboardingSceneDIContainer() -> OnboardingSceneDIContainer {
     return OnboardingSceneDIContainer(dependencies: OnboardingSceneDIContainer.Dependencies())
   }
+  
+  private func makeSignInStateRepository() -> any SignInStateRepository {
+    return DefaultSignInStateRepository(signInStateStorage: self.makeSignInStateStorage())
+  }
+  
+  private func makeSignInStateStorage() -> any SignInStateStorage {
+    return UserDefaultsSignInStateStorage()
+  }
 }
 
 // MARK: - AppCoordinatorDependencies
 extension AppDIContainer: AppCoordinatorDependencies {
+   func makeSignInStateUseCase() -> any SignInStateUseCase {
+    return DefaultSignInStateUseCase(signInStateRepository: self.makeSignInStateRepository())
+  }
+  
   func makeOnboardingCoordinator(navigationController: UINavigationController) -> OnboardingCoordinator {
     return OnboardingCoordinator(
-      dependencies: makeOnboardingSceneDIContainer(),
+      dependencies: self.makeOnboardingSceneDIContainer(),
       navigationController: navigationController
     )
   }
   
   func makeMainCoordinator(tabBarController: UITabBarController) -> MainCoordinator {
     return MainCoordinator(
-      dependencies: makeMainSceneDIContainer(),
+      dependencies: self.makeMainSceneDIContainer(),
       tabBarController: tabBarController
     )
   }

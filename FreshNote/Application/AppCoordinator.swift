@@ -5,9 +5,11 @@
 //  Created by SeokHyun on 10/23/24.
 //
 
-import UIKit
-import FirebaseAuth
 import AuthenticationServices
+import Combine
+import UIKit
+
+import FirebaseAuth
 
 protocol AppCoordinatorDelegate: AnyObject {
   func setRootViewController(_ viewController: UIViewController)
@@ -16,13 +18,20 @@ protocol AppCoordinatorDelegate: AnyObject {
 protocol AppCoordinatorDependencies: AnyObject {
   func makeOnboardingCoordinator(navigationController: UINavigationController) -> OnboardingCoordinator
   func makeMainCoordinator(tabBarController: UITabBarController) -> MainCoordinator
+  func makeSignInStateUseCase() -> any SignInStateUseCase
 }
 
 final class AppCoordinator {
   // MARK: - Properties
   private let dependencies: any AppCoordinatorDependencies
+  
   var childCoordinator: BaseCoordinator?
+  
   weak var delegate: AppCoordinatorDelegate?
+  
+  private var signInStateUseCase: (any SignInStateUseCase)?
+  
+  private var subscriptions = Set<AnyCancellable>()
   
   // MARK: - LifeCycle
   init(dependencies: any AppCoordinatorDependencies) {
@@ -30,48 +39,23 @@ final class AppCoordinator {
   }
   
   func start() {
-    Task { @MainActor in
-      let isLoggedIn = await self.isLoggedIn()
-      isLoggedIn ? self.startMainFlow() : self.startOnboardingFlow()
-    }
+    let signInStateUseCase = self.dependencies.makeSignInStateUseCase()
+    self.signInStateUseCase = signInStateUseCase
+    
+    signInStateUseCase.checkSignIn()
+      .receive(on: DispatchQueue.main)
+      .sink { completion in
+        guard case .failure(let error) = completion else { return }
+        // TODO: - 에러 핸들링하기
+      } receiveValue: { [weak self] isSignedIn in
+        isSignedIn ? self?.startMainFlow() : self?.startOnboardingFlow()
+      }
+      .store(in: &self.subscriptions)
   }
 }
 
 // MARK: - Private Helpers
 private extension AppCoordinator {
-  func isLoggedIn() async -> Bool {
-    // Firebase 로그인 확인
-    guard let currentUser = Auth.auth().currentUser else { return false }
-    
-    // Firebase 토큰 검증
-    do {
-      let _ = try await currentUser.getIDToken()
-    } catch {
-      print("파이어베이스 토큰 검증 실패: \(error)")
-      try? Auth.auth().signOut()
-      return false
-    }
-    
-    // Apple Credential 검증
-    guard let appleCredential = currentUser.providerData.first(where: { $0.providerID == "apple.com" }) else {
-      return false
-    }
-    
-    do {
-      return try await self.validateAppleCredential(userID: appleCredential.uid)
-    }
-    catch {
-      return false
-    }
-  }
-  
-  func validateAppleCredential(userID: String) async throws -> Bool {
-    let appleIDProvider = ASAuthorizationAppleIDProvider()
-    let credentialState = try await appleIDProvider.credentialState(forUserID: userID)
-    
-    return credentialState == .authorized
-  }
-  
   func startOnboardingFlow() {
     let navigatonController = UINavigationController()
     navigatonController.setupBarAppearance()

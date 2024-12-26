@@ -8,6 +8,8 @@
 import UIKit
 import Combine
 
+import SnapKit
+
 final class HomeViewController: BaseViewController {
   // MARK: - Properties
   private let viewModel: any HomeViewModel
@@ -57,26 +59,24 @@ final class HomeViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    ActivityIndicatorView.shared.startIndicating()
     self.setupTableView()
     self.setNavigationBar()
-    
     self.bindActions()
     self.bind(to: self.viewModel)
     self.viewModel.viewDidLoad()
   }
   
   override func setupLayout() {
-    view.addSubview(self.tableView)
+    self.view.addSubview(self.tableView)
     
-    self.tableView.translatesAutoresizingMaskIntoConstraints = false
+    self.tableView.snp.makeConstraints {
+      $0.leading.trailing.equalToSuperview()
+      $0.top.equalTo(self.view.safeAreaLayoutGuide)
+      $0.bottom.equalTo(self.view.safeAreaLayoutGuide)
+    }
     
-    let safeArea = view.safeAreaLayoutGuide
-    NSLayoutConstraint.activate([
-      self.tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      self.tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-      self.tableView.topAnchor.constraint(equalTo: safeArea.topAnchor),
-      self.tableView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor)
-    ])
+
   }
 }
 
@@ -99,6 +99,7 @@ extension HomeViewController {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] error in
         // TODO: - 에러 UI 처리하기
+        ActivityIndicatorView.shared.stopIndicating()
         print("error발생: \(error?.localizedDescription)")
       }
       .store(in: &self.subscriptions)
@@ -106,20 +107,23 @@ extension HomeViewController {
     viewModel.reloadDataPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
-      self?.tableView.reloadData()
-    }
-    .store(in: &self.subscriptions)
+        ActivityIndicatorView.shared.stopIndicating()
+        self?.tableView.reloadData()
+      }
+      .store(in: &self.subscriptions)
     
     viewModel.deleteRowsPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] indexPaths, swipeCompletion in
-      self?.tableView.deleteRows(at: indexPaths, with: .fade)
-      swipeCompletion(true)
-    }.store(in: &self.subscriptions)
+        ActivityIndicatorView.shared.stopIndicating()
+        self?.tableView.deleteRows(at: indexPaths, with: .fade)
+        swipeCompletion(true)
+      }.store(in: &self.subscriptions)
     
     viewModel.reloadRowsPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] indexPaths in
+        ActivityIndicatorView.shared.stopIndicating()
         self?.tableView.reloadRows(at: indexPaths, with: .automatic)
       }
       .store(in: &self.subscriptions)
@@ -155,7 +159,7 @@ extension HomeViewController: UITableViewDelegate {
       style: .destructive,
       title: "삭제"
     ) { [weak self] (action, view, completionHandler) in
-      
+      ActivityIndicatorView.shared.startIndicating()
       self?.viewModel.trailingSwipeActionsConfigurationForRowAt(
         indexPath: indexPath,
         handler: completionHandler

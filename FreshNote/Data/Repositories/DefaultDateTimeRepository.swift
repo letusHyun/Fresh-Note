@@ -21,9 +21,11 @@ final class DefaultDateTimeRepository: DateTimeRepository {
     self.backgroundQueue = backgroundQueue
   }
   
-  // TODO: - userID는 매개변수로 적절하지 않음. 따라서 수정 필요함
-  // repository 자체에서 FirebaseUseManager를 사용해서 userID를 만들것이기 때문
-  func fetchDateTime(userID: String) -> AnyPublisher<Alarm, any Error> {
+  func fetchDateTime() -> AnyPublisher<Alarm, any Error> {
+    guard let userID = FirebaseUserManager.shared.userID else {
+      return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
+    }
+    
     let publisher: AnyPublisher<AlarmResponseDTO, any Error> = self.firebaseNetworkService.getDocument(
       documentPath: FirestorePath.userID(userID: userID)
     )
@@ -31,6 +33,21 @@ final class DefaultDateTimeRepository: DateTimeRepository {
       .eraseToAnyPublisher()
     
     return publisher.tryMap { $0.toDomain() }
+      .eraseToAnyPublisher()
+  }
+  
+  func isSavedDateTime() -> AnyPublisher<Bool, any Error> {
+    return self.fetchDateTime()
+      .map { _ in return true }
+      .catch { error -> AnyPublisher<Bool, any Error> in
+        if case FirebaseNetworkServiceError.invalidData = error {
+          return Just(false)
+            .setFailureType(to: Error.self)
+            .eraseToAnyPublisher()
+        }
+        return Fail(error: error)
+          .eraseToAnyPublisher()
+      }
       .eraseToAnyPublisher()
   }
   

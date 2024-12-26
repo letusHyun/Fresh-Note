@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 
+
 protocol FetchProductUseCase {
   func fetchProducts() -> AnyPublisher<[Product], any Error>
 }
@@ -15,11 +16,14 @@ protocol FetchProductUseCase {
 final class DefaultFetchProductUseCase: FetchProductUseCase {
   private let productRepository: any ProductRepository
   
-  init(productRepository: any ProductRepository) {
+  init(
+    productRepository: any ProductRepository
+  ) {
     self.productRepository = productRepository
   }
   
   func fetchProducts() -> AnyPublisher<[Product], any Error> {
-    self.productRepository.fetchProducts()
+    return self.productRepository
+      .fetchProducts()
   }
 }

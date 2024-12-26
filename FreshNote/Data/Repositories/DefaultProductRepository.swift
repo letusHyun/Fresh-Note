@@ -10,13 +10,16 @@ import Foundation
 
 final class DefaultProductRepository: ProductRepository {
   private let firebaseNetworkService: any FirebaseNetworkService
+  private let productStorage: any ProductStorage
   private let backgroundQueue: DispatchQueue
 
   init(
     firebaseNetworkService: any FirebaseNetworkService,
+    productStorage: any ProductStorage,
     backgroundQueue: DispatchQueue = DispatchQueue.global(qos: .userInitiated)
   ) {
     self.firebaseNetworkService = firebaseNetworkService
+    self.productStorage = productStorage
     self.backgroundQueue = backgroundQueue
   }
 
@@ -24,22 +27,42 @@ final class DefaultProductRepository: ProductRepository {
     print("DEBUG: \(Self.self) deinit")
   }
   
+  /// 로그아웃 후, 로그인을 하면 localDB에 Products가 지워져있는 상태입니다.
+  /// 따라서 다시 localDB에 Products를 저장해야 합니다.
   func fetchProducts() -> AnyPublisher<[Product], any Error> {
-    guard let userID = FirebaseUserManager.shared.userID else {
-      return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
-    }
-    
-    let fullPath = FirestorePath.products(userID: userID)
-    
-    let requestPublisher: AnyPublisher<[ProductResponseDTO], any Error> = self.firebaseNetworkService
-      .getDocuments(collectionPath: fullPath)
-      .receive(on: self.backgroundQueue)
+    // 1. 최초 로그인이면, Firestore fetch → LocalDB save
+    // 2. 최초 로그인이 아니면, LocalDB fetch
+    return self.productStorage.hasProducts()
+      .flatMap { [weak self] hasProducts -> AnyPublisher<[Product], any Error> in
+        guard let self else { return Empty().eraseToAnyPublisher() }
+        
+        // 최초 로그인이 아니면
+        if hasProducts {
+          return self.productStorage.fetchProducts()
+        }
+        
+        guard let userID = FirebaseUserManager.shared.userID else {
+          return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
+        }
+        
+        let fullPath = FirestorePath.products(userID: userID)
+        
+        // 최초 로그인이면
+        // firestore fetch -> localDB save
+        return self.firebaseNetworkService
+          .getDocuments(collectionPath: fullPath)
+          .receive(on: self.backgroundQueue)
+          .map { (dtoArray: [ProductResponseDTO]) -> [Product] in
+            return dtoArray.compactMap {
+              self.convertProduct($0)
+            }
+          }
+          .flatMap { products in
+            return self.productStorage.saveProducts(with: products)
+          }
+          .eraseToAnyPublisher()
+      }
       .eraseToAnyPublisher()
-    
-    return requestPublisher.map { dtoArray -> [Product] in
-      return dtoArray.compactMap { self.convertProduct($0) }
-    }
-    .eraseToAnyPublisher()
   }
   
   func saveProduct(product: Product) -> AnyPublisher<Void, any Error> {
@@ -64,6 +87,11 @@ final class DefaultProductRepository: ProductRepository {
 
     return self.firebaseNetworkService
       .setDocument(documentPath: fullPath, requestDTO: requestDTO, merge: true)
+      .flatMap { [weak self] in
+        guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
+        
+        return self.productStorage.saveProduct(with: product)
+      }
       .receive(on: self.backgroundQueue)
       .eraseToAnyPublisher()
   }
@@ -77,6 +105,11 @@ final class DefaultProductRepository: ProductRepository {
     
     return self.firebaseNetworkService
       .deleteDocument(documentPath: fullPath)
+      .flatMap { [weak self] in
+        guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
+        
+        return self.productStorage.deleteProduct(uid: didString)
+      }
       .receive(on: self.backgroundQueue)
       .eraseToAnyPublisher()
   }

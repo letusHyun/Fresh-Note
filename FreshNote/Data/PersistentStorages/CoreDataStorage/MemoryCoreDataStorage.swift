@@ -32,9 +32,9 @@ final class MemoryCoreDataStorage: CoreDataStorage {
       self?.persistentContainer.performBackgroundTask { context in
         do {
           let result = try block(context)
-          promise(.success(result))
+          return promise(.success(result))
         } catch {
-          promise(.failure(error))
+          return promise(.failure(error))
         }
       }
     }

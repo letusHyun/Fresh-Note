@@ -116,6 +116,7 @@ final class DefaultProductViewModel: ProductViewModel {
   func viewDidLoad() {
     switch self.mode {
     case .create: break
+      
     case .edit(let product):
       self.isCustomImage = product.imageURL != nil
       self.setupProductSubejct.send(product)

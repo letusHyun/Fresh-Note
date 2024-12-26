@@ -9,6 +9,7 @@ import Foundation
 import Combine
 
 protocol DateTimeRepository {
-  func fetchDateTime(userID: String) -> AnyPublisher<Alarm, any Error>
+  func fetchDateTime() -> AnyPublisher<Alarm, any Error>
   func saveDateTime(date: Int, hour: Int, minute: Int) -> AnyPublisher<Void, any Error>
+  func isSavedDateTime() -> AnyPublisher<Bool, any Error>
 }

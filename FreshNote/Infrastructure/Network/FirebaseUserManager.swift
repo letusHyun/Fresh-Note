@@ -10,6 +10,7 @@ import FirebaseAuth
 
 enum FirebaseUserError: Error {
   case invalidUid
+  case noResult
 }
 
 class FirebaseUserManager {

@@ -28,18 +28,13 @@ final class OnboardingCoordinator: BaseCoordinator {
   
   // MARK: - Start
   func start() {
-    let actions = OnboardingViewModelActions { [weak self] in
+    let actions = OnboardingViewModelActions(showDateTimeSetting: { [weak self] in
       self?.showDateTimeSetting()
-    }
+    }, showMain: { [weak self] in
+      self?.showMain()
+    })
+    
     let viewController = dependencies.makeOnboardingViewController(actions: actions)
-    
-    // Case 1. 처음 로그인한 경우, 알람설정을 하지 않았기 때문에 settingVC까지 고려해야합니다.
-      // navigationController 필요함
-    // Case 2. 재로그인의 경우, setting을 설정했기 때문에 바로 Main화면으로 보여줍니다.
-      // navigationController 필요하지 않음
-    
-    // 재로그인 판별 방법: 파이어베이스의 dday가 -1이라면 처음 로그인, -1이 아니라면 재로그인
-      // 파이어베이스에서 dday fetch를 통해 알아오기
     navigationController?.viewControllers = [viewController]
   }
 }
@@ -47,13 +42,17 @@ final class OnboardingCoordinator: BaseCoordinator {
 // MARK: - CoordinatorFinishDelegate
 extension OnboardingCoordinator: CoordinatorFinishDelegate {
   func coordinatorDidFinish(_ childCoordinator: BaseCoordinator) {
-    childCoordinators.removeValue(forKey: childCoordinator.identifier)
-    finish()
+    self.childCoordinators.removeValue(forKey: childCoordinator.identifier)
+    self.finish()
   }
 }
 
-// MARK: - Private Helpers
+// MARK: - Privates
 extension OnboardingCoordinator {
+  private func showMain() {
+    self.finish()
+  }
+  
   private func showDateTimeSetting() {
     let childCoordinator = dependencies.makeDateTimeSettingCoordinator(navigationController: navigationController)
     childCoordinator.finishDelegate = self

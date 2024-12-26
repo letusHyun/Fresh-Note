@@ -19,7 +19,7 @@ enum SaveProductUseCaseError: Error {
   }
 }
 
-protocol SaveProductUseCase: AnyObject {
+protocol SaveProductUseCase {
   func execute(requestValue: SaveProductUseCaseRequestValue) -> AnyPublisher<Product, any Error>
 }
 
@@ -58,7 +58,7 @@ final class DefaultSaveProductUseCase: SaveProductUseCase {
         return self.productRepository
           .saveProduct(product: product)
           .retry(2)
-          .catch { _ in
+          .catch { _ in // 실패한 경우 firebase storage에서 이미지 제거 (rollback)
             return self.imageRepository.deleteImage(with: url)
               .flatMap {
                 return Fail(error: SaveProductUseCaseError.failToSaveProduct).eraseToAnyPublisher()

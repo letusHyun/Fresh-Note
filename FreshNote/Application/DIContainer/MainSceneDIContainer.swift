@@ -95,13 +95,28 @@ private extension MainSceneDIContainer {
     return DefaultFetchProductUseCase(productRepository: self.makeProductRepository())
   }
   
+//  func makeCheckFirstSignInUseCase() -> any CheckFirstSignInUseCase {
+//    return DefaultCheckFirstSignInUseCase(signInStateRepository: self.makeSignInStateRepository())
+//  }
+  
   // MARK: - Data Layer
+//  func makeFirstSignInStateStorage() -> any FirstSignInStateStorage {
+//    return UserDefaultsFirstSignInStateStorage()
+//  }
+  
+//  func makeSignInStateRepository() -> any SignInStateRepository {
+//    return DefaultSignInStateRepository(firstSignInStateStorage: self.makeFirstSignInStateStorage())
+//  }
+  
   func makeProductQueriesRepository() -> any ProductQueriesRepository {
     return DefaultProductQueriesRepository(productQueryPersistentStorage: self.makeProductQueryStorage())
   }
   
   func makeProductRepository() -> any ProductRepository {
-    return DefaultProductRepository(firebaseNetworkService: self.makeFirebaseNetworkService())
+    return DefaultProductRepository(
+      firebaseNetworkService: self.makeFirebaseNetworkService(),
+      productStorage: self.makeProductStorage()
+    )
   }
   
   func makeImageRepository() -> any ImageRepository {
@@ -110,6 +125,14 @@ private extension MainSceneDIContainer {
   
   func makeFirebaseNetworkService() -> any FirebaseNetworkService {
     return DefaultFirebaseNetworkService()
+  }
+  
+  func makeProductStorage() -> any ProductStorage {
+    return CoreDataProductStorage(coreDataStorage: self.makeCoreDataStorage())
+  }
+  
+  func makeCoreDataStorage() -> any CoreDataStorage {
+    return PersistentCoreDataStorage()
   }
   
   // MARK: - Persistent Storage

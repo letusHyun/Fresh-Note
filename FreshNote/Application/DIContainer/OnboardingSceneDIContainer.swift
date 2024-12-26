@@ -22,11 +22,65 @@ final class OnboardingSceneDIContainer {
   
   
   // MARK: - Domain Layer
-  func makeAlarmSaveUseCase() -> any AlarmSaveUseCase {
-    return DefaultAlarmSaveUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  func makeSaveAlarmUseCase() -> any SaveAlarmUseCase {
+    return DefaultSaveAlarmUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  }
+  
+  func makeSignInStateUseCase() -> any SignInStateUseCase {
+    return DefaultSignInStateUseCase(signInStateRepository: self.makeSignInStateRepository())
+  }
+  
+  func makeSignInUseCase() -> any SignInUseCase {
+    return DefaultSignInUseCase(appleSignInRepository: self.makeAppleSignInRepository())
+  }
+  
+  func makeSaveUserProfileUseCase() -> any SaveUserProfileUseCase {
+    return DefaultSaveUserProfileUseCase(
+      userProfileRepository: self.makeUserProfileRepository(),
+      imageRepository: self.makeImageRepository()
+    )
+  }
+  
+  func makeCheckDateTimeStateUseCase() -> any CheckDateTimeStateUseCase {
+    return DefaultCheckDateTimeStateUseCase(dateTimeRepository: self.makeDateTimeRepository())
   }
   
   // MARK: - Data Layer
+  func makeImageRepository() -> any ImageRepository {
+    return DefaultImageRepository(firebaseNetworkService: self.makeFirebaseNetworkService())
+  }
+  
+  func makePersistentCoreDataStorage() -> any CoreDataStorage {
+    return PersistentCoreDataStorage()
+  }
+  
+  func makeMemoryCoreDataStorage() -> any CoreDataStorage {
+    return MemoryCoreDataStorage()
+  }
+  
+  func makeUserProfileStorage() -> any UserProfileStorage {
+    return CoreDataUserProfileStorage(coreDataStorage: self.makePersistentCoreDataStorage())
+  }
+  
+  func makeUserProfileRepository() -> any UserProfileRepository {
+    return DefaultUserProfileRepository(
+      userProfileStorage: self.makeUserProfileStorage(),
+      firebaseNetworkService: self.makeFirebaseNetworkService()
+    )
+  }
+  
+  func makeAppleSignInRepository() -> any AppleSignInRepository {
+    return DefaultAppleSignInRepository()
+  }
+  
+  func makeSignInStateStorage() -> any SignInStateStorage {
+    return UserDefaultsSignInStateStorage()
+  }
+  
+  func makeSignInStateRepository() -> any SignInStateRepository {
+    return DefaultSignInStateRepository(signInStateStorage: self.makeSignInStateStorage())
+  }
+  
   func makeFirebaseNetworkService() -> any FirebaseNetworkService {
     return DefaultFirebaseNetworkService()
   }
@@ -39,14 +93,19 @@ final class OnboardingSceneDIContainer {
   func makeOnboardingViewModel(
     actions: OnboardingViewModelActions
   ) -> OnboardingViewModel {
-    return DefaultOnboardingViewModel(actions: actions)
+    return DefaultOnboardingViewModel(
+      actions: actions,
+      signInUseCase: self.makeSignInUseCase(),
+      signInStateUseCase: self.makeSignInStateUseCase(),
+      checkDateTimeStateUseCase: self.makeCheckDateTimeStateUseCase(),
+      saveUserProfileUseCase: self.makeSaveUserProfileUseCase()
+    )
   }
   
   func makeDateTimeSettingViewModel(
     actions: DateTimeSettingViewModelActions
   ) -> DateTimeSettingViewModel {
-    // TODO: - DefaultRepository 분리해야함
-    return DefaultDateTimeSettingViewModel(actions: actions, alarmSaveUseCase: self.makeAlarmSaveUseCase())
+    return DefaultDateTimeSettingViewModel(actions: actions, saveAlarmUseCase: self.makeSaveAlarmUseCase())
   }
 }
 

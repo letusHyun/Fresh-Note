@@ -23,5 +23,7 @@ enum CoreDataStorageError: Error {
   case readError(Error)
   case saveError(Error)
   case deleteError(Error)
+  case updateError(Error)
   case noEntity
+  case contextCountError(Error)
 }

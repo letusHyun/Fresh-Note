@@ -15,12 +15,28 @@ final class CoreDataProductQueryStorage {
   init(coreDataStorage: any CoreDataStorage) {
     self.coreDataStorage = coreDataStorage
   }
+  
+  // MARK: - Private
+  private func deleteResponse(in context: NSManagedObjectContext) throws {
+    let request = ProductQueryEntity.fetchRequest()
+    
+    do {
+      if let result = try context.fetch(request).first {
+        context.delete(result)
+      }
+    } catch {
+      throw CoreDataStorageError.deleteError(error)
+    }
+  }
 }
 
+// MARK: - ProductQueryStorage
 extension CoreDataProductQueryStorage: ProductQueryStorage {
   func saveQuery(productQuery: ProductQuery) -> AnyPublisher<ProductQuery, any Error> {
     return self.coreDataStorage
-      .performBackgroundTask { context -> ProductQuery in
+      .performBackgroundTask { [weak self] context -> ProductQuery in
+        try self?.deleteResponse(in: context)
+        
         _ = ProductQueryEntity(productQuery: productQuery, insertInto: context)
     
         do {
@@ -38,11 +54,10 @@ extension CoreDataProductQueryStorage: ProductQueryStorage {
       .performBackgroundTask { context -> [ProductQuery] in
         let request: NSFetchRequest<ProductQueryEntity> = ProductQueryEntity.fetchRequest()
         request.sortDescriptors = [
-          NSSortDescriptor(key: "createdAt", ascending: true)
+          NSSortDescriptor(key: ProductQueryEntity.PropertyName.createdAt.rawValue, ascending: true)
         ]
         
         do {
-          // 데이터 존재하지 않는 경우, 빈 배열 반환
           let entities = try context.fetch(request)
           return entities.map { $0.toDomain() }
         } catch {
@@ -56,7 +71,10 @@ extension CoreDataProductQueryStorage: ProductQueryStorage {
     self.coreDataStorage
       .performBackgroundTask { context -> Void in
         let request: NSFetchRequest<ProductQueryEntity> = ProductQueryEntity.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", uuidString)
+        request.predicate = NSPredicate(
+          format: "\(ProductQueryEntity.PropertyName.uuidString.rawValue) == %@",
+          uuidString
+        )
         let entities = try context.fetch(request)
         
         guard !entities.isEmpty else {

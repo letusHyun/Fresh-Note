@@ -13,7 +13,7 @@ extension UIControl {
     private let subscriber: S?
     private let control: UIControl
     private let event: UIControl.Event
-    
+  
     init(subscriber: S, control: UIControl, event: UIControl.Event) {
       self.subscriber = subscriber
       self.control = control

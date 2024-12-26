@@ -44,6 +44,7 @@ final class DefaultHomeViewModel: HomeViewModel {
   private var subscriptions = Set<AnyCancellable>()
   private let fetchProductUseCase: any FetchProductUseCase
   private let deleteProductUseCase: any DeleteProductUseCase
+  
   /// 제품의 update 유무 및 업데이트된 indexPath를 저장하는 변수입니다.
   private var updatedIndexPath: IndexPath?
   
@@ -74,7 +75,7 @@ final class DefaultHomeViewModel: HomeViewModel {
   
   // MARK: - Input
   func viewDidLoad() {
-    self.fetchProductUseCase.fetchProducts()
+    return self.fetchProductUseCase.fetchProducts()
       .receive(on: DispatchQueue.main)
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }
