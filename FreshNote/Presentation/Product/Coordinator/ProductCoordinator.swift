@@ -7,9 +7,9 @@
 
 import UIKit
 
-protocol ProductCoordinatorFinishDelegate: AnyObject {
-  func finish(_ childCoordinator: BaseCoordinator, with product: Product?)
-}
+//protocol ProductCoordinatorFinishDelegate: AnyObject {
+//  func finish(_ childCoordinator: BaseCoordinator, with product: Product?)
+//}
 
 protocol ProductCoordinatorDependencies: AnyObject {
   func makeProductViewController(
@@ -36,7 +36,7 @@ final class ProductCoordinator: BaseCoordinator {
   
   private var bottomSheetViewController: BottomSheetViewController?
   
-  weak var productCoordinatorFinishDelegate: (any ProductCoordinatorFinishDelegate)?
+//  weak var productCoordinatorFinishDelegate: (any ProductCoordinatorFinishDelegate)?
   
   // MARK: - LifeCycle
   init(
@@ -57,8 +57,8 @@ final class ProductCoordinator: BaseCoordinator {
   // MARK: - Start
   func start() {
     let actions = ProductViewModelActions(
-      pop: { [weak self] product in
-        self?.pop(product: product)
+      pop: { [weak self] in
+        self?.pop()
       }, showPhotoBottomSheet: { [weak self] passDataHandler in
         self?.showPhotoBottomSheet(passDataHandler: passDataHandler)
       }, showCategoryBottomSheet: { [weak self] (animateCategoryHandler, passCategoryHandler) in
@@ -76,9 +76,9 @@ final class ProductCoordinator: BaseCoordinator {
 
 // MARK: - Private Helpers
 extension ProductCoordinator {
-  private func pop(product: Product?) {
+  private func pop() {
     self.navigationController?.popViewController(animated: true)
-    self.productCoordinatorFinishDelegate?.finish(self, with: product)
+    self.finish()
   }
   
   private func showPhotoBottomSheet(passDataHandler: @escaping (Data?) -> Void) {

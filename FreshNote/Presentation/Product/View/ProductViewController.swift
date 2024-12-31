@@ -234,7 +234,8 @@ private extension ProductViewController {
   private func bind() {
     self.viewModel.errorPublisher
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] error in
+      .sink { error in
+        guard let error = error else { return }
         ActivityIndicatorView.shared.stopIndicating()
         // TODO: - error handling
       }

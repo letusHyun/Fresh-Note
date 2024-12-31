@@ -45,11 +45,7 @@
 		131095EF2D12AE660007AB2D /* Exceptions for "FreshNote" folder in "FreshNoteTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Data/PersistentStorages/SignInStateStorage/SignInStateStorage.swift,
-				Data/PersistentStorages/SignInStateStorage/UserDefaultsStorage/DataMapping/SignInStateUDS.swift,
-				Data/PersistentStorages/SignInStateStorage/UserDefaultsStorage/UserDefaultsSignInStateStorage.swift,
-				Data/PersistentStorages/UserDefaults/UserDefaultsError.swift,
-				Data/PersistentStorages/UserDefaults/UserDefaultsKey.swift,
+				Data/PersistentStorages/CoreDataStorage/CoreDataStorage.swift,
 				Infrastructure/Network/FirebaseNetworkService.swift,
 				"Utils/Extension/Encodable+.swift",
 			);
@@ -77,11 +73,6 @@
 		1383D2272CC3923A00F822A9 /* FreshNoteTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = FreshNoteTests;
-			sourceTree = "<group>";
-		};
-		1383D2312CC3923A00F822A9 /* FreshNoteUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FreshNoteUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -124,7 +115,6 @@
 				13C730CD2CE67D31009024A0 /* .gitignore */,
 				1383D2102CC3923800F822A9 /* FreshNote */,
 				1383D2272CC3923A00F822A9 /* FreshNoteTests */,
-				1383D2312CC3923A00F822A9 /* FreshNoteUITests */,
 				1383D20F2CC3923800F822A9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -206,9 +196,6 @@
 			);
 			dependencies = (
 				1383D2302CC3923A00F822A9 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				1383D2312CC3923A00F822A9 /* FreshNoteUITests */,
 			);
 			name = FreshNoteUITests;
 			packageProductDependencies = (

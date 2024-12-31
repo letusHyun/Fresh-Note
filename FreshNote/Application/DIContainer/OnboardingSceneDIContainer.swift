@@ -50,16 +50,12 @@ final class OnboardingSceneDIContainer {
     return DefaultImageRepository(firebaseNetworkService: self.makeFirebaseNetworkService())
   }
   
-  func makePersistentCoreDataStorage() -> any CoreDataStorage {
-    return PersistentCoreDataStorage()
-  }
-  
-  func makeMemoryCoreDataStorage() -> any CoreDataStorage {
-    return MemoryCoreDataStorage()
+  func makeCoreDataStorage() -> any CoreDataStorage {
+    return PersistentCoreDataStorage.shared
   }
   
   func makeUserProfileStorage() -> any UserProfileStorage {
-    return CoreDataUserProfileStorage(coreDataStorage: self.makePersistentCoreDataStorage())
+    return CoreDataUserProfileStorage(coreDataStorage: self.makeCoreDataStorage())
   }
   
   func makeUserProfileRepository() -> any UserProfileRepository {

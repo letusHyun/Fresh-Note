@@ -13,4 +13,5 @@ protocol ProductRepository {
   func saveProduct(product: Product) -> AnyPublisher<Void, any Error>
   func fetchProducts() -> AnyPublisher<[Product], any Error>
   func deleteProduct(didString: String) -> AnyPublisher<Void, any Error>
+  func updateProduct(product: Product) -> AnyPublisher<Product, any Error>
 }

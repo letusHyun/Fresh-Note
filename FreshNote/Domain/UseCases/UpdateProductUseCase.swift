@@ -34,8 +34,7 @@ final class DefaultUpdateProductUseCase: UpdateProductUseCase {
       guard let newImageData = newImageData else {
         // 새 이미지도 없으면, product 저장
         return self.productRepository
-          .saveProduct(product: product)
-          .map { product }
+          .updateProduct(product: product)
           .eraseToAnyPublisher()
       }
       
@@ -51,8 +50,7 @@ final class DefaultUpdateProductUseCase: UpdateProductUseCase {
           
           let newProduct = self.makeNewProduct(product: product, url: url)
           return self.productRepository
-            .saveProduct(product: newProduct)
-            .map { newProduct }
+            .updateProduct(product: newProduct)
             .eraseToAnyPublisher()
         }
         .eraseToAnyPublisher()
@@ -62,8 +60,7 @@ final class DefaultUpdateProductUseCase: UpdateProductUseCase {
     guard let newImageData = newImageData else {
       // 새 이미지가 없으면, product 저장
       return self.productRepository
-        .saveProduct(product: product)
-        .map { product }
+        .updateProduct(product: product)
         .eraseToAnyPublisher()
     }
     
@@ -90,8 +87,7 @@ final class DefaultUpdateProductUseCase: UpdateProductUseCase {
         let newProduct = self.makeNewProduct(product: product, url: url)
         
         return self.productRepository
-          .saveProduct(product: newProduct)
-          .map { newProduct }
+          .updateProduct(product: newProduct)
           .eraseToAnyPublisher()
       }
       .eraseToAnyPublisher()

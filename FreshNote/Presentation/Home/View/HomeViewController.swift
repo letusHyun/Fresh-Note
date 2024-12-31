@@ -59,12 +59,17 @@ final class HomeViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    ActivityIndicatorView.shared.startIndicating()
     self.setupTableView()
     self.setNavigationBar()
     self.bindActions()
     self.bind(to: self.viewModel)
     self.viewModel.viewDidLoad()
+  }
+  
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    ActivityIndicatorView.shared.startIndicating()
+    self.viewModel.viewWillAppear()
   }
   
   override func setupLayout() {
@@ -75,8 +80,6 @@ final class HomeViewController: BaseViewController {
       $0.top.equalTo(self.view.safeAreaLayoutGuide)
       $0.bottom.equalTo(self.view.safeAreaLayoutGuide)
     }
-    
-
   }
 }
 
@@ -97,10 +100,11 @@ extension HomeViewController {
   private func bind(to viewModel: any HomeViewModel) {
     viewModel.errorPublisher
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] error in
+      .sink { error in
+        guard let error = error else { return }
         // TODO: - 에러 UI 처리하기
         ActivityIndicatorView.shared.stopIndicating()
-        print("error발생: \(error?.localizedDescription)")
+        print("error발생: \(error.localizedDescription)")
       }
       .store(in: &self.subscriptions)
     

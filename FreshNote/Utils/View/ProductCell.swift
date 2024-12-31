@@ -46,6 +46,14 @@ final class ProductCell: UITableViewCell {
   
   private var subscriptions = Set<AnyCancellable>()
   
+  private let pinImageView: UIImageView = {
+    let iv = UIImageView()
+    // TODO: - image 수정하기
+    iv.image = UIImage(systemName: "v.circle")
+    
+    return iv
+  }()
+  
   // MARK: - LifeCycle
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -64,6 +72,7 @@ final class ProductCell: UITableViewCell {
     self.categoryLabel.text = nil
     self.expirationDateLabel.text = nil
     self.memoLabel.text = nil
+    self.pinImageView.image = nil
   }
 }
 
@@ -98,7 +107,7 @@ extension ProductCell {
 // MARK: - Private Helpers
 extension ProductCell {
   private func setupLayout() {
-    thumbnailImageView.translatesAutoresizingMaskIntoConstraints = false
+    self.thumbnailImageView.translatesAutoresizingMaskIntoConstraints = false
     
     let textContainerView: UIView = {
       let view = UIView()

@@ -10,6 +10,8 @@ import CoreData
 import Foundation
 
 final class PersistentCoreDataStorage: CoreDataStorage {
+  static let shared: CoreDataStorage = PersistentCoreDataStorage()
+  
   private lazy var persistentContainer: NSPersistentContainer = {
     let container = NSPersistentContainer(name: Self.name)
     
@@ -20,6 +22,8 @@ final class PersistentCoreDataStorage: CoreDataStorage {
     }
     return container
   }()
+  
+  private init() { }
   
   func performBackgroundTask<T>(
     _ block: @escaping (NSManagedObjectContext) throws -> T

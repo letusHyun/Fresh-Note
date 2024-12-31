@@ -113,6 +113,38 @@ final class DefaultProductRepository: ProductRepository {
       .receive(on: self.backgroundQueue)
       .eraseToAnyPublisher()
   }
+  
+  // TODO: - 제품 update usecase, repository 구현하기, vm도 업데이트하는 것으로 수정하기
+  func updateProduct(product: Product) -> AnyPublisher<Product, any Error> {
+    guard let userID = FirebaseUserManager.shared.userID else {
+      return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
+    }
+    
+    let urlString = product.imageURL?.absoluteString
+    let didString = product.did.didString
+    let fullPath = FirestorePath.product(userID: userID, productID: didString)
+    
+    let requestDTO = ProductRequestDTO(
+      name: product.name,
+      memo: product.memo,
+      imageURLString: urlString,
+      expirationDate: product.expirationDate,
+      category: product.category,
+      isPinned: product.isPinned,
+      didString: didString,
+      creationDate: product.creationDate
+    )
+
+    return self.firebaseNetworkService
+      .setDocument(documentPath: fullPath, requestDTO: requestDTO, merge: true)
+      .flatMap { [weak self] in
+        guard let self else { return Empty<Product, any Error>().eraseToAnyPublisher() }
+        
+        return self.productStorage.updateProduct(with: product)
+      }
+      .receive(on: self.backgroundQueue)
+      .eraseToAnyPublisher()
+  }
 }
 
 // MARK: - Private Helpers

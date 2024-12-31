@@ -22,7 +22,7 @@ final class HomeCoordinator: BaseCoordinator {
   // MARK: - Properties
   private let dependencies: any HomeCoordinatorDependencies
   
-  private let productSubject = PassthroughSubject<Product?, Never>()
+//  private let productSubject = PassthroughSubject<Product?, Never>()
   
   // MARK: - LifeCycle
   init(navigationController: UINavigationController?, dependencies: any HomeCoordinatorDependencies) {
@@ -34,14 +34,15 @@ final class HomeCoordinator: BaseCoordinator {
 // MARK: - Start
 extension HomeCoordinator {
   func start() {
-    let actions = HomeViewModelActions(showNotificationPage: { [weak self] in
-      self?.showNotificationPage()
-    }, showSearchPage: { [weak self] in
-      self?.showSearchPage()
-    }, showProductPage: { [weak self] product in
-      let mode: ProductViewModelMode = product.map { .edit($0) } ?? .create
-      self?.showProductPage(mode: mode)
-    }, productPublisher: self.productSubject.eraseToAnyPublisher()
+    let actions = HomeViewModelActions(
+      showNotificationPage: { [weak self] in
+        self?.showNotificationPage()
+      }, showSearchPage: { [weak self] in
+        self?.showSearchPage()
+      }, showProductPage: { [weak self] product in
+        let mode: ProductViewModelMode = product.map { .edit($0) } ?? .create
+        self?.showProductPage(mode: mode)
+      }
     )
     
     let homeViewController = self.dependencies.makeHomeViewController(actions: actions)
@@ -74,7 +75,8 @@ extension HomeCoordinator {
       navigationController: self.navigationController,
       mode: mode
     )
-    childCoordinator.productCoordinatorFinishDelegate = self
+    
+    childCoordinator.finishDelegate = self
     self.childCoordinators[childCoordinator.identifier] = childCoordinator
     childCoordinator.start()
   }
@@ -84,12 +86,5 @@ extension HomeCoordinator {
 extension HomeCoordinator: CoordinatorFinishDelegate {
   func coordinatorDidFinish(_ childCoordinator: BaseCoordinator) {
     self.childCoordinators.removeValue(forKey: childCoordinator.identifier)
-  }
-}
-
-extension HomeCoordinator: ProductCoordinatorFinishDelegate {
-  func finish(_ childCoordinator: BaseCoordinator, with product: Product?) {
-    self.childCoordinators.removeValue(forKey: childCoordinator.identifier)
-    self.productSubject.send(product)
   }
 }

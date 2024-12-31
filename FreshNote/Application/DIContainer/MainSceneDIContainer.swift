@@ -32,7 +32,7 @@ private extension MainSceneDIContainer {
   }
   
   func makeCalendarViewModel(actions: CalendarViewModelActions) -> any CalendarViewModel {
-    return DefaultCalendarViewModel(actions: actions)
+    return DefaultCalendarViewModel(actions: actions, fetchProductUseCase: self.makefetchProductUseCase())
   }
   
   func makeNotificationViewModel(actions: NotificationViewModelActions) -> any NotificationViewModel {
@@ -132,20 +132,12 @@ private extension MainSceneDIContainer {
   }
   
   func makeCoreDataStorage() -> any CoreDataStorage {
-    return PersistentCoreDataStorage()
+    return PersistentCoreDataStorage.shared
   }
   
   // MARK: - Persistent Storage
   func makeProductQueryStorage() -> any ProductQueryStorage {
-    return CoreDataProductQueryStorage(coreDataStorage: self.makePersistentCoreDataStorage())
-  }
-  
-  func makePersistentCoreDataStorage() -> any CoreDataStorage {
-    return PersistentCoreDataStorage()
-  }
-  
-  func makeMemoryCoreDataStorage() -> any CoreDataStorage {
-    return MemoryCoreDataStorage()
+    return CoreDataProductQueryStorage(coreDataStorage: self.makeCoreDataStorage())
   }
 }
 
@@ -188,6 +180,13 @@ extension MainSceneDIContainer: HomeCoordinatorDependencies {
 
 // MARK: - CalendarCoordinatorDependencies
 extension MainSceneDIContainer: CalendarCoordinatorDependencies {
+  func makeProductCoordinator(
+    navigationController: UINavigationController?,
+    product: Product
+  ) -> ProductCoordinator {
+    return self.makeProductCoordinator(navigationController: navigationController, mode: .edit(product))
+  }
+  
   func makeCalendarViewController(actions: CalendarViewModelActions) -> CalendarViewController {
     return CalendarViewController(viewModel: self.makeCalendarViewModel(actions: actions))
   }

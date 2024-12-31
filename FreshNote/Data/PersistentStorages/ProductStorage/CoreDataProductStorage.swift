@@ -119,6 +119,7 @@ extension CoreDataProductStorage: ProductStorage {
         entity.createdAt = updatedProduct.creationDate
         entity.category = updatedProduct.category
         
+        try context.save()
         return updatedProduct
       } catch {
         throw CoreDataStorageError.updateError(error)

@@ -11,6 +11,8 @@ import Foundation
 
 /// 인메모리 방식으로 CRUD를 수행합니다.
 final class MemoryCoreDataStorage: CoreDataStorage {
+  static let shared: CoreDataStorage = MemoryCoreDataStorage()
+  
   private lazy var persistentContainer: NSPersistentContainer = {
     let container = NSPersistentContainer(name: Self.name)
     let description = NSPersistentStoreDescription()

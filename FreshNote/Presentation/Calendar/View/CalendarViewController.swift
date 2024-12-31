@@ -21,17 +21,25 @@ final class CalendarViewController: BaseViewController {
     calendarView.calendar = gregorianCalendar
     calendarView.locale = Locale(identifier: "ko_KR")
     calendarView.fontDesign = .default
+    calendarView.delegate = self
     calendarView.selectionBehavior = UICalendarSelectionSingleDate(delegate: self)
     return calendarView
   }()
   
   private lazy var collectionView: UICollectionView = {
-    let cv = UICollectionView()
-    // TODO: - register 및 collectionView의 layour 지정해야 한다.
+    let layout =  UICollectionViewFlowLayout()
+    layout.minimumInteritemSpacing = 10
+    layout.minimumLineSpacing = 15
+  
+    let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+    cv.contentInset = UIEdgeInsets(top: 0, left: 30, bottom: 0, right: 30)
+    cv.register(CalendarProductCell.self, forCellWithReuseIdentifier: CalendarProductCell.id)
     cv.dataSource = self
     cv.delegate = self
     return cv
   }()
+  
+  private var subscriptions: Set<AnyCancellable> = []
   
   // MARK: - LifeCycle
   init(viewModel: any CalendarViewModel) {
@@ -45,7 +53,15 @@ final class CalendarViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    self.viewModel.viewDidLoad()
+    defer { self.viewModel.viewDidLoad() }
+    
+    self.bind(to: self.viewModel)
+  }
+  
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    
+    self.viewModel.viewWillAppear()
   }
   
   // MARK: - UI
@@ -56,7 +72,6 @@ final class CalendarViewController: BaseViewController {
     self.calendarView.snp.makeConstraints {
       $0.top.equalTo(self.view.safeAreaLayoutGuide)
       $0.leading.trailing.equalToSuperview()
-      $0.height.equalToSuperview().multipliedBy(0.31)
     }
     
     self.collectionView.snp.makeConstraints {
@@ -65,13 +80,25 @@ final class CalendarViewController: BaseViewController {
       $0.bottom.equalTo(self.view.safeAreaLayoutGuide)
     }
   }
+  
+  // MARK: - Privates
+  private func bind(to viewModel: any CalendarViewModel) {
+    viewModel.reloadDataPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.collectionView.reloadData()
+      }
+      .store(in: &self.subscriptions)
+  }
 }
 
 // MARK: - UICalendarSelectionSingleDateDelegate
 extension CalendarViewController: UICalendarSelectionSingleDateDelegate {
-  func dateSelection(_ selection: UICalendarSelectionSingleDate, didSelectDate dateComponents: DateComponents?) {
-    guard let date = dateComponents?.date else { return }
-    print("selected date: \(date)")
+  func dateSelection(
+    _ selection: UICalendarSelectionSingleDate,
+    didSelectDate dateComponents: DateComponents?
+  ) {
+    self.viewModel.didSelectDate(dateComponents: dateComponents)
   }
 }
 
@@ -107,6 +134,25 @@ extension CalendarViewController: UICollectionViewDelegateFlowLayout {
     layout collectionViewLayout: UICollectionViewLayout,
     sizeForItemAt indexPath: IndexPath
   ) -> CGSize {
-    return .init(width: 140, height: 310)
+    guard let layout = collectionViewLayout as? UICollectionViewFlowLayout
+    else { return CGSize(width: 0, height: 0) }
+    
+    let edgeInset = collectionView.contentInset.left + collectionView.contentInset.right
+    let width: CGFloat = (self.view.bounds.width - edgeInset - layout.minimumInteritemSpacing) / 2
+    return CGSize(width: width, height: 50)
+  }
+  
+  func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    self.viewModel.didSelectItem(at: indexPath)
+  }
+}
+
+// MARK: - UICalendarViewDelegate
+extension CalendarViewController: UICalendarViewDelegate {
+  func calendarView(
+    _ calendarView: UICalendarView,
+    didChangeVisibleDateComponentsFrom previousDateComponents: DateComponents
+  ) {
+    self.viewModel.didChangeVisibleDateComponents(dateComponents: calendarView.visibleDateComponents)
   }
 }

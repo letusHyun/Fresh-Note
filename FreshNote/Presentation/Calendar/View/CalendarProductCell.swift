@@ -79,9 +79,42 @@ final class CalendarProductCell: UICollectionViewCell {
     self.contentView.addSubview(self.categoryTagLabel)
     self.contentView.addSubview(self.categoryLabel)
     
-    // TODO: - 오토레이아웃 정의하기
+    self.titleTagLabel.snp.makeConstraints {
+      $0.top.equalToSuperview().inset(2)
+      $0.leading.equalToSuperview().inset(10)
+    }
+    self.titleTagLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
     
+    self.titleLabel.snp.makeConstraints {
+      $0.leading.equalTo(self.titleTagLabel.snp.trailing)
+      $0.centerY.equalTo(self.titleTagLabel)
+      $0.trailing.lessThanOrEqualToSuperview().inset(10)
+    }
     
+    self.expirationTagLabel.snp.makeConstraints {
+      $0.top.equalTo(self.titleTagLabel.snp.bottom).offset(2)
+      $0.leading.equalToSuperview().inset(10)
+    }
+    self.expirationTagLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+    
+    self.expirationLabel.snp.makeConstraints {
+      $0.leading.equalTo(self.expirationTagLabel.snp.trailing)
+      $0.centerY.equalTo(self.expirationTagLabel)
+      $0.trailing.lessThanOrEqualToSuperview().inset(10)
+    }
+    
+    self.categoryTagLabel.snp.makeConstraints {
+      $0.top.equalTo(self.expirationTagLabel.snp.bottom).offset(2)
+      $0.leading.equalToSuperview().inset(10)
+//      $0.bottom.equalToSuperview().inset(2)
+    }
+    self.categoryTagLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+    
+    self.categoryLabel.snp.makeConstraints {
+      $0.leading.equalTo(self.categoryTagLabel.snp.trailing)
+      $0.centerY.equalTo(self.categoryTagLabel)
+      $0.trailing.lessThanOrEqualToSuperview().inset(10)
+    }
   }
   
   func configure(with product: Product) {
