@@ -9,7 +9,7 @@ import Combine
 import Foundation
 
 struct CalendarViewModelActions {
-  let showProduct: (Product) -> Void
+  let showProduct: (DocumentID) -> Void
 }
 
 protocol CalendarViewModelInput {
@@ -129,7 +129,7 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   }
   
   func didSelectItem(at indexPath: IndexPath) {
-    let product = filterdDataSource[indexPath.item]
-    self.actions.showProduct(product)
+    let productID = filterdDataSource[indexPath.item].did
+    self.actions.showProduct(productID)
   }
 }

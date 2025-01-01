@@ -8,6 +8,8 @@
 import Combine
 import UIKit
 
+import SnapKit
+
 final class ProductCell: UITableViewCell {
   // MARK: - Properteis
   static var id: String {
@@ -48,10 +50,13 @@ final class ProductCell: UITableViewCell {
   
   private let pinImageView: UIImageView = {
     let iv = UIImageView()
-    // TODO: - image 수정하기
-    iv.image = UIImage(systemName: "v.circle")
-    
     return iv
+  }()
+  
+  private let dateFormatter: DateFormatter = {
+    let dateFormatter = DateFormatter()
+    dateFormatter.dateFormat = "yyyy.MM.dd"
+    return dateFormatter
   }()
   
   // MARK: - LifeCycle
@@ -79,7 +84,24 @@ final class ProductCell: UITableViewCell {
 // MARK: - Helpers
 extension ProductCell {
   func configure(product: Product) {
-    if let imageURL = product.imageURL {
+    self.configureProductImage(with: product.imageURL)
+    self.configurePin(isPinned: product.isPinned)
+    self.expirationDateLabel.text = self.dateFormatter.string(from: product.expirationDate)
+    self.nameLabel.text = product.name
+    self.categoryLabel.text = product.category
+    self.memoLabel.text = product.memo
+  }
+}
+
+// MARK: - Private Helpers
+extension ProductCell {
+  private func configurePin(isPinned: Bool) {
+    let imageName = isPinned ? "v.circle.fill" : "v.circle"
+    self.pinImageView.image = UIImage(systemName: imageName)
+  }
+  
+  private func configureProductImage(with imageURL: URL?) {
+    if let imageURL = imageURL {
       URLSession.shared.dataTaskPublisher(for: imageURL)
         .map { UIImage(data: $0.data) }
         .replaceError(with: nil)
@@ -93,19 +115,8 @@ extension ProductCell {
       self.thumbnailImageView.image = UIImage(named: "defaultProductImage")?
         .withInsets(UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5))
     }
-    
-    let dateFormatter = DateFormatter()
-    dateFormatter.dateFormat = "yyyy.MM.dd"
-    self.expirationDateLabel.text = dateFormatter.string(from: product.expirationDate)
-    
-    self.nameLabel.text = product.name
-    self.categoryLabel.text = product.category
-    self.memoLabel.text = product.memo
   }
-}
-
-// MARK: - Private Helpers
-extension ProductCell {
+  
   private func setupLayout() {
     self.thumbnailImageView.translatesAutoresizingMaskIntoConstraints = false
     

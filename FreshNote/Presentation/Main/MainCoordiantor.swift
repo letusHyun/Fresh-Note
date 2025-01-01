@@ -11,6 +11,7 @@ protocol MainCoordinatorDependencies: AnyObject {
   // todo: make각 탭Coordinator
   func makeHomeCoordinator(navigationController: UINavigationController) -> HomeCoordinator
   func makeCalendarCoordinator(navigationController: UINavigationController) -> CalendarCoordinator
+  func makePinCoordinator(navigationController: UINavigationController) -> PinCoordinator
 }
 
 final class MainCoordinator: BaseCoordinator {
@@ -33,28 +34,47 @@ final class MainCoordinator: BaseCoordinator {
   func start() {
     // TODO: - 나머지 탭들도 구성해야합니다.
     // tabBarController에 들어갈 window에서 알 필요가 없기 때문에 내비컨들은 여기서 만들어주는것이 적합함
-    let homeNaviController = self.makeNavigationController(
+    let homeNavigationController = self.makeNavigationController(
       title: "홈",
       tabBarImage: UIImage(systemName: "house"),
       tag: 0
     )
-    let calendarNaviController = self.makeNavigationController(
+    let calendarNavigationController = self.makeNavigationController(
       title: "캘린더",
       tabBarImage: UIImage(systemName: "calendar"),
       tag: 1
     )
+    let pinNavigationController = self.makeNavigationController(
+      title: "핀",
+      tabBarImage: UIImage(systemName: "pin"),
+      tag: 2
+    )
     
     self.tabBarController?.tabBar.tintColor = UIColor(fnColor: .gray3)
     self.tabBarController?.tabBar.unselectedItemTintColor = UIColor(fnColor: .gray1)
-    self.tabBarController?.viewControllers = [homeNaviController, calendarNaviController]
+    self.tabBarController?.viewControllers = [
+      homeNavigationController,
+      calendarNavigationController,
+      pinNavigationController
+    ]
     
-    let homeCoordinator = self.dependencies.makeHomeCoordinator(navigationController: homeNaviController)
+    let homeCoordinator = self.dependencies.makeHomeCoordinator(
+      navigationController: homeNavigationController
+    )
     self.childCoordinators[homeCoordinator.identifier] = homeCoordinator
     homeCoordinator.start()
     
-    let calendarCoordinator = self.dependencies.makeCalendarCoordinator(navigationController: calendarNaviController)
+    let calendarCoordinator = self.dependencies.makeCalendarCoordinator(
+      navigationController: calendarNavigationController
+    )
     self.childCoordinators[calendarCoordinator.identifier] = calendarCoordinator
     calendarCoordinator.start()
+    
+    let pinCoordinator = self.dependencies.makePinCoordinator(
+      navigationController: pinNavigationController
+    )
+    self.childCoordinators[pinCoordinator.identifier] = pinCoordinator
+    pinCoordinator.start()
   }
 }
 

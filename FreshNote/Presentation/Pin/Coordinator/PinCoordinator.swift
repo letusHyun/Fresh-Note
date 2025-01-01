@@ -9,7 +9,10 @@ import UIKit
 
 protocol PinCoordinatorDependencies {
   func makePinViewController(actions: PinViewModelActions) -> PinViewController
-  func makeProductCoordinator() -> ProductCoordinator
+  func makeProductCoordinator(
+    navigationController: UINavigationController?,
+    productID: DocumentID
+  ) -> ProductCoordinator
 }
 
 final class PinCoordinator: BaseCoordinator {
@@ -22,12 +25,12 @@ final class PinCoordinator: BaseCoordinator {
     dependencies: any PinCoordinatorDependencies
   ) {
     self.dependencies = dependencies
-    self.navigationController = navigationController
+    super.init(navigationController: navigationController)
   }
   
   func start() {
-    let actions = PinViewModelActions(showProduct: { [weak self] in
-      self?.showProduct()
+    let actions = PinViewModelActions(showProduct: { [weak self] productID in
+      self?.showProduct(productID: productID)
     })
     
     let viewController = self.dependencies.makePinViewController(actions: actions)
@@ -35,8 +38,11 @@ final class PinCoordinator: BaseCoordinator {
   }
   
   // MARK: - Private
-  private func showProduct() {
-    let childCoordinator = self.dependencies.makeProductCoordinator()
+  private func showProduct(productID: DocumentID) {
+    let childCoordinator = self.dependencies.makeProductCoordinator(
+      navigationController: self.navigationController,
+      productID: productID
+    )
     childCoordinator.finishDelegate = self
     self.childCoordinators[childCoordinator.identifier] = childCoordinator
   }

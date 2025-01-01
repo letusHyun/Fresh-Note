@@ -9,7 +9,7 @@ import Combine
 import Foundation
 
 struct PinViewModelActions {
-  let showProduct: () -> Void
+  let showProduct: (DocumentID) -> Void
 }
 
 protocol PinViewModelInput {
@@ -33,6 +33,7 @@ final class DefaultPinViewModel: PinViewModel {
   private let updateProductUseCase: any UpdateProductUseCase
   private var subscriptions: Set<AnyCancellable> = []
   private var dataSource = [Product]()
+  private let actions: PinViewModelActions
   
   // MARK: - Output
   var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
@@ -43,16 +44,18 @@ final class DefaultPinViewModel: PinViewModel {
   
   // MARK: - LifeCycle
   init(
+    actions: PinViewModelActions,
     fetchProductUseCase: any FetchProductUseCase,
     updateProductUseCase: any UpdateProductUseCase
   ) {
+    self.actions = actions
     self.fetchProductUseCase = fetchProductUseCase
     self.updateProductUseCase = updateProductUseCase
   }
   
   // MARK: - Input
   func viewDidLoad() {
-    <#code#>
+    
   }
   
   func viewWillAppear() {

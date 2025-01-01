@@ -11,7 +11,7 @@ import Foundation
 struct HomeViewModelActions {
   let showNotificationPage: () -> Void
   let showSearchPage: () -> Void
-  let showProductPage: (Product?) -> Void
+  let showProductPage: (DocumentID?) -> Void
 }
 
 protocol HomeViewModelInput {
@@ -125,6 +125,6 @@ final class DefaultHomeViewModel: HomeViewModel {
   
   func didSelectRow(at indexPath: IndexPath) {
     let product = self.dataSource[indexPath.row]
-    self.actions.showProductPage(product)
+    self.actions.showProductPage(product.did)
   }
 }

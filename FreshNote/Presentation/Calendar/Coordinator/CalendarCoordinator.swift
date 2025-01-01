@@ -10,7 +10,11 @@ import UIKit
 
 protocol CalendarCoordinatorDependencies: AnyObject {
   func makeCalendarViewController(actions: CalendarViewModelActions) -> CalendarViewController
-  func makeProductCoordinator(navigationController: UINavigationController?, product: Product) -> ProductCoordinator
+  
+  func makeProductCoordinator(
+    navigationController: UINavigationController?,
+    productID: DocumentID
+  ) -> ProductCoordinator
 }
 
 class CalendarCoordinator: BaseCoordinator {
@@ -25,11 +29,14 @@ class CalendarCoordinator: BaseCoordinator {
     super.init(navigationController: navigationController)
   }
   
+  deinit {
+    print("DEBUG: \(Self.self) deinit")
+  }
   
   func start() {
     let actions = CalendarViewModelActions(
-      showProduct: { [weak self] product in
-        self?.showProduct(at: product)
+      showProduct: { [weak self] productID in
+        self?.showProduct(at: productID)
       }
     )
     
@@ -38,10 +45,10 @@ class CalendarCoordinator: BaseCoordinator {
   }
   
   // MARK: - Privates
-  private func showProduct(at product: Product) {
+  private func showProduct(at productID: DocumentID) {
     let childCoordinator = self.dependencies.makeProductCoordinator(
       navigationController: self.navigationController,
-      product: product
+      productID: productID
     )
     childCoordinator.finishDelegate = self
     self.childCoordinators[childCoordinator.identifier] = childCoordinator

@@ -29,6 +29,27 @@ final class CoreDataProductStorage {
 
 // MARK: - ProductStorage
 extension CoreDataProductStorage: ProductStorage {
+  func fetchProduct(didString: String) -> AnyPublisher<Product, any Error> {
+    return self.coreDataStorage.performBackgroundTask { context in
+      let request = ProductEntity.fetchRequest()
+      
+      do {
+        request.predicate = NSPredicate(
+          format: "\(ProductEntity.PropertyName.didString.rawValue) == %@",
+          didString
+        )
+        let entities = try context.fetch(request).first
+        guard let entity = entities else {
+          throw CoreDataStorageError.noEntity
+        }
+        
+        return entity.toDomain()
+      } catch {
+        throw CoreDataStorageError.readError(error)
+      }
+    }
+  }
+  
   func hasProducts() -> AnyPublisher<Bool, any Error> {
     return self.coreDataStorage.performBackgroundTask { context in
       let request = ProductEntity.fetchRequest()
@@ -126,5 +147,4 @@ extension CoreDataProductStorage: ProductStorage {
       }
     }
   }
-  
 }

@@ -50,6 +50,7 @@ private extension MainSceneDIContainer {
     return DefaultProductViewModel(
       saveProductUseCase: self.makeSaveProductUseCase(),
       updateProductUseCase: self.makeUpdateProductUseCase(),
+      fetchProductUseCase: self.makefetchProductUseCase(),
       actions: actions,
       mode: mode
     )
@@ -63,6 +64,14 @@ private extension MainSceneDIContainer {
     actions: CategoryBottomSheetViewModelActions
   ) -> any CategoryBottomSheetViewModel {
     return DefaultCategoryBottomSheetViewModel(actions: actions)
+  }
+  
+  func makePinViewModel(actions: PinViewModelActions) -> any PinViewModel {
+    return DefaultPinViewModel(
+      actions: actions,
+      fetchProductUseCase: self.makefetchProductUseCase(),
+      updateProductUseCase: self.makeUpdateProductUseCase()
+    )
   }
   
   // MARK: - Domain Layer
@@ -95,19 +104,7 @@ private extension MainSceneDIContainer {
     return DefaultFetchProductUseCase(productRepository: self.makeProductRepository())
   }
   
-//  func makeCheckFirstSignInUseCase() -> any CheckFirstSignInUseCase {
-//    return DefaultCheckFirstSignInUseCase(signInStateRepository: self.makeSignInStateRepository())
-//  }
-  
   // MARK: - Data Layer
-//  func makeFirstSignInStateStorage() -> any FirstSignInStateStorage {
-//    return UserDefaultsFirstSignInStateStorage()
-//  }
-  
-//  func makeSignInStateRepository() -> any SignInStateRepository {
-//    return DefaultSignInStateRepository(firstSignInStateStorage: self.makeFirstSignInStateStorage())
-//  }
-  
   func makeProductQueriesRepository() -> any ProductQueriesRepository {
     return DefaultProductQueriesRepository(productQueryPersistentStorage: self.makeProductQueryStorage())
   }
@@ -143,12 +140,34 @@ private extension MainSceneDIContainer {
 
 // MARK: - MainCoordinatorDependencies
 extension MainSceneDIContainer: MainCoordinatorDependencies {
+  func makePinCoordinator(navigationController: UINavigationController) -> PinCoordinator {
+    return PinCoordinator(navigationController: navigationController, dependencies: self)
+  }
+  
   func makeCalendarCoordinator(navigationController: UINavigationController) -> CalendarCoordinator {
     return CalendarCoordinator(navigationController: navigationController, dependencies: self)
   }
   
   func makeHomeCoordinator(navigationController: UINavigationController) -> HomeCoordinator {
     return HomeCoordinator(navigationController: navigationController, dependencies: self)
+  }
+}
+
+// MARK: - PinCoordinatorDependencies
+extension MainSceneDIContainer: PinCoordinatorDependencies {
+  func makePinViewController(actions: PinViewModelActions) -> PinViewController {
+    return PinViewController(viewModel: self.makePinViewModel(actions: actions))
+  }
+  
+  func makeProductCoordinator(
+    navigationController: UINavigationController,
+    productID: DocumentID
+  ) -> ProductCoordinator {
+    return ProductCoordinator(
+      dependencies: self,
+      navigationController: navigationController,
+      mode: .edit(productID)
+    )
   }
 }
 
@@ -182,9 +201,9 @@ extension MainSceneDIContainer: HomeCoordinatorDependencies {
 extension MainSceneDIContainer: CalendarCoordinatorDependencies {
   func makeProductCoordinator(
     navigationController: UINavigationController?,
-    product: Product
+    productID: DocumentID
   ) -> ProductCoordinator {
-    return self.makeProductCoordinator(navigationController: navigationController, mode: .edit(product))
+    return self.makeProductCoordinator(navigationController: navigationController, mode: .edit(productID))
   }
   
   func makeCalendarViewController(actions: CalendarViewModelActions) -> CalendarViewController {

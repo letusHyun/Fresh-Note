@@ -11,6 +11,7 @@ import Foundation
 
 protocol FetchProductUseCase {
   func fetchProducts() -> AnyPublisher<[Product], any Error>
+  func fetchProduct(productID: DocumentID) -> AnyPublisher<Product, any Error>
 }
 
 final class DefaultFetchProductUseCase: FetchProductUseCase {
@@ -25,5 +26,10 @@ final class DefaultFetchProductUseCase: FetchProductUseCase {
   func fetchProducts() -> AnyPublisher<[Product], any Error> {
     return self.productRepository
       .fetchProducts()
+  }
+  
+  func fetchProduct(productID: DocumentID) -> AnyPublisher<Product, any Error> {
+    return self.productRepository
+      .fetchProduct(productID: productID)
   }
 }

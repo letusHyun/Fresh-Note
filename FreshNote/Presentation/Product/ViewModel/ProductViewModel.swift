@@ -50,7 +50,7 @@ enum ExpirationOutputState {
 
 enum ProductViewModelMode {
   case create
-  case edit(Product)
+  case edit(DocumentID)
 }
 
 final class DefaultProductViewModel: ProductViewModel {
@@ -72,8 +72,10 @@ final class DefaultProductViewModel: ProductViewModel {
   var isCustomImage: Bool = false
   
   private let saveProductUseCase: any SaveProductUseCase
-  
   private let updateProductUseCase: any UpdateProductUseCase
+  private let fetchProductUseCase: any FetchProductUseCase
+  
+  private var fetchedProduct: Product?
   
   // MARK: - Output
   var categoryToggleAnimationPublisher: AnyPublisher<Void, Never> {
@@ -99,11 +101,13 @@ final class DefaultProductViewModel: ProductViewModel {
   init(
     saveProductUseCase: any SaveProductUseCase,
     updateProductUseCase: any UpdateProductUseCase,
+    fetchProductUseCase: any FetchProductUseCase,
     actions: ProductViewModelActions,
     mode: ProductViewModelMode
   ) {
     self.saveProductUseCase = saveProductUseCase
     self.updateProductUseCase = updateProductUseCase
+    self.fetchProductUseCase = fetchProductUseCase
     self.actions = actions
     self.mode = mode
   }
@@ -117,9 +121,19 @@ final class DefaultProductViewModel: ProductViewModel {
     switch self.mode {
     case .create: break
       
-    case .edit(let product):
-      self.isCustomImage = product.imageURL != nil
-      self.setupProductSubejct.send(product)
+    case .edit(let productID):
+      self.fetchProductUseCase
+        .fetchProduct(productID: productID)
+        .receive(on: DispatchQueue.main)
+        .sink { [weak self] completion in
+          guard case .failure(let error) = completion else { return }
+          self?.error = error
+        } receiveValue: { [weak self] product in
+          self?.fetchedProduct = product
+          self?.isCustomImage = product.imageURL != nil
+          self?.setupProductSubejct.send(product)
+        }
+        .store(in: &self.subscriptions)
     }
   }
   
@@ -152,16 +166,18 @@ final class DefaultProductViewModel: ProductViewModel {
           self?.actions.pop()
         }
         .store(in: &self.subscriptions)
-    case .edit(let product):
+    case .edit(_):
+      guard let fetchedProduct = self.fetchedProduct else { return }
+      
       let updatedProductExcludedImageURL = Product(
-        did: product.did,
+        did: fetchedProduct.did,
         name: name,
         expirationDate: date,
         category: category,
         memo: memo,
-        imageURL: product.imageURL,
-        isPinned: product.isPinned,
-        creationDate: product.creationDate
+        imageURL: fetchedProduct.imageURL,
+        isPinned: fetchedProduct.isPinned,
+        creationDate: fetchedProduct.creationDate
       )
       
       self.updateProductUseCase
@@ -171,7 +187,6 @@ final class DefaultProductViewModel: ProductViewModel {
           guard case .failure(let error) = completion else { return }
           self?.error = error
         } receiveValue: { [weak self] product in
-//          self?.actions.pop(product)
           self?.actions.pop()
         }
         .store(in: &self.subscriptions)

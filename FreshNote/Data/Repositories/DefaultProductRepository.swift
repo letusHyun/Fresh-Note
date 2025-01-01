@@ -145,6 +145,13 @@ final class DefaultProductRepository: ProductRepository {
       .receive(on: self.backgroundQueue)
       .eraseToAnyPublisher()
   }
+  
+  func fetchProduct(productID: DocumentID) -> AnyPublisher<Product, any Error> {
+    return self.productStorage
+      .fetchProduct(didString: productID.didString)
+      .receive(on: self.backgroundQueue)
+      .eraseToAnyPublisher()
+  }
 }
 
 // MARK: - Private Helpers

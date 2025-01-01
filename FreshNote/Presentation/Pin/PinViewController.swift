@@ -8,19 +8,24 @@
 import Combine
 import UIKit
 
+import SnapKit
+
 final class PinViewController: BaseViewController {
   // MARK: - Properties
   private let viewModel: any PinViewModel
   private lazy var tableView: UITableView = {
     let tv = UITableView()
-    tv.register(ProductCell, forCellReuseIdentifier: ProductCell.id)
+    tv.register(ProductCell.self, forCellReuseIdentifier: ProductCell.id)
     tv.dataSource = self
     tv.delegate = self
+    return tv
   }()
   
   // MARK: - LifeCycle
   init(viewModel: any PinViewModel) {
     self.viewModel = viewModel
+    
+    super.init(nibName: nil, bundle: nil)
   }
   
   @MainActor required init?(coder: NSCoder) {
@@ -31,6 +36,16 @@ final class PinViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
+  }
+  
+  // MARK: - SetupUI
+  override func setupLayout() {
+    self.view.addSubview(self.tableView)
+    
+    self.tableView.snp.makeConstraints {
+      $0.top.bottom.equalTo(self.view.safeAreaLayoutGuide)
+      $0.leading.trailing.equalToSuperview()
+    }
   }
   
   // MARK: - Private
