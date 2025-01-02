@@ -50,6 +50,7 @@ final class ProductCell: UITableViewCell {
   
   private let pinImageView: UIImageView = {
     let iv = UIImageView()
+    iv.transform = CGAffineTransform(rotationAngle: CGFloat.pi / 4)
     return iv
   }()
   
@@ -96,8 +97,9 @@ extension ProductCell {
 // MARK: - Private Helpers
 extension ProductCell {
   private func configurePin(isPinned: Bool) {
-    let imageName = isPinned ? "v.circle.fill" : "v.circle"
-    self.pinImageView.image = UIImage(systemName: imageName)
+    let imageName = isPinned ? "pin.fill" : "pin"
+    self.pinImageView.image = UIImage(systemName: imageName)?
+      .withTintColor(.black, renderingMode: .alwaysOriginal)
   }
   
   private func configureProductImage(with imageURL: URL?) {
@@ -117,74 +119,12 @@ extension ProductCell {
     }
   }
   
-  private func setupLayout() {
-    self.thumbnailImageView.translatesAutoresizingMaskIntoConstraints = false
-    
-    let textContainerView: UIView = {
-      let view = UIView()
-      view.translatesAutoresizingMaskIntoConstraints = false
-      view.layer.cornerRadius = 3
-      view.layer.borderWidth = 1.5
-      view.layer.borderColor = UIColor(fnColor: .orange1).cgColor
-      return view
-    }()
-    
-    let tagLabels = makeAndSetupStyleTagLabels()
-    let mainLabels = [self.nameLabel, self.expirationDateLabel, self.categoryLabel, self.memoLabel].map {
-      $0.translatesAutoresizingMaskIntoConstraints = false
-      return $0
-    }
-    _=(tagLabels + mainLabels)
-      .map { textContainerView.addSubview($0) }
-    contentView.addSubview(thumbnailImageView)
-    contentView.addSubview(textContainerView)
-    
-    let nameTagLabel = tagLabels[0]
-    let expirationTagLabel = tagLabels[1]
-    let categoryTagLabel = tagLabels[2]
-    let memoTagLabel = tagLabels[3]
-    
-    // container
-    NSLayoutConstraint.activate([
-      nameTagLabel.topAnchor.constraint(equalTo: textContainerView.topAnchor, constant: 5),
-      nameTagLabel.leadingAnchor.constraint(equalTo: textContainerView.leadingAnchor, constant: 5),
-      nameLabel.centerYAnchor.constraint(equalTo: nameTagLabel.centerYAnchor),
-      nameLabel.leadingAnchor.constraint(equalTo: nameTagLabel.trailingAnchor),
-      nameLabel.trailingAnchor.constraint(lessThanOrEqualTo: textContainerView.trailingAnchor, constant: -5)
-    ]+[
-      expirationTagLabel.topAnchor.constraint(equalTo: nameTagLabel.bottomAnchor, constant: 4),
-      expirationTagLabel.leadingAnchor.constraint(equalTo: textContainerView.leadingAnchor, constant: 5),
-      expirationDateLabel.centerYAnchor.constraint(equalTo: expirationTagLabel.centerYAnchor),
-      expirationDateLabel.leadingAnchor.constraint(equalTo: expirationTagLabel.trailingAnchor),
-      expirationDateLabel.trailingAnchor.constraint(lessThanOrEqualTo: textContainerView.trailingAnchor, constant: -5)
-    ]+[
-      categoryTagLabel.topAnchor.constraint(equalTo: expirationTagLabel.bottomAnchor, constant: 4),
-      categoryTagLabel.leadingAnchor.constraint(equalTo: textContainerView.leadingAnchor, constant: 5),
-      categoryLabel.centerYAnchor.constraint(equalTo: categoryTagLabel.centerYAnchor),
-      categoryLabel.leadingAnchor.constraint(equalTo: categoryTagLabel.trailingAnchor),
-      categoryLabel.trailingAnchor.constraint(lessThanOrEqualTo: textContainerView.trailingAnchor, constant: -5)
-    ]+[
-      memoTagLabel.topAnchor.constraint(equalTo: categoryTagLabel.bottomAnchor, constant: 4),
-      memoTagLabel.leadingAnchor.constraint(equalTo: textContainerView.leadingAnchor, constant: 5),
-      memoTagLabel.bottomAnchor.constraint(equalTo: textContainerView.bottomAnchor, constant: -5),
-      memoLabel.centerYAnchor.constraint(equalTo: memoTagLabel.centerYAnchor),
-      memoLabel.leadingAnchor.constraint(equalTo: memoTagLabel.trailingAnchor),
-      memoLabel.trailingAnchor.constraint(lessThanOrEqualTo: textContainerView.trailingAnchor, constant: -5)
-    ])
-    
-    // outer
-    NSLayoutConstraint.activate([
-      thumbnailImageView.topAnchor.constraint(equalTo: textContainerView.topAnchor, constant: 5),
-      thumbnailImageView.bottomAnchor.constraint(equalTo: textContainerView.bottomAnchor, constant: -5),
-      thumbnailImageView.widthAnchor.constraint(equalToConstant: 80),
-      thumbnailImageView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-      thumbnailImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10)
-    ]+[
-      textContainerView.leadingAnchor.constraint(equalTo: thumbnailImageView.trailingAnchor, constant: 10),
-      textContainerView.topAnchor.constraint(equalTo: contentView.topAnchor,constant: 5),
-      textContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
-      textContainerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -5)
-    ])
+  private func makeTextContainerView() -> UIView {
+    let view = UIView()
+    view.layer.cornerRadius = 3
+    view.layer.borderWidth = 1.5
+    view.layer.borderColor = UIColor(fnColor: .orange1).cgColor
+    return view
   }
   
   private func setupLabelsStyle(labels: [UILabel]) {
@@ -194,15 +134,96 @@ extension ProductCell {
     }
   }
 
-  private func makeAndSetupStyleTagLabels() -> [UILabel] {
-    let labels = ["상품명: ", "유통기한: ", "카테고리: ", "메모: "].map {
+  private func makeAndSetupStyleTagLabels(texts: [String]) -> [UILabel] {
+    let labels = texts.map {
       let label = UILabel()
       label.text = $0
-      label.translatesAutoresizingMaskIntoConstraints = false
       label.setContentCompressionResistancePriority(.required, for: .horizontal)
       return label
     }
-    setupLabelsStyle(labels: labels)
+    self.setupLabelsStyle(labels: labels)
     return labels
+  }
+  
+  // MARK: - SetupUI
+  private func setupLayout() {
+    let textContainerView = self.makeTextContainerView()
+    let tagLabels = self.makeAndSetupStyleTagLabels(texts: ["상품명: ", "유통기한: ", "카테고리: ", "메모: "])
+    let mainLabels = [self.nameLabel, self.expirationDateLabel, self.categoryLabel, self.memoLabel].map {
+      return $0
+    }
+    _=(tagLabels + mainLabels)
+      .map { textContainerView.addSubview($0) }
+    textContainerView.addSubview(self.pinImageView)
+    self.contentView.addSubview(self.thumbnailImageView)
+    self.contentView.addSubview(textContainerView)
+    
+    let nameTagLabel = tagLabels[0]
+    let expirationTagLabel = tagLabels[1]
+    let categoryTagLabel = tagLabels[2]
+    let memoTagLabel = tagLabels[3]
+    
+    // container
+    self.pinImageView.snp.makeConstraints {
+      $0.size.equalTo(30)
+      $0.top.equalToSuperview().inset(5)
+      $0.trailing.equalToSuperview().inset(5)
+    }
+    
+    nameTagLabel.snp.makeConstraints {
+      $0.top.equalToSuperview().inset(5)
+      $0.leading.equalToSuperview().inset(5)
+    }
+    self.nameLabel.snp.makeConstraints {
+      $0.centerY.equalTo(nameTagLabel)
+      $0.leading.equalTo(nameTagLabel.snp.trailing)
+      $0.trailing.lessThanOrEqualTo(self.pinImageView.snp.leading).offset(-5)
+    }
+    
+    expirationTagLabel.snp.makeConstraints {
+      $0.top.equalTo(nameTagLabel.snp.bottom).offset(4)
+      $0.leading.equalToSuperview().inset(5)
+    }
+    self.expirationDateLabel.snp.makeConstraints {
+      $0.centerY.equalTo(expirationTagLabel)
+      $0.leading.equalTo(expirationTagLabel.snp.trailing)
+      $0.trailing.lessThanOrEqualTo(self.pinImageView.snp.leading).offset(-5)
+    }
+    
+    categoryTagLabel.snp.makeConstraints {
+      $0.top.equalTo(expirationTagLabel.snp.bottom).offset(4)
+      $0.leading.equalToSuperview().inset(5)
+    }
+    self.categoryLabel.snp.makeConstraints {
+      $0.centerY.equalTo(categoryTagLabel)
+      $0.leading.equalTo(categoryTagLabel.snp.trailing)
+      $0.trailing.lessThanOrEqualToSuperview().inset(5)
+    }
+    
+    memoTagLabel.snp.makeConstraints {
+      $0.top.equalTo(categoryTagLabel.snp.bottom).offset(4)
+      $0.leading.equalToSuperview().inset(5)
+      $0.bottom.equalToSuperview().inset(5)
+    }
+    self.memoLabel.snp.makeConstraints {
+      $0.centerY.equalTo(memoTagLabel)
+      $0.leading.equalTo(memoTagLabel.snp.trailing)
+      $0.trailing.lessThanOrEqualToSuperview().inset(5)
+    }
+    
+    // outer
+    self.thumbnailImageView.snp.makeConstraints {
+      $0.top.equalTo(textContainerView).offset(5)
+      $0.bottom.equalTo(textContainerView).offset(-5)
+      $0.width.equalTo(80)
+      $0.centerY.equalToSuperview()
+      $0.leading.equalToSuperview().inset(10)
+    }
+    textContainerView.snp.makeConstraints {
+      $0.leading.equalTo(self.thumbnailImageView.snp.trailing).offset(10)
+      $0.top.equalToSuperview().inset(5)
+      $0.trailing.equalToSuperview().inset(10)
+      $0.bottom.equalToSuperview().inset(5)
+    }
   }
 }

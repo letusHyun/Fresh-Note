@@ -13,13 +13,17 @@ import SnapKit
 final class PinViewController: BaseViewController {
   // MARK: - Properties
   private let viewModel: any PinViewModel
+  
   private lazy var tableView: UITableView = {
     let tv = UITableView()
+    tv.separatorStyle = .none
     tv.register(ProductCell.self, forCellReuseIdentifier: ProductCell.id)
     tv.dataSource = self
     tv.delegate = self
     return tv
   }()
+  
+  private var subscriptions: Set<AnyCancellable> = []
   
   // MARK: - LifeCycle
   init(viewModel: any PinViewModel) {
@@ -32,10 +36,17 @@ final class PinViewController: BaseViewController {
     fatalError("init(coder:) has not been implemented")
   }
   
-  
-  
   override func viewDidLoad() {
     super.viewDidLoad()
+    defer { self.viewModel.viewDidLoad() }
+    
+    self.bind(to: self.viewModel)
+    self.setupNavigationBar()
+  }
+  
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    self.viewModel.viewWillAppear()
   }
   
   // MARK: - SetupUI
@@ -50,7 +61,17 @@ final class PinViewController: BaseViewController {
   
   // MARK: - Private
   private func bind(to viewModel: any PinViewModel) {
-    
+    self.viewModel
+      .reloadDataPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] _ in
+        self?.tableView.reloadData()
+      }
+      .store(in: &self.subscriptions)
+  }
+  
+  private func setupNavigationBar() {
+    self.navigationItem.title = "핀"
   }
 }
 

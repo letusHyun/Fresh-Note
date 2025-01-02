@@ -19,6 +19,7 @@ final class MainCoordinator: BaseCoordinator {
   private let dependencies: any MainCoordinatorDependencies
   private weak var tabBarController: UITabBarController? // window.rootVC가 강한참조를 하기 때문에 weak 선언
   
+  // MARK: - LifeCycle
   init(
     dependencies: any MainCoordinatorDependencies,
     tabBarController: UITabBarController
@@ -31,6 +32,7 @@ final class MainCoordinator: BaseCoordinator {
     super.init(navigationController: nil)
   }
   
+  // MARK: - Helpers
   func start() {
     // TODO: - 나머지 탭들도 구성해야합니다.
     // tabBarController에 들어갈 window에서 알 필요가 없기 때문에 내비컨들은 여기서 만들어주는것이 적합함
@@ -44,7 +46,7 @@ final class MainCoordinator: BaseCoordinator {
       tabBarImage: UIImage(systemName: "calendar"),
       tag: 1
     )
-    let pinNavigationController = self.makeNavigationController(
+    let pinNavigationController = self.makePinNavigationController(
       title: "핀",
       tabBarImage: UIImage(systemName: "pin"),
       tag: 2
@@ -76,13 +78,33 @@ final class MainCoordinator: BaseCoordinator {
     self.childCoordinators[pinCoordinator.identifier] = pinCoordinator
     pinCoordinator.start()
   }
-}
-
-// MARK: - Private Helpers
-private extension MainCoordinator {
+  
+  // MARK: - Private
   private func makeNavigationController(title: String, tabBarImage: UIImage?, tag: Int) -> UINavigationController {
     let navigationController = UINavigationController()
     navigationController.setupBarAppearance()
+    
+    let tabBarItem = UITabBarItem(
+      title: title,
+      image: tabBarImage,
+      tag: tag
+    )
+    navigationController.tabBarItem = tabBarItem
+    
+    return navigationController
+  }
+  
+  private func makePinNavigationController(title: String, tabBarImage: UIImage?, tag: Int) -> UINavigationController {
+    let navigationController = UINavigationController()
+    let appearance = UINavigationBarAppearance()
+    appearance.configureWithTransparentBackground()
+    appearance.backgroundColor = UIColor(fnColor: .realBack)
+    appearance.titleTextAttributes = [
+      .font: UIFont.pretendard(size: 20, weight: ._700)
+    ]
+    navigationController.navigationBar.standardAppearance = appearance
+    navigationController.navigationBar.scrollEdgeAppearance = appearance
+    navigationController.navigationBar.scrollEdgeAppearance = appearance
     
     let tabBarItem = UITabBarItem(
       title: title,

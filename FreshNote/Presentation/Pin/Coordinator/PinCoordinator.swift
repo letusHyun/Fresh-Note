@@ -45,6 +45,7 @@ final class PinCoordinator: BaseCoordinator {
     )
     childCoordinator.finishDelegate = self
     self.childCoordinators[childCoordinator.identifier] = childCoordinator
+    childCoordinator.start()
   }
 }
 

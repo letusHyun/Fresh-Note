@@ -37,7 +37,7 @@ final class DefaultPinViewModel: PinViewModel {
   
   // MARK: - Output
   var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
-  var reloadDataPublisher: AnyPublisher<Void, Never> { self.reloadDataPublisher.eraseToAnyPublisher() }
+  var reloadDataPublisher: AnyPublisher<Void, Never> { self.reloadDataSubject.eraseToAnyPublisher() }
   
   @Published private var error: (any Error)?
   private let reloadDataSubject: PassthroughSubject<Void, Never> = .init()
@@ -81,7 +81,7 @@ final class DefaultPinViewModel: PinViewModel {
   
   func didSelectRow(at indexPath: IndexPath) {
     let selectedProduct = self.dataSource[indexPath.row]
-    // TODO: - Product 화면으로 이동
+    self.actions.showProduct(selectedProduct.did)
   }
   
   // MARK: - Private
