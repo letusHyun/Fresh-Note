@@ -43,7 +43,7 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
     return iv
   }()
   
-  private let expiration: UILabel = {
+  private let expirationLabel: UILabel = {
     let lb = UILabel()
     lb.text = "유통기한"
     lb.font = UIFont.pretendard(size: 12, weight: ._500)
@@ -120,13 +120,8 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
     btn.setTitle("저장", for: .normal)
     btn.setTitleColor(UIColor(fnColor: .gray0), for: .normal)
     btn.titleLabel?.font = UIFont.pretendard(size: 20, weight: ._600)
-    btn.isEnabled = false
     return btn
-  }() {
-    didSet {
-      print("saveButton isEnabled changed to: \(saveButton.isEnabled)")
-    }
-  }
+  }()
   
   var transformView: UIView { self.view }
   
@@ -167,7 +162,7 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   override func setupLayout() {
     _=[self.titleTextField,
        self.imageView,
-       self.expiration,
+       self.expirationLabel,
        self.expirationWarningLabel,
        self.expirationTextField,
        self.categoryLabel,
@@ -185,15 +180,15 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
       
       self.imageView.topAnchor.constraint(equalTo: self.titleTextField.bottomAnchor, constant: 23),
       self.imageView.widthAnchor.constraint(equalToConstant: 100),
-      self.imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor),
+      self.imageView.heightAnchor.constraint(equalTo: self.imageView.widthAnchor),
       self.imageView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
       
-      self.expiration.topAnchor.constraint(equalTo: self.imageView.bottomAnchor, constant: 45),
-      self.expiration.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 18),
+      self.expirationLabel.topAnchor.constraint(equalTo: self.imageView.bottomAnchor, constant: 45),
+      self.expirationLabel.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 18),
       
-      self.expirationWarningLabel.centerYAnchor.constraint(equalTo: self.expiration.centerYAnchor),
+      self.expirationWarningLabel.centerYAnchor.constraint(equalTo: self.expirationLabel.centerYAnchor),
       self.expirationWarningLabel.leadingAnchor.constraint(
-        equalTo: self.expiration.trailingAnchor,
+        equalTo: self.expirationLabel.trailingAnchor,
         constant: 10
       ),
       self.expirationWarningLabel.trailingAnchor.constraint(
@@ -201,13 +196,13 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
         constant: -40
       ),
       
-      self.expirationTextField.topAnchor.constraint(equalTo: self.expiration.bottomAnchor, constant: 10),
+      self.expirationTextField.topAnchor.constraint(equalTo: self.expirationLabel.bottomAnchor, constant: 10),
       self.expirationTextField.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 16.5),
       self.expirationTextField.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -16.5),
       self.expirationTextField.heightAnchor.constraint(equalToConstant: 58),
       
       self.categoryLabel.topAnchor.constraint(equalTo: self.expirationTextField.bottomAnchor, constant: 10),
-      self.categoryLabel.leadingAnchor.constraint(equalTo: self.expiration.leadingAnchor),
+      self.categoryLabel.leadingAnchor.constraint(equalTo: self.expirationLabel.leadingAnchor),
       
       self.categoryTextField.topAnchor.constraint(equalTo: self.categoryLabel.bottomAnchor, constant: 10),
       self.categoryTextField.leadingAnchor.constraint(equalTo: self.expirationTextField.leadingAnchor),
@@ -330,15 +325,14 @@ private extension ProductViewController {
       }
       .store(in: &self.subscriptions)
     
-    self.backButton.publisher(for: .touchUpInside)
+    self.backButton.tapPublisher
       .sink { [weak self] _ in
         self?.viewModel.didTapBackButton()
       }
       .store(in: &self.subscriptions)
     
-    self.saveButton.publisher(for: .touchUpInside)
+    self.saveButton.tapPublisher
       .sink { [weak self] _ in
-        print("is enabled?: \(self?.saveButton.isEnabled)")
         ActivityIndicatorView.shared.startIndicating()
         
         guard let self = self,
@@ -362,14 +356,13 @@ private extension ProductViewController {
       }
       .store(in: &self.subscriptions)
     
-    self.imageView.publisher(for: UITapGestureRecognizer())
-      .receive(on: DispatchQueue.main)
+    self.imageView.gesture()
       .sink { [weak self] _ in
         self?.viewModel.didTapImageView()
       }
       .store(in: &self.subscriptions)
     
-    self.categoryTextField.publisher(for: UITapGestureRecognizer())
+    self.categoryTextField.gesture()
       .receive(on: DispatchQueue.main)
       .sink { [weak self] _ in
         self?.animateCategoryToggleImageView()
@@ -383,6 +376,8 @@ private extension ProductViewController {
 extension ProductViewController {
   private func setupNavigationBar() {
     self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: self.saveButton)
+    // UIBarButtonItem에 넣은 후에 isEnabled를 지정해야 정상 작동함..
+    self.saveButton.isEnabled = false
     self.navigationItem.leftBarButtonItem = UIBarButtonItem(customView: self.backButton)
   }
   

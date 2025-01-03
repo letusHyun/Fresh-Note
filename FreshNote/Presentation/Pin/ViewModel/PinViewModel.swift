@@ -18,11 +18,13 @@ protocol PinViewModelInput {
   func numberOfRowsInSection() -> Int
   func cellForRow(at indexPath: IndexPath) -> Product
   func didSelectRow(at indexPath: IndexPath)
+  func didTapPin(at indexPath: IndexPath)
 }
 
 protocol PinViewModelOutput {
   var errorPublisher: AnyPublisher<(any Error)?, Never> { get }
   var reloadDataPublisher: AnyPublisher<Void, Never> { get }
+  var deleteRowsPublisher: AnyPublisher<IndexPath, Never> { get }
 }
 
 protocol PinViewModel: PinViewModelInput, PinViewModelOutput { }
@@ -38,9 +40,11 @@ final class DefaultPinViewModel: PinViewModel {
   // MARK: - Output
   var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
   var reloadDataPublisher: AnyPublisher<Void, Never> { self.reloadDataSubject.eraseToAnyPublisher() }
+  var deleteRowsPublisher: AnyPublisher<IndexPath, Never> { self.deleteRowsSubject.eraseToAnyPublisher() }
   
   @Published private var error: (any Error)?
   private let reloadDataSubject: PassthroughSubject<Void, Never> = .init()
+  private let deleteRowsSubject: PassthroughSubject<IndexPath, Never> = .init()
   
   // MARK: - LifeCycle
   init(
@@ -59,7 +63,7 @@ final class DefaultPinViewModel: PinViewModel {
   }
   
   func viewWillAppear() {
-    self.fetchProductUseCase.fetchProducts()
+    self.fetchProductUseCase.fetchPinnedProducts()
       .receive(on: DispatchQueue.main)
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }
@@ -84,5 +88,34 @@ final class DefaultPinViewModel: PinViewModel {
     self.actions.showProduct(selectedProduct.did)
   }
   
+  func didTapPin(at indexPath: IndexPath) {
+    let product = self.dataSource[indexPath.row]
+    let updatedPinState = product.isPinned ? false : true
+    let updatingProduct = self.makeUpdatingProduct(product: product, updatedPinState: updatedPinState)
+    
+    self.updateProductUseCase.execute(product: updatingProduct, newImageData: nil)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.error = error
+      } receiveValue: { [weak self] _ in
+        self?.dataSource.remove(at: indexPath.row)
+        self?.deleteRowsSubject.send(indexPath)
+      }
+      .store(in: &self.subscriptions)
+  }
+  
   // MARK: - Private
+  private func makeUpdatingProduct(product: Product, updatedPinState: Bool) -> Product {
+    return Product(
+      did: product.did,
+      name: product.name,
+      expirationDate: product.expirationDate,
+      category: product.category,
+      memo: product.memo,
+      imageURL: product.imageURL,
+      isPinned: updatedPinState,
+      creationDate: product.creationDate
+    )
+  }
 }

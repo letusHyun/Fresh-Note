@@ -66,9 +66,9 @@ final class PhotoBottomSheetViewController: UIViewController {
   
   // MARK: - Private Helpers
   func bind() {
-    self.albumButton.publisher(for: UITapGestureRecognizer())
-      .receive(on: DispatchQueue.main)
+    self.albumButton.gesture()
       .sink { [weak self] _ in
+        // TODO: - Coordinator에서 정의
         let imagePickerController = UIImagePickerController()
         imagePickerController.delegate = self
         imagePickerController.sourceType = .photoLibrary
@@ -77,15 +77,13 @@ final class PhotoBottomSheetViewController: UIViewController {
       }
       .store(in: &self.subscriptions)
     
-    self.cameraButton.publisher(for: UITapGestureRecognizer())
-      .receive(on: DispatchQueue.main)
+    self.cameraButton.gesture()
       .sink { [weak self] _ in
         self?.viewModel.didTapCameraButton()
       }
       .store(in: &self.subscriptions)
     
-    self.deleteButton.publisher(for: UITapGestureRecognizer())
-      .receive(on: DispatchQueue.main)
+    self.deleteButton.gesture()
       .sink { [weak self] _ in
         self?.viewModel.didTapDeleteButton()
       }.store(in: &self.subscriptions)
@@ -120,6 +118,7 @@ final class PhotoBottomSheetViewController: UIViewController {
   }
 }
 
+// MARK: - UIImagePickerControllerDelegate, UINavigationControllerDelegate
 extension PhotoBottomSheetViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
   func imagePickerController(
     _ picker: UIImagePickerController,

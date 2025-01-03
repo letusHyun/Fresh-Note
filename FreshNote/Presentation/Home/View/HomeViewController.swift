@@ -97,6 +97,7 @@ extension HomeViewController {
     navigationItem.titleView = FreshNoteTitleView()
   }
   
+  // MARK: - Bind
   private func bind(to viewModel: any HomeViewModel) {
     viewModel.errorPublisher
       .receive(on: DispatchQueue.main)
@@ -131,6 +132,19 @@ extension HomeViewController {
         self?.tableView.reloadRows(at: indexPaths, with: .automatic)
       }
       .store(in: &self.subscriptions)
+    
+    viewModel.updatePinPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] indexPath, updatedPinState in
+        ActivityIndicatorView.shared.stopIndicating()
+        guard
+          let self,
+          let cell = self.tableView.cellForRow(at: indexPath) as? ProductCell
+        else { return }
+        
+        cell.configurePin(isPinned: updatedPinState)
+      }
+      .store(in: &self.subscriptions)
   }
 }
 
@@ -146,6 +160,7 @@ extension HomeViewController: UITableViewDataSource {
       for: indexPath
     ) as? ProductCell else { return UITableViewCell() }
     
+    cell.delegate = self
     let product = self.viewModel.cellForItemAt(indexPath: indexPath)
     cell.configure(product: product)
     
@@ -189,22 +204,31 @@ extension HomeViewController: UITableViewDelegate {
 // MARK: - Actions
 private extension HomeViewController {
   func bindActions() {
-    self.notificationButton.publisher(for: .touchUpInside)
+    self.notificationButton.tapPublisher
       .sink { [weak self] _ in
         self?.viewModel.didTapNotificationButton()
       }
       .store(in: &self.subscriptions)
     
-    self.searchButton.publisher(for: .touchUpInside)
+    self.searchButton.tapPublisher
       .sink { [weak self] _ in
         self?.viewModel.didTapSearchButton()
       }
       .store(in: &self.subscriptions)
     
-    self.addProductButton.publisher(for: .touchUpInside)
+    self.addProductButton.tapPublisher
       .sink { [weak self] _ in
         self?.viewModel.didTapAddProductButton()
       }
       .store(in: &self.subscriptions)
+  }
+}
+
+extension HomeViewController: ProductCellDelegate {
+  func didTapPin(in cell: UITableViewCell) {
+    guard let indexPath = self.tableView.indexPath(for: cell) else { return }
+    
+    ActivityIndicatorView.shared.startIndicating()
+    self.viewModel.didTapPin(at: indexPath)
   }
 }

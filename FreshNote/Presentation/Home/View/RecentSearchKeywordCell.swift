@@ -36,9 +36,9 @@ final class RecentSearchKeywordCell: UITableViewCell {
   // MARK: - LifeCycle
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
-    setupLayout()
-    setupStyle()
-    addTargets()
+    self.setupLayout()
+    self.setupStyle()
+    self.addTargets()
   }
   
   required init?(coder: NSCoder) {
@@ -47,43 +47,43 @@ final class RecentSearchKeywordCell: UITableViewCell {
   
   override func prepareForReuse() {
     super.prepareForReuse()
-    keywordLabel.text = nil
+    self.keywordLabel.text = nil
   }
 }
 
 // MARK: - Helpers
 extension RecentSearchKeywordCell {
   func configure(keyword: ProductQuery) {
-    keywordLabel.text = keyword.keyword
+    self.keywordLabel.text = keyword.keyword
   }
 }
 
 // MARK: - Private Helpers
 extension RecentSearchKeywordCell {
   private func addTargets() {
-    deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+    self.deleteButton.addTarget(self, action: #selector(self.deleteButtonTapped), for: .touchUpInside)
   }
   
   private func setupLayout() {
-    contentView.addSubview(keywordLabel)
-    contentView.addSubview(deleteButton)
+    self.contentView.addSubview(self.keywordLabel)
+    self.contentView.addSubview(self.deleteButton)
     
-    keywordLabel.translatesAutoresizingMaskIntoConstraints = false
-    deleteButton.translatesAutoresizingMaskIntoConstraints = false
+    self.keywordLabel.translatesAutoresizingMaskIntoConstraints = false
+    self.deleteButton.translatesAutoresizingMaskIntoConstraints = false
     
     NSLayoutConstraint.activate([
-      keywordLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-      keywordLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-      keywordLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 13),
-      keywordLabel.trailingAnchor.constraint(lessThanOrEqualTo: deleteButton.leadingAnchor, constant: -30)
+      self.keywordLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+      self.keywordLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+      self.keywordLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 13),
+      self.keywordLabel.trailingAnchor.constraint(lessThanOrEqualTo: self.deleteButton.leadingAnchor, constant: -30)
     ] + [
-      deleteButton.widthAnchor.constraint(equalToConstant: 20),
-      deleteButton.heightAnchor.constraint(equalTo: deleteButton.widthAnchor),
-      deleteButton.centerYAnchor.constraint(equalTo: keywordLabel.centerYAnchor),
-      deleteButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -15)
+      self.deleteButton.widthAnchor.constraint(equalToConstant: 20),
+      self.deleteButton.heightAnchor.constraint(equalTo: self.deleteButton.widthAnchor),
+      self.deleteButton.centerYAnchor.constraint(equalTo: self.keywordLabel.centerYAnchor),
+      self.deleteButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -15)
     ])
     
-    deleteButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+    self.deleteButton.setContentCompressionResistancePriority(.required, for: .horizontal)
   }
   
   private func setupStyle() {
@@ -94,6 +94,6 @@ extension RecentSearchKeywordCell {
 // MARK: - Actions
 private extension RecentSearchKeywordCell {
   @objc func deleteButtonTapped() {
-    delegate?.didTapDeleteButton(in: self)
+    self.delegate?.didTapDeleteButton(in: self)
   }
 }

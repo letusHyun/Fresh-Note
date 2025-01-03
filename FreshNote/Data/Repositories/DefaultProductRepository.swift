@@ -152,6 +152,13 @@ final class DefaultProductRepository: ProductRepository {
       .receive(on: self.backgroundQueue)
       .eraseToAnyPublisher()
   }
+  
+  func fetchPinnedProducts() -> AnyPublisher<[Product], any Error> {
+    return self.productStorage
+      .fetchPinnedProducts()
+      .receive(on: self.backgroundQueue)
+      .eraseToAnyPublisher()
+  }
 }
 
 // MARK: - Private Helpers

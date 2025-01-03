@@ -68,6 +68,14 @@ final class PinViewController: BaseViewController {
         self?.tableView.reloadData()
       }
       .store(in: &self.subscriptions)
+    
+    self.viewModel
+      .deleteRowsPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self]indexPath in
+        self?.tableView.deleteRows(at: [indexPath], with: .fade)
+      }
+      .store(in: &self.subscriptions)
   }
   
   private func setupNavigationBar() {
@@ -85,6 +93,7 @@ extension PinViewController: UITableViewDataSource {
     guard let cell = tableView.dequeueReusableCell(withIdentifier: ProductCell.id) as? ProductCell
     else {return UITableViewCell() }
     
+    cell.delegate = self
     let product = self.viewModel.cellForRow(at: indexPath)
     cell.configure(product: product)
     
@@ -104,5 +113,13 @@ extension PinViewController: UITableViewDelegate {
   
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     self.viewModel.didSelectRow(at: indexPath)
+  }
+}
+
+extension PinViewController: ProductCellDelegate {
+  func didTapPin(in cell: UITableViewCell) {
+    guard let indexPath = self.tableView.indexPath(for: cell) else { return }
+    
+    self.viewModel.didTapPin(at: indexPath)
   }
 }

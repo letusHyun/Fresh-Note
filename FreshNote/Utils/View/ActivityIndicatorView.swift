@@ -49,7 +49,7 @@ final class ActivityIndicatorView: UIView {
   }
   
   private func setupStyles() {
-    self.backgroundColor = .black.withAlphaComponent(0.05)
+    self.backgroundColor = .clear
   }
   
   // MARK: - Public

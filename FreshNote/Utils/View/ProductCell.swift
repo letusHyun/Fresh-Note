@@ -10,6 +10,10 @@ import UIKit
 
 import SnapKit
 
+protocol ProductCellDelegate: AnyObject {
+  func didTapPin(in cell: UITableViewCell)
+}
+
 final class ProductCell: UITableViewCell {
   // MARK: - Properteis
   static var id: String {
@@ -51,6 +55,7 @@ final class ProductCell: UITableViewCell {
   private let pinImageView: UIImageView = {
     let iv = UIImageView()
     iv.transform = CGAffineTransform(rotationAngle: CGFloat.pi / 4)
+    iv.isUserInteractionEnabled = true
     return iv
   }()
   
@@ -60,11 +65,14 @@ final class ProductCell: UITableViewCell {
     return dateFormatter
   }()
   
+  weak var delegate: (any ProductCellDelegate)?
+  
   // MARK: - LifeCycle
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
     self.setupLayout()
     self.setupLabelsStyle(labels: [self.nameLabel, self.expirationDateLabel, self.categoryLabel, self.memoLabel])
+    self.bind()
   }
   
   required init?(coder: NSCoder) {
@@ -92,14 +100,23 @@ extension ProductCell {
     self.categoryLabel.text = product.category
     self.memoLabel.text = product.memo
   }
+  
+  func configurePin(isPinned: Bool) {
+    let imageName = isPinned ? "pin.fill" : "pin"
+    self.pinImageView.image = UIImage(systemName: imageName)?
+      .withTintColor(.black, renderingMode: .alwaysOriginal)
+  }
 }
 
 // MARK: - Private Helpers
 extension ProductCell {
-  private func configurePin(isPinned: Bool) {
-    let imageName = isPinned ? "pin.fill" : "pin"
-    self.pinImageView.image = UIImage(systemName: imageName)?
-      .withTintColor(.black, renderingMode: .alwaysOriginal)
+  private func bind() {
+    self.pinImageView.gesture()
+      .sink { [weak self] _ in
+        guard let self else { return }
+        self.delegate?.didTapPin(in: self)
+      }
+      .store(in: &self.subscriptions)
   }
   
   private func configureProductImage(with imageURL: URL?) {

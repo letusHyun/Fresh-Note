@@ -121,7 +121,7 @@ extension NotificationViewController: UITableViewDelegate {
 // MARK: - Actions
 private extension NotificationViewController {
   func bindActions() {
-    backButton.publisher(for: .touchUpInside)
+    backButton.tapPublisher
       .sink { [weak self] _ in
         self?.viewModel.didTapBackButton()
       }

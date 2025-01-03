@@ -105,6 +105,20 @@ extension CoreDataProductStorage: ProductStorage {
     }
   }
   
+  func fetchPinnedProducts() -> AnyPublisher<[Product], any Error> {
+    return self.coreDataStorage.performBackgroundTask { context in
+      let request = ProductEntity.fetchRequest()
+      request.predicate = NSPredicate(format: "isPinned == %@", NSNumber(value: true))
+      
+      do {
+        let entities = try context.fetch(request)
+        return entities.map { $0.toDomain() }
+      } catch {
+        throw CoreDataStorageError.readError(error)
+      }
+    }
+  }
+  
   func deleteProduct(uid: String) -> AnyPublisher<Void, any Error> {
     return self.coreDataStorage.performBackgroundTask { [weak self] context in
       let request = ProductEntity.fetchRequest()

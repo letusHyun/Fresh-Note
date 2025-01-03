@@ -27,7 +27,8 @@ private extension MainSceneDIContainer {
     return DefaultHomeViewModel(
       actions: actions,
       fetchProductUseCase: self.makefetchProductUseCase(),
-      deleteProductUseCase: self.makeDeleteProductUseCase()
+      deleteProductUseCase: self.makeDeleteProductUseCase(),
+      updateProductUseCase: self.makeUpdateProductUseCase()
     )
   }
   

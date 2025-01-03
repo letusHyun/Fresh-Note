@@ -24,6 +24,7 @@ protocol HomeViewModelInput {
   func didTapSearchButton()
   func didTapAddProductButton()
   func didSelectRow(at indexPath: IndexPath)
+  func didTapPin(at indexPath: IndexPath)
 }
 
 protocol HomeViewModelOutput {
@@ -31,6 +32,7 @@ protocol HomeViewModelOutput {
   var deleteRowsPublisher: AnyPublisher<([IndexPath], (Bool) -> Void), Never> { get }
   var errorPublisher: AnyPublisher<(any Error)?, Never> { get }
   var reloadRowsPublisher: AnyPublisher<[IndexPath], Never> { get }
+  var updatePinPublisher: AnyPublisher<(IndexPath, Bool), Never> { get }
 }
 
 protocol HomeViewModel: HomeViewModelInput, HomeViewModelOutput {}
@@ -43,14 +45,18 @@ final class DefaultHomeViewModel: HomeViewModel {
   private var items = [Product]()
   private var dataSource: [Product] = []
   private var subscriptions = Set<AnyCancellable>()
+  
   private let fetchProductUseCase: any FetchProductUseCase
   private let deleteProductUseCase: any DeleteProductUseCase
+  private let updateProductUseCase: any UpdateProductUseCase
   
   // MARK: - Output
   private var reloadDataSubject: PassthroughSubject<Void, Never> = PassthroughSubject()
   private var deleteRowsSubject: PassthroughSubject<([IndexPath], SwipeCompletion), Never> = PassthroughSubject()
   private var reloadRowsSubject: PassthroughSubject<[IndexPath], Never> = PassthroughSubject()
+  private var updatePinSubject: PassthroughSubject<(IndexPath, Bool), Never> = PassthroughSubject()
   
+  var updatePinPublisher: AnyPublisher<(IndexPath, Bool), Never> { self.updatePinSubject.eraseToAnyPublisher() }
   var reloadDataPublisher: AnyPublisher<Void, Never> { self.reloadDataSubject.eraseToAnyPublisher() }
   var deleteRowsPublisher: AnyPublisher<([IndexPath], SwipeCompletion), Never>
   { self.deleteRowsSubject.eraseToAnyPublisher() }
@@ -62,11 +68,13 @@ final class DefaultHomeViewModel: HomeViewModel {
   // MARK: - LifeCycle
   init(actions: HomeViewModelActions,
        fetchProductUseCase: any FetchProductUseCase,
-       deleteProductUseCase: any DeleteProductUseCase
+       deleteProductUseCase: any DeleteProductUseCase,
+       updateProductUseCase: any UpdateProductUseCase
   ) {
     self.actions = actions
     self.fetchProductUseCase = fetchProductUseCase
     self.deleteProductUseCase = deleteProductUseCase
+    self.updateProductUseCase = updateProductUseCase
   }
   
   // MARK: - Input
@@ -126,5 +134,36 @@ final class DefaultHomeViewModel: HomeViewModel {
   func didSelectRow(at indexPath: IndexPath) {
     let product = self.dataSource[indexPath.row]
     self.actions.showProductPage(product.did)
+  }
+  
+  func didTapPin(at indexPath: IndexPath) {
+    let product = self.dataSource[indexPath.row]
+    let updatedPinState = product.isPinned ? false : true
+    let updatingProduct = self.makeUpdatingProduct(product: product, updatedPinState: updatedPinState)
+    
+    self.updateProductUseCase.execute(product: updatingProduct, newImageData: nil)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.error = error
+      } receiveValue: { [weak self] updatedProduct in
+        self?.dataSource[indexPath.row] = updatedProduct
+        self?.updatePinSubject.send((indexPath, updatedPinState))
+      }
+      .store(in: &self.subscriptions)
+  }
+  
+  // MARK: - Private
+  private func makeUpdatingProduct(product: Product, updatedPinState: Bool) -> Product {
+    return Product(
+      did: product.did,
+      name: product.name,
+      expirationDate: product.expirationDate,
+      category: product.category,
+      memo: product.memo,
+      imageURL: product.imageURL,
+      isPinned: updatedPinState,
+      creationDate: product.creationDate
+    )
   }
 }
