@@ -235,6 +235,10 @@ class BottomSheetViewController: BaseViewController {
   }
   
   // MARK: - Helpers
+  func hideBottomSheet() {
+    self.view.alpha = 0
+  }
+  
   func hideBottomSheetAndDismiss() {
     let safeAreaHeight = self.view.safeAreaLayoutGuide.layoutFrame.height
     let bottomPadding = self.safeAreaBottomHeight

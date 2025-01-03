@@ -13,9 +13,10 @@ struct ProductViewModelActions {
   typealias PassCategoryHandler = (String) -> Void
   
   let pop: () -> Void
-  let showPhotoBottomSheet: (@escaping (Data?) -> Void) -> Void
+  let showPhotoBottomSheet: () -> Void
   let showCategoryBottomSheet: (@escaping AnimateCategoryHandler,
                                 @escaping PassCategoryHandler) -> Void
+  let imageDataPublisher: AnyPublisher<Data, Never>
 }
 
 protocol ProductViewModel: ProductViewModelInput & ProductViewModelOutput { }
@@ -110,6 +111,8 @@ final class DefaultProductViewModel: ProductViewModel {
     self.fetchProductUseCase = fetchProductUseCase
     self.actions = actions
     self.mode = mode
+    
+    self.bind()
   }
   
   deinit {
@@ -169,6 +172,8 @@ final class DefaultProductViewModel: ProductViewModel {
     case .edit(_):
       guard let fetchedProduct = self.fetchedProduct else { return }
       
+      
+      
       let updatedProductExcludedImageURL = Product(
         did: fetchedProduct.did,
         name: name,
@@ -194,10 +199,7 @@ final class DefaultProductViewModel: ProductViewModel {
   }
   
   func didTapImageView() {
-    self.actions.showPhotoBottomSheet({ [weak self] data in
-      self?.isCustomImage = data != nil
-      self?.imageDataSubject.send(data)
-    })
+    self.actions.showPhotoBottomSheet()
   }
   
   func didTapCategoryTextField() {
@@ -272,6 +274,17 @@ final class DefaultProductViewModel: ProductViewModel {
   }
   
   // MARK: - Private Helpers
+  private func bind() {
+    /// 사용자가 이미지를 추가할때마다 호출됩니다.
+    self.actions.imageDataPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] imageData in
+        self?.isCustomImage = true
+        self?.imageDataSubject.send(imageData)
+      }
+      .store(in: &self.subscriptions)
+  }
+  
   private func validateDate(with dateString: String) {
     let associatedSring = "잘못된 유통기한입니다."
     
