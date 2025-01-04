@@ -35,6 +35,8 @@ final class ProductCoordinator: BaseCoordinator {
   
   private let imageDataSubject: PassthroughSubject<Data, Never> = PassthroughSubject()
   
+  private let deleteImageSubject: PassthroughSubject<Void, Never> = PassthroughSubject()
+  
   // MARK: - LifeCycle
   init(
     dependencies: any ProductCoordinatorDependencies,
@@ -63,7 +65,8 @@ final class ProductCoordinator: BaseCoordinator {
           animateCategoryHandler: animateCategoryHandler,
           passCategoryHandler: passCategoryHandler
         )
-      }, imageDataPublisher: self.imageDataSubject.eraseToAnyPublisher()
+      }, imageDataPublisher: self.imageDataSubject.eraseToAnyPublisher(),
+      deleteImagePublisher: self.deleteImageSubject.eraseToAnyPublisher()
     )
     
     let viewController = self.dependencies.makeProductViewController(actions: actions, mode: mode)
@@ -89,6 +92,8 @@ extension ProductCoordinator {
       self?.presentPhotoLibrary()
     }, presentCamera: { [weak self] in
       self?.presentCamera()
+    }, deleteImageAndDisMissBottomSheet: { [weak self] in
+      self?.deleteImageAndDisMissBottomSheet()
     })
     
     let photoBottomSheetViewController = self.dependencies.makePhotoBottomSheetViewController(actions: actions)
@@ -101,6 +106,11 @@ extension ProductCoordinator {
     
     bottomSheetViewController.modalPresentationStyle = .overFullScreen
     self.navigationController?.topViewController?.present(bottomSheetViewController, animated: false)
+  }
+  
+  private func deleteImageAndDisMissBottomSheet() {
+    self.deleteImageSubject.send()
+    self.dismissPhotoBottomSheet()
   }
   
   private func showCategoryBottomSheet(

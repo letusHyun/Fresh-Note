@@ -10,6 +10,7 @@ import Foundation
 struct PhotoBottomSheetViewModelActions {
   let presentPhotoLibrary: () -> Void
   let presentCamera: () -> Void
+  let deleteImageAndDisMissBottomSheet: () -> Void
 }
 
 typealias PhotoBottomSheetViewModel = PhotoBottomSheetViewModelInput & PhotoBottomSheetViewModelOutput
@@ -45,7 +46,6 @@ final class DefaultPhotoBottomSheetViewModel: PhotoBottomSheetViewModel {
   }
   
   func didTapDeleteButton() {
-    // 삭제 시, productVM에서 감지 해야 함.
-    print("현재 사진 삭제 탭")
+    self.actions.deleteImageAndDisMissBottomSheet()
   }
 }

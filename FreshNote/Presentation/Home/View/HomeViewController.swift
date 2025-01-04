@@ -91,10 +91,10 @@ extension HomeViewController {
   }
   
   private func setNavigationBar() {
-    navigationItem.leftBarButtonItem = UIBarButtonItem(customView: self.notificationButton)
+    self.navigationItem.leftBarButtonItem = UIBarButtonItem(customView: self.notificationButton)
     let rightBarButtonItems = [self.addProductButton, self.searchButton].map { UIBarButtonItem(customView: $0) }
-    navigationItem.rightBarButtonItems = rightBarButtonItems
-    navigationItem.titleView = FreshNoteTitleView()
+    self.navigationItem.rightBarButtonItems = rightBarButtonItems
+    self.navigationItem.titleView = FreshNoteTitleView()
   }
   
   // MARK: - Bind

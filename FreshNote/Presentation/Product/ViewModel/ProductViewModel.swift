@@ -17,6 +17,7 @@ struct ProductViewModelActions {
   let showCategoryBottomSheet: (@escaping AnimateCategoryHandler,
                                 @escaping PassCategoryHandler) -> Void
   let imageDataPublisher: AnyPublisher<Data, Never>
+  let deleteImagePublisher: AnyPublisher<Void, Never>
 }
 
 protocol ProductViewModel: ProductViewModelInput & ProductViewModelOutput { }
@@ -281,6 +282,14 @@ final class DefaultProductViewModel: ProductViewModel {
       .sink { [weak self] imageData in
         self?.isCustomImage = true
         self?.imageDataSubject.send(imageData)
+      }
+      .store(in: &self.subscriptions)
+    
+    self.actions.deleteImagePublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] in
+        self?.isCustomImage = false
+        self?.imageDataSubject.send(nil)
       }
       .store(in: &self.subscriptions)
   }
