@@ -14,12 +14,12 @@ struct CalendarViewModelActions {
 
 protocol CalendarViewModelInput {
   func viewDidLoad()
-  func viewWillAppear()
+  func viewWillAppear(calendarDateComponents: CalendarDateComponents)
   func cellForItem(at indexPath: IndexPath) -> Product
   func numberOfItemsInSection() -> Int
-  func didSelectDate(dateComponents: DateComponents)
-  func didDeselectDate(dateComponents: DateComponents)
-  func didChangeVisibleDateComponents(dateComponents: DateComponents)
+  func didSelectDate(calendarDateComponents: CalendarDateComponents)
+  func didDeselectDate(calendarDateComponents: CalendarDateComponents)
+  func didChangeVisibleDateComponents(calendarDateComponents: CalendarDateComponents)
   func didSelectItem(at indexPath: IndexPath)
 }
 
@@ -81,7 +81,7 @@ final class DefaultCalendarViewModel: CalendarViewModel {
     return self.filterdDataSource.count
   }
   
-  func viewWillAppear() {
+  func viewWillAppear(calendarDateComponents: CalendarDateComponents) {
     self.fetchProductUseCase
       .fetchProducts()
       .receive(on: DispatchQueue.main)
@@ -92,28 +92,35 @@ final class DefaultCalendarViewModel: CalendarViewModel {
         guard let self else { return }
         
         self.originDataSource = products
-        
-        let currentDateString = self.monthFormatter.string(from: Date())
-        
-        self.filterdDataSource = products.filter {
-          self.monthFormatter.string(from: $0.expirationDate) == currentDateString
+      
+        switch calendarDateComponents {
+        case let .day(dateComponents):
+          self.filterToProductsBasedOnDay(dateComponents: dateComponents)
+        case let .month(dateComponents):
+          self.filterToProductsBasedOnMonth(dateComponents: dateComponents)
+        case .currentMonth:
+          self.filterToProductsBasedOnCurrentMonth(with: products)
         }
-        
-        self.reloadDataSubject.send()
       }
       .store(in: &self.subscriptions)
   }
   
-  func didChangeVisibleDateComponents(dateComponents: DateComponents) {
-    self.filterToProductsBasedOnMonth(dateComponents: dateComponents)
+  func didChangeVisibleDateComponents(calendarDateComponents: CalendarDateComponents) {
+    if case let .month(dateComponents) = calendarDateComponents {
+      self.filterToProductsBasedOnMonth(dateComponents: dateComponents)
+    }
   }
   
-  func didSelectDate(dateComponents: DateComponents) {
-    self.filterToProductsBasedOnDay(dateComponents: dateComponents)
+  func didSelectDate(calendarDateComponents: CalendarDateComponents) {
+    if case let .day(dateComponents) = calendarDateComponents {
+      self.filterToProductsBasedOnDay(dateComponents: dateComponents)
+    }
   }
   
-  func didDeselectDate(dateComponents: DateComponents) {
-    self.filterToProductsBasedOnMonth(dateComponents: dateComponents)
+  func didDeselectDate(calendarDateComponents: CalendarDateComponents) {
+    if case let .month(dateComponents) = calendarDateComponents {
+      self.filterToProductsBasedOnMonth(dateComponents: dateComponents)
+    }
   }
   
   func didSelectItem(at indexPath: IndexPath) {
@@ -122,6 +129,16 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   }
   
   // MARK: - Private
+  private func filterToProductsBasedOnCurrentMonth(with products: [Product]) {
+    let currentDateString = self.monthFormatter.string(from: Date())
+    
+    self.filterdDataSource = products.filter {
+      self.monthFormatter.string(from: $0.expirationDate) == currentDateString
+    }
+    
+    self.reloadDataSubject.send()
+  }
+  
   private func filterToProductsBasedOnDay(dateComponents: DateComponents) {
     guard let date = dateComponents.date else { return }
     

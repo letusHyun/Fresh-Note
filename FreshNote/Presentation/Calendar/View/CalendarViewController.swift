@@ -46,8 +46,26 @@ final class CalendarViewController: BaseViewController {
   private var subscriptions: Set<AnyCancellable> = []
   
   /// date가 선택되었는지 판별하는 값입니다. nil이면 선택되지 않음을 의미합니다.
-  // TODO: - erase
-  private var selectedDateComponents: DateComponents? = nil
+
+  private var selectedDayComponents: DateComponents? {
+    didSet {
+      if self.selectedDayComponents != nil {
+        self.selectedMonthComponents = nil
+      }
+    }
+  }
+  
+  private var selectedMonthComponents: DateComponents? {
+    didSet {
+      if self.selectedMonthComponents != nil {
+        self.selectedDayComponents = nil
+      }
+    }
+  }
+  
+  private var isSelectedDay: Bool {
+    return self.selectedDayComponents != nil
+  }
   
   // MARK: - LifeCycle
   init(viewModel: any CalendarViewModel) {
@@ -70,15 +88,13 @@ final class CalendarViewController: BaseViewController {
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
     
-    self.viewModel.viewWillAppear()
-    // 현재 날짜가 선택됐는지 선택되지 않았는지 판별
-      // 선택 됐으면 date 선택된 호출
-      // 선택되지 않았으면 month 호출
-    
-    
-    // 날짜 선택 판별 값은 선택된 date의 옵셔널로 지정
-    // 값이 nil이면 선택되지 않음
-    // 값이 존재하면 해당 날짜가 선택됨을 의미
+    if self.isSelectedDay, let selectedDayComponents = self.selectedDayComponents {
+      self.viewModel.viewWillAppear(calendarDateComponents: .day(selectedDayComponents))
+    } else if let selectedMonthComponents = self.selectedMonthComponents {
+      self.viewModel.viewWillAppear(calendarDateComponents: .month(selectedMonthComponents))
+    } else {
+      self.viewModel.viewWillAppear(calendarDateComponents: .currentMonth)
+    }
   }
   
   // MARK: - UI
@@ -113,34 +129,6 @@ final class CalendarViewController: BaseViewController {
   }
 }
 
-// MARK: - UICalendarSelectionSingleDateDelegate
-//extension CalendarViewController: UICalendarSelectionSingleDateDelegate {
-//  func dateSelection(
-//    _ selection: UICalendarSelectionSingleDate,
-//    didSelectDate dateComponents: DateComponents?
-//  ) {
-//    guard let newDateComponents = dateComponents else {
-//      return
-//    }
-//    let isSelectedDate = self.selectedDateComponents != nil
-//    
-//    // 선택된 날짜가 존재한다면
-//    if let previousDateComponents = self.selectedDateComponents {
-//      // 애니메이션 해제
-//      selection.setSelected(nil, animated: true)
-//      // 변수 선택되지 않음으로 변경
-//      self.selectedDateComponents = nil
-//      // month fetch
-//      self.viewModel.didSelectDate(dateComponents: newDateComponents, isSelectedDate: isSelectedDate)
-//    } else { // 선택된 날짜가 존재하지 않는다면
-//      // 변수 선택으로 변경
-//      self.selectedDateComponents = newDateComponents
-//      // day fetch
-//      self.viewModel.didSelectDate(dateComponents: newDateComponents, isSelectedDate: isSelectedDate)
-//    }
-//  }
-//}
-
 extension CalendarViewController: UICalendarSelectionMultiDateDelegate {
   func multiDateSelection(
     _ selection: UICalendarSelectionMultiDate,
@@ -148,14 +136,14 @@ extension CalendarViewController: UICalendarSelectionMultiDateDelegate {
   ) {
     selection.selectedDates = [dateComponents]
     
-    self.viewModel.didSelectDate(dateComponents: dateComponents)
+    self.viewModel.didSelectDate(calendarDateComponents: .day(dateComponents))
   }
   
   func multiDateSelection(
     _ selection: UICalendarSelectionMultiDate,
     didDeselectDate dateComponents: DateComponents
   ) {
-    self.viewModel.didDeselectDate(dateComponents: dateComponents)
+    self.viewModel.didDeselectDate(calendarDateComponents: .month(dateComponents))
   }
 }
 
@@ -210,6 +198,8 @@ extension CalendarViewController: UICalendarViewDelegate {
     _ calendarView: UICalendarView,
     didChangeVisibleDateComponentsFrom previousDateComponents: DateComponents
   ) {
-    self.viewModel.didChangeVisibleDateComponents(dateComponents: calendarView.visibleDateComponents)
+    self.viewModel.didChangeVisibleDateComponents(
+      calendarDateComponents: .month(calendarView.visibleDateComponents)
+    )
   }
 }
