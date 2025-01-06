@@ -17,7 +17,8 @@ protocol CalendarViewModelInput {
   func viewWillAppear()
   func cellForItem(at indexPath: IndexPath) -> Product
   func numberOfItemsInSection() -> Int
-  func didSelectDate(dateComponents: DateComponents?)
+  func didSelectDate(dateComponents: DateComponents)
+  func didDeselectDate(dateComponents: DateComponents)
   func didChangeVisibleDateComponents(dateComponents: DateComponents)
   func didSelectItem(at indexPath: IndexPath)
 }
@@ -104,19 +105,25 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   }
   
   func didChangeVisibleDateComponents(dateComponents: DateComponents) {
-    let year = String(format: "%02d", (dateComponents.year ?? .zero) % 100)
-    let month = String(format: "%02d", dateComponents.month ?? .zero)
-    let changedDateString = "\(year).\(month)"
-  
-    self.filterdDataSource = self.originDataSource.filter {
-      self.monthFormatter.string(from: $0.expirationDate) == changedDateString
-    }
-    
-    self.reloadDataSubject.send()
+    self.filterToProductsBasedOnMonth(dateComponents: dateComponents)
   }
   
-  func didSelectDate(dateComponents: DateComponents?) {
-    guard let date = dateComponents?.date else { return }
+  func didSelectDate(dateComponents: DateComponents) {
+    self.filterToProductsBasedOnDay(dateComponents: dateComponents)
+  }
+  
+  func didDeselectDate(dateComponents: DateComponents) {
+    self.filterToProductsBasedOnMonth(dateComponents: dateComponents)
+  }
+  
+  func didSelectItem(at indexPath: IndexPath) {
+    let productID = filterdDataSource[indexPath.item].did
+    self.actions.showProduct(productID)
+  }
+  
+  // MARK: - Private
+  private func filterToProductsBasedOnDay(dateComponents: DateComponents) {
+    guard let date = dateComponents.date else { return }
     
     let dateFormatter = DateFormatManager()
     let selectedDateString = dateFormatter.string(from: date)
@@ -128,8 +135,15 @@ final class DefaultCalendarViewModel: CalendarViewModel {
     self.reloadDataSubject.send()
   }
   
-  func didSelectItem(at indexPath: IndexPath) {
-    let productID = filterdDataSource[indexPath.item].did
-    self.actions.showProduct(productID)
+  private func filterToProductsBasedOnMonth(dateComponents: DateComponents) {
+    let year = String(format: "%02d", (dateComponents.year ?? .zero) % 100)
+    let month = String(format: "%02d", dateComponents.month ?? .zero)
+    let changedDateString = "\(year).\(month)"
+  
+    self.filterdDataSource = self.originDataSource.filter {
+      self.monthFormatter.string(from: $0.expirationDate) == changedDateString
+    }
+    
+    self.reloadDataSubject.send()
   }
 }

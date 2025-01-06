@@ -106,7 +106,6 @@ final class CalendarProductCell: UICollectionViewCell {
     self.categoryTagLabel.snp.makeConstraints {
       $0.top.equalTo(self.expirationTagLabel.snp.bottom).offset(2)
       $0.leading.equalToSuperview().inset(10)
-//      $0.bottom.equalToSuperview().inset(2)
     }
     self.categoryTagLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
     

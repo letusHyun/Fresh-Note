@@ -46,6 +46,7 @@ final class PinViewController: BaseViewController {
   
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
+    ActivityIndicatorView.shared.startIndicating()
     self.viewModel.viewWillAppear()
   }
   
@@ -62,9 +63,21 @@ final class PinViewController: BaseViewController {
   // MARK: - Private
   private func bind(to viewModel: any PinViewModel) {
     self.viewModel
+      .errorPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { error in
+        guard let error = error else { return }
+        
+        // MARK: - Error 핸들링
+        ActivityIndicatorView.shared.stopIndicating()
+      }
+      .store(in: &self.subscriptions)
+    
+    self.viewModel
       .reloadDataPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] _ in
+        ActivityIndicatorView.shared.stopIndicating()
         self?.tableView.reloadData()
       }
       .store(in: &self.subscriptions)
@@ -73,6 +86,7 @@ final class PinViewController: BaseViewController {
       .deleteRowsPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self]indexPath in
+        ActivityIndicatorView.shared.stopIndicating()
         self?.tableView.deleteRows(at: [indexPath], with: .fade)
       }
       .store(in: &self.subscriptions)
@@ -120,6 +134,7 @@ extension PinViewController: ProductCellDelegate {
   func didTapPin(in cell: UITableViewCell) {
     guard let indexPath = self.tableView.indexPath(for: cell) else { return }
     
+    ActivityIndicatorView.shared.startIndicating()
     self.viewModel.didTapPin(at: indexPath)
   }
 }
