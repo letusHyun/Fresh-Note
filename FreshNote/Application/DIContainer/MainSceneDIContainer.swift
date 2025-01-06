@@ -75,6 +75,10 @@ private extension MainSceneDIContainer {
     )
   }
   
+  func makeCategoryViewModel(actions: CategoryViewModelActions) -> any CategoryViewModel {
+    return DefaultCategoryViewModel(actions: actions)
+  }
+  
   // MARK: - Domain Layer
   func makeRecentProductQueriesUseCase() -> any RecentProductQueriesUseCase {
     return DefaultRecentProductQueriesUseCase(productQueriesRepository: self.makeProductQueriesRepository())
@@ -141,6 +145,10 @@ private extension MainSceneDIContainer {
 
 // MARK: - MainCoordinatorDependencies
 extension MainSceneDIContainer: MainCoordinatorDependencies {
+  func makeCategoryCoordinator(navigationController: UINavigationController) -> CategoryCoordinater {
+    return CategoryCoordinater(navigationController: navigationController, dependencies: self)
+  }
+  
   func makePinCoordinator(navigationController: UINavigationController) -> PinCoordinator {
     return PinCoordinator(navigationController: navigationController, dependencies: self)
   }
@@ -209,6 +217,12 @@ extension MainSceneDIContainer: CalendarCoordinatorDependencies {
   
   func makeCalendarViewController(actions: CalendarViewModelActions) -> CalendarViewController {
     return CalendarViewController(viewModel: self.makeCalendarViewModel(actions: actions))
+  }
+}
+
+extension MainSceneDIContainer: CategoryCoordinaterDependencies {
+  func makeCategoryViewController(actions: CategoryViewModelActions) -> CategoryViewController {
+    return CategoryViewController(viewModel: self.makeCategoryViewModel(actions: actions))
   }
 }
 

@@ -21,8 +21,6 @@ class CalendarCoordinator: BaseCoordinator {
   // MARK: - Properties
   private let dependencies: any CalendarCoordinatorDependencies
   
-//  private let productSubject = PassthroughSubject<Product?, Never>()
-  
   // MARK: - LifeCycle
   init(navigationController: UINavigationController?, dependencies: any CalendarCoordinatorDependencies) {
     self.dependencies = dependencies
@@ -56,6 +54,7 @@ class CalendarCoordinator: BaseCoordinator {
   }
 }
 
+// MARK: - CoordinatorFinishDelegate
 extension CalendarCoordinator: CoordinatorFinishDelegate {
   func coordinatorDidFinish(_ childCoordinator: BaseCoordinator) {
     childCoordinator.childCoordinators.removeValue(forKey: childCoordinator.identifier)

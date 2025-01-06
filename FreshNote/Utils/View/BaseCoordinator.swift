@@ -24,6 +24,6 @@ class BaseCoordinator: NSObject {
   /// 상위 코디네이터에게 현재 코디네이터를 삭제할 것을 요청합니다.
   /// 만약 상위 코디네이터에게 데이터를 전달해야 한다면, finishDelegate 및 finish를 직접 정의해야 합니다.
   func finish() {
-    finishDelegate?.coordinatorDidFinish(self)
+    self.finishDelegate?.coordinatorDidFinish(self)
   }
 }

@@ -1,5 +1,5 @@
 //
-//  Category.swift
+//  ProductCategory.swift
 //  FreshNote
 //
 //  Created by SeokHyun on 11/23/24.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum Category: String, CaseIterable {
+enum ProductCategory: String, CaseIterable {
   case 과일
   case 채소
   case 정육_계란 = "정육 / 계란"
