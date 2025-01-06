@@ -22,7 +22,11 @@ final class CalendarViewController: BaseViewController {
     calendarView.locale = Locale(identifier: "ko_KR")
     calendarView.fontDesign = .default
     calendarView.delegate = self
-    calendarView.selectionBehavior = UICalendarSelectionSingleDate(delegate: self)
+//    calendarView.selectionBehavior = UICalendarSelectionSingleDate(delegate: self)
+    
+    let selection = UICalendarSelectionMultiDate(delegate: self)
+    calendarView.selectionBehavior = selection
+    
     return calendarView
   }()
   
@@ -41,6 +45,10 @@ final class CalendarViewController: BaseViewController {
   
   private var subscriptions: Set<AnyCancellable> = []
   
+  /// date가 선택되었는지 판별하는 값입니다. nil이면 선택되지 않음을 의미합니다.
+  // TODO: - erase
+  private var selectedDateComponents: DateComponents? = nil
+  
   // MARK: - LifeCycle
   init(viewModel: any CalendarViewModel) {
     self.viewModel = viewModel
@@ -56,12 +64,21 @@ final class CalendarViewController: BaseViewController {
     defer { self.viewModel.viewDidLoad() }
     
     self.bind(to: self.viewModel)
+    self.setupNavigationBar()
   }
   
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
     
     self.viewModel.viewWillAppear()
+    // 현재 날짜가 선택됐는지 선택되지 않았는지 판별
+      // 선택 됐으면 date 선택된 호출
+      // 선택되지 않았으면 month 호출
+    
+    
+    // 날짜 선택 판별 값은 선택된 date의 옵셔널로 지정
+    // 값이 nil이면 선택되지 않음
+    // 값이 존재하면 해당 날짜가 선택됨을 의미
   }
   
   // MARK: - UI
@@ -82,6 +99,10 @@ final class CalendarViewController: BaseViewController {
   }
   
   // MARK: - Privates
+  private func setupNavigationBar() {
+    self.navigationItem.title = "캘린더"
+  }
+  
   private func bind(to viewModel: any CalendarViewModel) {
     viewModel.reloadDataPublisher
       .receive(on: DispatchQueue.main)
@@ -93,12 +114,48 @@ final class CalendarViewController: BaseViewController {
 }
 
 // MARK: - UICalendarSelectionSingleDateDelegate
-extension CalendarViewController: UICalendarSelectionSingleDateDelegate {
-  func dateSelection(
-    _ selection: UICalendarSelectionSingleDate,
-    didSelectDate dateComponents: DateComponents?
+//extension CalendarViewController: UICalendarSelectionSingleDateDelegate {
+//  func dateSelection(
+//    _ selection: UICalendarSelectionSingleDate,
+//    didSelectDate dateComponents: DateComponents?
+//  ) {
+//    guard let newDateComponents = dateComponents else {
+//      return
+//    }
+//    let isSelectedDate = self.selectedDateComponents != nil
+//    
+//    // 선택된 날짜가 존재한다면
+//    if let previousDateComponents = self.selectedDateComponents {
+//      // 애니메이션 해제
+//      selection.setSelected(nil, animated: true)
+//      // 변수 선택되지 않음으로 변경
+//      self.selectedDateComponents = nil
+//      // month fetch
+//      self.viewModel.didSelectDate(dateComponents: newDateComponents, isSelectedDate: isSelectedDate)
+//    } else { // 선택된 날짜가 존재하지 않는다면
+//      // 변수 선택으로 변경
+//      self.selectedDateComponents = newDateComponents
+//      // day fetch
+//      self.viewModel.didSelectDate(dateComponents: newDateComponents, isSelectedDate: isSelectedDate)
+//    }
+//  }
+//}
+
+extension CalendarViewController: UICalendarSelectionMultiDateDelegate {
+  func multiDateSelection(
+    _ selection: UICalendarSelectionMultiDate,
+    didSelectDate dateComponents: DateComponents
   ) {
+    selection.selectedDates = [dateComponents]
+    
     self.viewModel.didSelectDate(dateComponents: dateComponents)
+  }
+  
+  func multiDateSelection(
+    _ selection: UICalendarSelectionMultiDate,
+    didDeselectDate dateComponents: DateComponents
+  ) {
+    self.viewModel.didDeselectDate(dateComponents: dateComponents)
   }
 }
 

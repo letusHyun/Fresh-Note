@@ -7,7 +7,7 @@
 
 import UIKit
 
-class BaseCoordinator {
+class BaseCoordinator: NSObject {
   // MARK: - Properties
   /// parentCoordiantor에서 childCoordinator를 생성하면 finishDelegate의 참조를 설정해주어야 합니다.
   weak var finishDelegate: CoordinatorFinishDelegate?

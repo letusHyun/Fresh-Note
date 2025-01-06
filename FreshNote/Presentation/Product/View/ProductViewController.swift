@@ -252,8 +252,13 @@ private extension ProductViewController {
     
     self.viewModel.imageDataPublisher
       .receive(on: DispatchQueue.main)
-      .compactMap { $0 }
       .sink { [weak self] data in
+        guard let data = data else {
+          self?.imageView.image = UIImage(systemName: "camera")?
+            .withInsets(.init(top: 28, left: 28, bottom: 28, right: 28))
+          return
+        }
+        
         self?.imageView.image = UIImage(data: data)
       }
       .store(in: &self.subscriptions)

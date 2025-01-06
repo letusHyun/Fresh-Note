@@ -68,12 +68,7 @@ final class PhotoBottomSheetViewController: UIViewController {
   func bind() {
     self.albumButton.gesture()
       .sink { [weak self] _ in
-        // TODO: - Coordinator에서 정의
-        let imagePickerController = UIImagePickerController()
-        imagePickerController.delegate = self
-        imagePickerController.sourceType = .photoLibrary
-        self?.present(imagePickerController, animated: true)
-//        self?.viewModel.didTapAlbumButton()
+        self?.viewModel.didTapAlbumButton()
       }
       .store(in: &self.subscriptions)
     
@@ -114,21 +109,6 @@ final class PhotoBottomSheetViewController: UIViewController {
       $0.leading.trailing.equalToSuperview().inset(16.5)
       $0.bottom.equalToSuperview().inset(14)
       $0.height.equalTo(buttonHeight * 3)
-    }
-  }
-}
-
-// MARK: - UIImagePickerControllerDelegate, UINavigationControllerDelegate
-extension PhotoBottomSheetViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-  func imagePickerController(
-    _ picker: UIImagePickerController,
-    didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
-  ) {
-    if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage,
-       let imageData = image.jpegData(compressionQuality: 0.8) {
-      picker.dismiss(animated: true)
-      
-      self.viewModel.didFinishPickingMediaWithInfo(data: imageData)
     }
   }
 }

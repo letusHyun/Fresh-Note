@@ -36,17 +36,17 @@ final class MainCoordinator: BaseCoordinator {
   func start() {
     // TODO: - 나머지 탭들도 구성해야합니다.
     // tabBarController에 들어갈 window에서 알 필요가 없기 때문에 내비컨들은 여기서 만들어주는것이 적합함
-    let homeNavigationController = self.makeNavigationController(
+    let homeNavigationController = self.makeHomeNavigationController(
       title: "홈",
       tabBarImage: UIImage(systemName: "house"),
       tag: 0
     )
-    let calendarNavigationController = self.makeNavigationController(
+    let calendarNavigationController = self.makeNavigationControllerWithTitle(
       title: "캘린더",
       tabBarImage: UIImage(systemName: "calendar"),
       tag: 1
     )
-    let pinNavigationController = self.makePinNavigationController(
+    let pinNavigationController = self.makeNavigationControllerWithTitle(
       title: "핀",
       tabBarImage: UIImage(systemName: "pin"),
       tag: 2
@@ -80,7 +80,11 @@ final class MainCoordinator: BaseCoordinator {
   }
   
   // MARK: - Private
-  private func makeNavigationController(title: String, tabBarImage: UIImage?, tag: Int) -> UINavigationController {
+  private func makeHomeNavigationController(
+    title: String,
+    tabBarImage: UIImage?,
+    tag: Int
+  ) -> UINavigationController {
     let navigationController = UINavigationController()
     navigationController.setupBarAppearance()
     
@@ -94,11 +98,15 @@ final class MainCoordinator: BaseCoordinator {
     return navigationController
   }
   
-  private func makePinNavigationController(title: String, tabBarImage: UIImage?, tag: Int) -> UINavigationController {
+  
+  private func makeNavigationControllerWithTitle(
+    title: String,
+    tabBarImage: UIImage?,
+    tag: Int
+  ) -> UINavigationController {
     let navigationController = UINavigationController()
     let appearance = UINavigationBarAppearance()
     appearance.configureWithTransparentBackground()
-    appearance.backgroundColor = UIColor(fnColor: .realBack)
     appearance.titleTextAttributes = [
       .font: UIFont.pretendard(size: 20, weight: ._700)
     ]
