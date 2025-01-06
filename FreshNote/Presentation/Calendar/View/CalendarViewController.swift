@@ -22,11 +22,10 @@ final class CalendarViewController: BaseViewController {
     calendarView.locale = Locale(identifier: "ko_KR")
     calendarView.fontDesign = .default
     calendarView.delegate = self
-//    calendarView.selectionBehavior = UICalendarSelectionSingleDate(delegate: self)
     
     let selection = UICalendarSelectionMultiDate(delegate: self)
     calendarView.selectionBehavior = selection
-    
+    calendarView.tintColor = UIColor(fnColor: .orange2)
     return calendarView
   }()
   
@@ -45,8 +44,7 @@ final class CalendarViewController: BaseViewController {
   
   private var subscriptions: Set<AnyCancellable> = []
   
-  /// date가 선택되었는지 판별하는 값입니다. nil이면 선택되지 않음을 의미합니다.
-
+  /// day를 선택했을 때 저장하는 변수입니다.
   private var selectedDayComponents: DateComponents? {
     didSet {
       if self.selectedDayComponents != nil {
@@ -55,6 +53,7 @@ final class CalendarViewController: BaseViewController {
     }
   }
   
+  /// day를 선택하지 않고 month만 선택했을 때 저장하는 변수입니다.
   private var selectedMonthComponents: DateComponents? {
     didSet {
       if self.selectedMonthComponents != nil {
@@ -126,16 +125,24 @@ final class CalendarViewController: BaseViewController {
         self?.collectionView.reloadData()
       }
       .store(in: &self.subscriptions)
+    
+    viewModel.reloadDecorationsPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] dateComponentsArray in
+        self?.calendarView.reloadDecorations(forDateComponents: dateComponentsArray, animated: false)
+      }
+      .store(in: &self.subscriptions)
   }
 }
 
+// MARK: - UICalendarSelectionMultiDateDelegate
 extension CalendarViewController: UICalendarSelectionMultiDateDelegate {
   func multiDateSelection(
     _ selection: UICalendarSelectionMultiDate,
     didSelectDate dateComponents: DateComponents
   ) {
     selection.selectedDates = [dateComponents]
-    
+    self.selectedDayComponents = dateComponents
     self.viewModel.didSelectDate(calendarDateComponents: .day(dateComponents))
   }
   
@@ -184,6 +191,7 @@ extension CalendarViewController: UICollectionViewDelegateFlowLayout {
     
     let edgeInset = collectionView.contentInset.left + collectionView.contentInset.right
     let width: CGFloat = (self.view.bounds.width - edgeInset - layout.minimumInteritemSpacing) / 2
+    
     return CGSize(width: width, height: 50)
   }
   
@@ -198,8 +206,25 @@ extension CalendarViewController: UICalendarViewDelegate {
     _ calendarView: UICalendarView,
     didChangeVisibleDateComponentsFrom previousDateComponents: DateComponents
   ) {
+    if let selection = self.calendarView.selectionBehavior as? UICalendarSelectionMultiDate {
+      self.selectedDayComponents = nil
+      self.selectedMonthComponents = calendarView.visibleDateComponents
+      selection.setSelectedDates([], animated: false)
+    }
+    
     self.viewModel.didChangeVisibleDateComponents(
       calendarDateComponents: .month(calendarView.visibleDateComponents)
     )
+  }
+  
+  func calendarView(
+    _ calendarView: UICalendarView,
+    decorationFor dateComponents: DateComponents
+  ) -> UICalendarView.Decoration? {
+    guard let targetDate = Calendar.current.date(from: dateComponents) else { return nil }
+    
+    return self.viewModel.hasEvent(decorationFor: targetDate)
+    ? .default(color: UIColor.init(fnColor: .orange2))
+    : nil
   }
 }

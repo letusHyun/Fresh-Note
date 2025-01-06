@@ -21,11 +21,13 @@ protocol CalendarViewModelInput {
   func didDeselectDate(calendarDateComponents: CalendarDateComponents)
   func didChangeVisibleDateComponents(calendarDateComponents: CalendarDateComponents)
   func didSelectItem(at indexPath: IndexPath)
+  func hasEvent(decorationFor date: Date) -> Bool
 }
 
 protocol CalendarViewModelOutput {
   var errorPublisher: AnyPublisher<(any Error)?, Never> { get }
   var reloadDataPublisher: AnyPublisher<Void, Never> { get }
+  var reloadDecorationsPublisher: AnyPublisher<[DateComponents], Never> { get }
 }
 
 protocol CalendarViewModel: CalendarViewModelInput & CalendarViewModelOutput { }
@@ -56,8 +58,12 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   // MARK: - Output
   var reloadDataPublisher: AnyPublisher<Void, Never> { self.reloadDataSubject.eraseToAnyPublisher() }
   var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
+  var reloadDecorationsPublisher: AnyPublisher<[DateComponents], Never> {
+    self.reloadDecorationsSubject.eraseToAnyPublisher()
+  }
   
   private let reloadDataSubject: PassthroughSubject<Void, Never> = .init()
+  private let reloadDecorationsSubject: PassthroughSubject<[DateComponents], Never> = .init()
   
   // MARK: - LifeCycle
   init(
@@ -101,6 +107,12 @@ final class DefaultCalendarViewModel: CalendarViewModel {
         case .currentMonth:
           self.filterToProductsBasedOnCurrentMonth(with: products)
         }
+        
+        let calendar = Calendar.current
+        let dateComponents = self.filterdDataSource.map {
+          calendar.dateComponents([.year, .month, .day], from: $0.expirationDate)
+        }
+        self.reloadDecorationsSubject.send(dateComponents)
       }
       .store(in: &self.subscriptions)
   }
@@ -126,6 +138,19 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   func didSelectItem(at indexPath: IndexPath) {
     let productID = filterdDataSource[indexPath.item].did
     self.actions.showProduct(productID)
+  }
+  
+  func hasEvent(decorationFor date: Date) -> Bool {
+    let dateFormatter = DateFormatManager()
+    let screenDateString = dateFormatter.makeYearMonthDay(date: date).joined(separator: ".")
+    
+    return self.filterdDataSource.contains { product in
+      let expirationDateString = dateFormatter
+        .makeYearMonthDay(date: product.expirationDate)
+        .joined(separator: ".")
+
+      return expirationDateString == screenDateString
+    }
   }
   
   // MARK: - Private

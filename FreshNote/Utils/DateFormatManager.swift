@@ -32,4 +32,8 @@ struct DateFormatManager {
   func date(from string: String) -> Date? {
     return dateFormatter.date(from: string)
   }
+  
+  func makeYearMonthDay(date: Date) -> [String] {
+    return dateFormatter.string(from: date).components(separatedBy: ".")
+  }
 }
