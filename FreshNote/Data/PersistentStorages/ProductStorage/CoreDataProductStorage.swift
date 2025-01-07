@@ -172,7 +172,7 @@ extension CoreDataProductStorage: ProductStorage {
     return self.coreDataStorage.performBackgroundTask { context in
       let request = ProductEntity.fetchRequest()
       request.predicate = NSPredicate(
-        format: format: "\(ProductEntity.PropertyName.category.rawValue) == %@",
+        format: "\(ProductEntity.PropertyName.category.rawValue) == %@",
         category
       )
       

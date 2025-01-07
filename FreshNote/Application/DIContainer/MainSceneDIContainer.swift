@@ -79,8 +79,16 @@ private extension MainSceneDIContainer {
     return DefaultCategoryViewModel(actions: actions)
   }
   
-  func makeCategoryDetailViewModel(actions: CategoryDetailViewModelActions) -> any CategoryDetailViewModel {
-    return DefaultCategoryDetailViewModel(actions: actions)
+  func makeCategoryDetailViewModel(
+    actions: CategoryDetailViewModelActions,
+    category: ProductCategory
+  ) -> any CategoryDetailViewModel {
+    return DefaultCategoryDetailViewModel(
+      actions: actions,
+      category: category,
+      fetchProductUseCase: self.makefetchProductUseCase(),
+      updateProductUseCase: self.makeUpdateProductUseCase()
+    )
   }
   
   // MARK: - Domain Layer
@@ -224,7 +232,18 @@ extension MainSceneDIContainer: CalendarCoordinatorDependencies {
   }
 }
 
+// MARK: - CategoryCoordinatorDependencies
 extension MainSceneDIContainer: CategoryCoordinatorDependencies {
+  func makeCategoryDetailCoordinator(
+    navigationController: UINavigationController?,
+    category: ProductCategory
+  ) -> CategoryDetailCoordinator {
+    return CategoryDetailCoordinator(
+      navigationController: navigationController, category: category,
+      dependencies: self
+    )
+  }
+  
   func makeCategoryViewController(actions: CategoryViewModelActions) -> CategoryViewController {
     return CategoryViewController(viewModel: self.makeCategoryViewModel(actions: actions))
   }
@@ -270,18 +289,11 @@ extension MainSceneDIContainer: ProductCoordinatorDependencies {
 
 // MARK: - CategoryDetailCoordinatorDependencies
 extension MainSceneDIContainer: CategoryDetailCoordinatorDependencies {
-  func makeCategoryDetailViewController(actions: CategoryDetailViewModelActions) -> CategoryDetailViewController {
-    CategoryDetailViewController(viewModel: self.makeCategoryDetailViewModel(actions: actions))
-  }
-  
-  func makeProductCoordinator(
-    navigationController: UINavigationController,
-    productID: DocumentID
-  ) -> ProductCoordinator {
-    return ProductCoordinator(
-      dependencies: self,
-      navigationController: navigationController,
-      mode: .edit(productID)
-    )
+  func makeCategoryDetailViewController(
+    actions: CategoryDetailViewModelActions,
+    category: ProductCategory
+  ) -> CategoryDetailViewController {
+    CategoryDetailViewController(viewModel: self.makeCategoryDetailViewModel(actions: actions,
+                                                                             category: category))
   }
 }

@@ -57,6 +57,6 @@ class CalendarCoordinator: BaseCoordinator {
 // MARK: - CoordinatorFinishDelegate
 extension CalendarCoordinator: CoordinatorFinishDelegate {
   func coordinatorDidFinish(_ childCoordinator: BaseCoordinator) {
-    childCoordinator.childCoordinators.removeValue(forKey: childCoordinator.identifier)
+    self.childCoordinators.removeValue(forKey: childCoordinator.identifier)
   }
 }

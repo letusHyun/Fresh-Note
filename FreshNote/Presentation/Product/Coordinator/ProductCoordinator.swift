@@ -17,6 +17,7 @@ protocol ProductCoordinatorDependencies: AnyObject {
   func makeBottomSheetViewController(
     detent: BottomSheetViewController.Detent
   ) -> BottomSheetViewController
+  
   func makePhotoBottomSheetViewController(actions: PhotoBottomSheetViewModelActions) -> UIViewController
   func makeCategoryBottomSheetViewController(actions: CategoryBottomSheetViewModelActions) -> UIViewController
 }
@@ -174,6 +175,7 @@ extension ProductCoordinator {
   }
 }
 
+// MARK: - UIImagePickerControllerDelegate, UINavigationControllerDelegate
 extension ProductCoordinator: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
   // 사진 찍고 Use Photo || 앨범에서 Pick Photo
   func imagePickerController(

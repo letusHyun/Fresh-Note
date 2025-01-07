@@ -55,6 +55,8 @@ final class DefaultCalendarViewModel: CalendarViewModel {
     return formatter
   }()
   
+  private var currentMonthDateComponents: [DateComponents] = []
+  
   // MARK: - Output
   var reloadDataPublisher: AnyPublisher<Void, Never> { self.reloadDataSubject.eraseToAnyPublisher() }
   var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
@@ -76,7 +78,12 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   
   // MARK: - Input
   func viewDidLoad() {
-    
+    let calendar = Calendar.current
+    let now = Date()
+    let currentYear = calendar.component(.year, from: now)
+    let currentMonth = calendar.component(.month, from: now)
+
+    self.updateDateComponentsForMonth(year: currentYear, month: currentMonth)
   }
   
   func cellForItem(at indexPath: IndexPath) -> Product {
@@ -109,7 +116,7 @@ final class DefaultCalendarViewModel: CalendarViewModel {
         }
         
         let calendar = Calendar.current
-        let dateComponents = self.filterdDataSource.map {
+        let dateComponents = self.originDataSource.map {
           calendar.dateComponents([.year, .month, .day], from: $0.expirationDate)
         }
         self.reloadDecorationsSubject.send(dateComponents)
@@ -154,6 +161,15 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   }
   
   // MARK: - Private
+  private func updateDateComponentsForMonth(year: Int, month: Int) {
+    print("yaer: \(year), month: \(month)")
+    let calendar = Calendar.current
+    guard let firstDayOfMonth = calendar.date(from: DateComponents(year: year, month: month, day: 1))
+    else { return }
+    print("firstDayOfMonth: \(firstDayOfMonth)")
+    
+  }
+  
   private func filterToProductsBasedOnCurrentMonth(with products: [Product]) {
     let currentDateString = self.monthFormatter.string(from: Date())
     

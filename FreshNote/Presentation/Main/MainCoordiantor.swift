@@ -12,7 +12,7 @@ protocol MainCoordinatorDependencies: AnyObject {
   func makeHomeCoordinator(navigationController: UINavigationController) -> HomeCoordinator
   func makeCalendarCoordinator(navigationController: UINavigationController) -> CalendarCoordinator
   func makePinCoordinator(navigationController: UINavigationController) -> PinCoordinator
-  func makeCategoryCoordinator(navigationController: UINavigationController) -> CategoryCoordinater
+  func makeCategoryCoordinator(navigationController: UINavigationController) -> CategoryCoordinator
 }
 
 final class MainCoordinator: BaseCoordinator {
@@ -99,6 +99,7 @@ final class MainCoordinator: BaseCoordinator {
     tag: Int
   ) -> UINavigationController {
     let navigationController = UINavigationController()
+    navigationController.navigationBar.tintColor = UIColor(fnColor: .gray3)
     navigationController.setupBarAppearance()
     
     let tabBarItem = UITabBarItem(
@@ -118,6 +119,7 @@ final class MainCoordinator: BaseCoordinator {
     tag: Int
   ) -> UINavigationController {
     let navigationController = UINavigationController()
+    navigationController.navigationBar.tintColor = UIColor(fnColor: .gray3)
     let appearance = UINavigationBarAppearance()
     appearance.configureWithTransparentBackground()
     appearance.titleTextAttributes = [

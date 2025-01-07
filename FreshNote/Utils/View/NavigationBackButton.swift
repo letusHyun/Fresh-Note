@@ -30,6 +30,6 @@ extension NavigationBackButton {
       .withRenderingMode(.alwaysTemplate)
     
     self.setImage(image, for: .normal)
-    self.tintColor = UIColor(fnColor: .orange2)
+    self.tintColor = UIColor(fnColor: .gray3)
   }
 }

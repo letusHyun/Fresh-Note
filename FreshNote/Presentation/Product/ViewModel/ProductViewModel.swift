@@ -173,8 +173,6 @@ final class DefaultProductViewModel: ProductViewModel {
     case .edit(_):
       guard let fetchedProduct = self.fetchedProduct else { return }
       
-      
-      
       let updatedProductExcludedImageURL = Product(
         did: fetchedProduct.did,
         name: name,

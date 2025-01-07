@@ -106,7 +106,7 @@ final class OnboardingViewController: BaseViewController {
   
   // MARK: - Private Helpers
   func bind(to viewModel: any OnboardingViewModel) {
-    self.viewModel
+    viewModel
       .errorPublisher
       .sink { [weak self] error in
         guard let error = error else { return }

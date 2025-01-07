@@ -58,9 +58,18 @@ final class DefaultUpdateProductUseCase: UpdateProductUseCase {
     
     // 기존 이미지가 존재하는 경우
     guard let newImageData = newImageData else {
-      // 새 이미지가 없으면, product 저장
-      return self.productRepository
-        .updateProduct(product: product)
+      // 새 이미지가 없으면, 기존 이미지 제거하고 product 저장
+      return self.imageRepository
+        .deleteImage(with: existingImageURL)
+        .flatMap { [weak self] in
+          guard let self else {
+            return Fail<Product, any Error>(error: UpdateProductUseCaseError.failedToExecute)
+              .eraseToAnyPublisher()
+          }
+          let updatingProduct = self.makeNewProduct(product: product, url: nil)
+          
+          return self.productRepository.updateProduct(product: updatingProduct)
+        }
         .eraseToAnyPublisher()
     }
     
@@ -96,7 +105,7 @@ final class DefaultUpdateProductUseCase: UpdateProductUseCase {
 
 // MARK: - Private Helpers
 extension DefaultUpdateProductUseCase {
-  private func makeNewProduct(product: Product, url: URL) -> Product {
+  private func makeNewProduct(product: Product, url: URL?) -> Product {
     return Product(
       did: product.did,
       name: product.name,

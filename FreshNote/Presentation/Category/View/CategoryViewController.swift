@@ -82,6 +82,7 @@ extension CategoryViewController: UITableViewDataSource {
 // MARK: - UITableViewDelegate
 extension CategoryViewController: UITableViewDelegate {
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    tableView.deselectRow(at: indexPath, animated: true)
     self.viewModel.didSelectRow(at: indexPath)
   }
 }

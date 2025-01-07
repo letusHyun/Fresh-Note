@@ -36,8 +36,8 @@ extension SearchCoordinator {
     let actions = SearchViewModelActions(pop: { [weak self] in
       self?.pop()
     })
-    let viewController = dependencies.makeSearchViewController(actions: actions)
-    navigationController?.pushViewController(viewController, animated: true)
+    let viewController = self.dependencies.makeSearchViewController(actions: actions)
+    self.navigationController?.pushViewController(viewController, animated: true)
   }
 }
 

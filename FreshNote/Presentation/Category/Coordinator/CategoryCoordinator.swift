@@ -40,16 +40,19 @@ final class CategoryCoordinator: BaseCoordinator {
   
   // MARK: - Private
   private func showCategoryDetail(category: ProductCategory) {
-    let coordinator = self.dependencies.makeCategoryDetailCoordinator(
+    let childCoordinator = self.dependencies.makeCategoryDetailCoordinator(
       navigationController: self.navigationController,
       category: category
     )
+    childCoordinator.finishDelegate = self
+    self.childCoordinators[childCoordinator.identifier] = childCoordinator
+    childCoordinator.start()
   }
 }
 
 // MARK: - CoordinatorFinishDelegate
 extension CategoryCoordinator: CoordinatorFinishDelegate {
   func coordinatorDidFinish(_ childCoordinator: BaseCoordinator) {
-    childCoordinator.childCoordinators.removeValue(forKey: childCoordinator.identifier)
+    self.childCoordinators.removeValue(forKey: childCoordinator.identifier)
   }
 }
