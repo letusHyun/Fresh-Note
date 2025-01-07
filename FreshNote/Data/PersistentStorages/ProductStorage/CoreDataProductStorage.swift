@@ -12,10 +12,16 @@ import Foundation
 final class CoreDataProductStorage {
   private let coreDataStorage: any CoreDataStorage
   
+  // MARK: - LifeCycle
   init(coreDataStorage: any CoreDataStorage) {
     self.coreDataStorage = coreDataStorage
   }
   
+  deinit {
+    print("DEBUG: \(Self.self) deinit")
+  }
+  
+  // MARK: - Private
   private func deleteResponse(request: NSFetchRequest<ProductEntity>, in context: NSManagedObjectContext) throws {
     do {
       let results = try context.fetch(request)
@@ -158,6 +164,23 @@ extension CoreDataProductStorage: ProductStorage {
         return updatedProduct
       } catch {
         throw CoreDataStorageError.updateError(error)
+      }
+    }
+  }
+  
+  func fetchProduct(category: String) -> AnyPublisher<[Product], any Error> {
+    return self.coreDataStorage.performBackgroundTask { context in
+      let request = ProductEntity.fetchRequest()
+      request.predicate = NSPredicate(
+        format: format: "\(ProductEntity.PropertyName.category.rawValue) == %@",
+        category
+      )
+      
+      do {
+        let entities = try context.fetch(request)
+        return entities.map { $0.toDomain() }
+      } catch {
+        throw CoreDataStorageError.readError(error)
       }
     }
   }

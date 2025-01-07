@@ -79,6 +79,10 @@ private extension MainSceneDIContainer {
     return DefaultCategoryViewModel(actions: actions)
   }
   
+  func makeCategoryDetailViewModel(actions: CategoryDetailViewModelActions) -> any CategoryDetailViewModel {
+    return DefaultCategoryDetailViewModel(actions: actions)
+  }
+  
   // MARK: - Domain Layer
   func makeRecentProductQueriesUseCase() -> any RecentProductQueriesUseCase {
     return DefaultRecentProductQueriesUseCase(productQueriesRepository: self.makeProductQueriesRepository())
@@ -145,8 +149,8 @@ private extension MainSceneDIContainer {
 
 // MARK: - MainCoordinatorDependencies
 extension MainSceneDIContainer: MainCoordinatorDependencies {
-  func makeCategoryCoordinator(navigationController: UINavigationController) -> CategoryCoordinater {
-    return CategoryCoordinater(navigationController: navigationController, dependencies: self)
+  func makeCategoryCoordinator(navigationController: UINavigationController) -> CategoryCoordinator {
+    return CategoryCoordinator(navigationController: navigationController, dependencies: self)
   }
   
   func makePinCoordinator(navigationController: UINavigationController) -> PinCoordinator {
@@ -220,7 +224,7 @@ extension MainSceneDIContainer: CalendarCoordinatorDependencies {
   }
 }
 
-extension MainSceneDIContainer: CategoryCoordinaterDependencies {
+extension MainSceneDIContainer: CategoryCoordinatorDependencies {
   func makeCategoryViewController(actions: CategoryViewModelActions) -> CategoryViewController {
     return CategoryViewController(viewModel: self.makeCategoryViewModel(actions: actions))
   }
@@ -240,6 +244,7 @@ extension MainSceneDIContainer: SearchCoordinatorDependencies {
   }
 }
 
+// MARK: - ProductCoordinatorDependencies
 extension MainSceneDIContainer: ProductCoordinatorDependencies {
   func makeCategoryBottomSheetViewController(actions: CategoryBottomSheetViewModelActions) -> UIViewController {
     return CategoryBottomSheetViewController(viewModel: self.makeCategoryBottomSheetViewModel(actions: actions))
@@ -260,5 +265,23 @@ extension MainSceneDIContainer: ProductCoordinatorDependencies {
     mode: ProductViewModelMode
   ) -> ProductViewController {
     return ProductViewController(viewModel: self.makeProductViewModel(actions: actions, mode: mode))
+  }
+}
+
+// MARK: - CategoryDetailCoordinatorDependencies
+extension MainSceneDIContainer: CategoryDetailCoordinatorDependencies {
+  func makeCategoryDetailViewController(actions: CategoryDetailViewModelActions) -> CategoryDetailViewController {
+    CategoryDetailViewController(viewModel: self.makeCategoryDetailViewModel(actions: actions))
+  }
+  
+  func makeProductCoordinator(
+    navigationController: UINavigationController,
+    productID: DocumentID
+  ) -> ProductCoordinator {
+    return ProductCoordinator(
+      dependencies: self,
+      navigationController: navigationController,
+      mode: .edit(productID)
+    )
   }
 }

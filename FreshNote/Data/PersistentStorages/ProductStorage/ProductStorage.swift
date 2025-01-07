@@ -18,4 +18,5 @@ protocol ProductStorage {
   func hasProducts() -> AnyPublisher<Bool, any Error>
   func fetchProduct(didString: String) -> AnyPublisher<Product, any Error>
   func fetchPinnedProducts() -> AnyPublisher<[Product], any Error>
+  func fetchProduct(category: String) -> AnyPublisher<[Product], any Error>
 }

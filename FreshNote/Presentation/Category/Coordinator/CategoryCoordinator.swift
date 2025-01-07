@@ -1,5 +1,5 @@
 //
-//  CategoryCoordinater.swift
+//  CategoryCoordinator.swift
 //  FreshNote
 //
 //  Created by SeokHyun on 1/7/25.
@@ -7,17 +7,20 @@
 
 import UIKit
 
-protocol CategoryCoordinaterDependencies: AnyObject {
+protocol CategoryCoordinatorDependencies: AnyObject {
   func makeCategoryViewController(actions: CategoryViewModelActions) -> CategoryViewController
-//  func makeCategoryDetailCoordinator() -> CategoryDetailCoordinater
+  func makeCategoryDetailCoordinator(
+    navigationController: UINavigationController?,
+    category: ProductCategory
+  ) -> CategoryDetailCoordinator
 }
 
-final class CategoryCoordinater: BaseCoordinator {
+final class CategoryCoordinator: BaseCoordinator {
   // MARK: - Properties
-  private let dependencies: any CategoryCoordinaterDependencies
+  private let dependencies: any CategoryCoordinatorDependencies
   
   // MARK: - LifeCycle
-  init(navigationController: UINavigationController?, dependencies: CategoryCoordinaterDependencies) {
+  init(navigationController: UINavigationController?, dependencies: CategoryCoordinatorDependencies) {
     self.dependencies = dependencies
     
     super.init(navigationController: navigationController)
@@ -37,12 +40,15 @@ final class CategoryCoordinater: BaseCoordinator {
   
   // MARK: - Private
   private func showCategoryDetail(category: ProductCategory) {
-//    let coordinator = self.dependencies.
+    let coordinator = self.dependencies.makeCategoryDetailCoordinator(
+      navigationController: self.navigationController,
+      category: category
+    )
   }
 }
 
 // MARK: - CoordinatorFinishDelegate
-extension CategoryCoordinater: CoordinatorFinishDelegate {
+extension CategoryCoordinator: CoordinatorFinishDelegate {
   func coordinatorDidFinish(_ childCoordinator: BaseCoordinator) {
     childCoordinator.childCoordinators.removeValue(forKey: childCoordinator.identifier)
   }
