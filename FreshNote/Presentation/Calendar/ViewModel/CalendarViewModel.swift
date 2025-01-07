@@ -49,9 +49,9 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   private let monthFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateFormat = "yy.MM"
-        formatter.calendar = Calendar(identifier: .gregorian)
-        formatter.timeZone = TimeZone(secondsFromGMT: 0)
-        formatter.locale = Locale(identifier: "ko_KR")
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.locale = Locale(identifier: "ko_KR")
     return formatter
   }()
   
@@ -79,11 +79,11 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   // MARK: - Input
   func viewDidLoad() {
     let calendar = Calendar.current
-    let now = Date()
-    let currentYear = calendar.component(.year, from: now)
-    let currentMonth = calendar.component(.month, from: now)
-
-    self.updateDateComponentsForMonth(year: currentYear, month: currentMonth)
+    let today = Date()
+    let year = calendar.component(.year, from: today)
+    let month = calendar.component(.month, from: today)
+    
+    self.currentMonthDateComponents = self.getMonthDateComponents(year: year, month: month)
   }
   
   func cellForItem(at indexPath: IndexPath) -> Product {
@@ -105,7 +105,7 @@ final class DefaultCalendarViewModel: CalendarViewModel {
         guard let self else { return }
         
         self.originDataSource = products
-      
+        
         switch calendarDateComponents {
         case let .day(dateComponents):
           self.filterToProductsBasedOnDay(dateComponents: dateComponents)
@@ -114,20 +114,20 @@ final class DefaultCalendarViewModel: CalendarViewModel {
         case .currentMonth:
           self.filterToProductsBasedOnCurrentMonth(with: products)
         }
-        
-        let calendar = Calendar.current
-        let dateComponents = self.originDataSource.map {
-          calendar.dateComponents([.year, .month, .day], from: $0.expirationDate)
-        }
-        self.reloadDecorationsSubject.send(dateComponents)
+        self.reloadDecorationsSubject.send(self.currentMonthDateComponents)
       }
       .store(in: &self.subscriptions)
   }
   
   func didChangeVisibleDateComponents(calendarDateComponents: CalendarDateComponents) {
-    if case let .month(dateComponents) = calendarDateComponents {
-      self.filterToProductsBasedOnMonth(dateComponents: dateComponents)
-    }
+    guard case let .month(dateComponents) = calendarDateComponents else { return }
+    
+    guard let year = dateComponents.year, let month = dateComponents.month else { return }
+    self.filterToProductsBasedOnMonth(dateComponents: dateComponents)
+    self.currentMonthDateComponents = self.getMonthDateComponents(
+      year: year,
+      month: month
+    )
   }
   
   func didSelectDate(calendarDateComponents: CalendarDateComponents) {
@@ -151,23 +151,43 @@ final class DefaultCalendarViewModel: CalendarViewModel {
     let dateFormatter = DateFormatManager()
     let screenDateString = dateFormatter.makeYearMonthDay(date: date).joined(separator: ".")
     
-    return self.filterdDataSource.contains { product in
+    return self.originDataSource.contains { product in
       let expirationDateString = dateFormatter
         .makeYearMonthDay(date: product.expirationDate)
         .joined(separator: ".")
-
+      
       return expirationDateString == screenDateString
     }
   }
   
   // MARK: - Private
-  private func updateDateComponentsForMonth(year: Int, month: Int) {
-    print("yaer: \(year), month: \(month)")
+  private func getMonthDateComponents(year: Int, month: Int) -> [DateComponents] {
     let calendar = Calendar.current
-    guard let firstDayOfMonth = calendar.date(from: DateComponents(year: year, month: month, day: 1))
-    else { return }
-    print("firstDayOfMonth: \(firstDayOfMonth)")
     
+    // 해당 월의 첫 날 구하기
+    var components = DateComponents()
+    components.year = year
+    components.month = month
+    components.day = 1
+    
+    guard let firstDayOfMonth = calendar.date(from: components) else { return [] }
+    
+    // 해당 월의 일수 구하기
+    guard let range = calendar.range(of: .day, in: .month, for: firstDayOfMonth) else { return [] }
+    let numberOfDaysInMonth = range.count
+    
+    // 모든 날짜의 DateComponents 생성
+    var allDateComponents: [DateComponents] = []
+    
+    for day in 1...numberOfDaysInMonth {
+      var components = DateComponents()
+      components.year = year
+      components.month = month
+      components.day = day
+      allDateComponents.append(components)
+    }
+    
+    return allDateComponents
   }
   
   private func filterToProductsBasedOnCurrentMonth(with products: [Product]) {
@@ -197,7 +217,7 @@ final class DefaultCalendarViewModel: CalendarViewModel {
     let year = String(format: "%02d", (dateComponents.year ?? .zero) % 100)
     let month = String(format: "%02d", dateComponents.month ?? .zero)
     let changedDateString = "\(year).\(month)"
-  
+    
     self.filterdDataSource = self.originDataSource.filter {
       self.monthFormatter.string(from: $0.expirationDate) == changedDateString
     }
