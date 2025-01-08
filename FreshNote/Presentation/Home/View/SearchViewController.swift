@@ -15,7 +15,7 @@ final class SearchViewController: BaseViewController {
   private lazy var textField: PaddingTextField = {
     let tf = PaddingTextField()
     tf.layer.borderColor = UIColor(fnColor: .orange2).cgColor
-    tf.layer.borderWidth = 0.8
+    tf.layer.borderWidth = 1.5
     tf.layer.cornerRadius = 3
     let placeholderAttr = NSAttributedString(
       string: "상품명을 검색해주세요.",
