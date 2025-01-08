@@ -124,6 +124,8 @@ extension SearchViewController: UITextFieldDelegate {
     guard let text = textField.text, text != "" else { return false }
     
     self.viewModel.textFieldShouldReturn(keyword: text)
+    textField.resignFirstResponder()
+    
     return true
   }
 }
