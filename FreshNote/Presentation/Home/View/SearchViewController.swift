@@ -59,10 +59,10 @@ final class SearchViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    defer { viewModel.viewDidLoad() }
-    bind(to: self.viewModel)
-    setupTableView()
-    addTargets()
+    defer { self.viewModel.viewDidLoad() }
+    self.bind(to: self.viewModel)
+    self.setupTableView()
+    self.addTargets()
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -79,38 +79,38 @@ final class SearchViewController: BaseViewController {
   
   // MARK: - SetupUI
   override func setupLayout() {
-    let descriptionLabel = makeDescriptionLabel()
+    let descriptionLabel = self.makeDescriptionLabel()
     
-    view.addSubview(textField)
-    view.addSubview(cancelButton)
+    view.addSubview(self.textField)
+    view.addSubview(self.cancelButton)
     view.addSubview(descriptionLabel)
-    view.addSubview(tableView)
+    view.addSubview(self.tableView)
     
-    textField.translatesAutoresizingMaskIntoConstraints = false
-    cancelButton.translatesAutoresizingMaskIntoConstraints = false
+    self.textField.translatesAutoresizingMaskIntoConstraints = false
+    self.cancelButton.translatesAutoresizingMaskIntoConstraints = false
     descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-    tableView.translatesAutoresizingMaskIntoConstraints = false
+    self.tableView.translatesAutoresizingMaskIntoConstraints = false
   
     NSLayoutConstraint.activate([
-      textField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 15),
-      textField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
-      textField.heightAnchor.constraint(equalToConstant: 40)
+      self.textField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 15),
+      self.textField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
+      self.textField.heightAnchor.constraint(equalToConstant: 40)
     ] + [
-      cancelButton.leadingAnchor.constraint(equalTo: textField.trailingAnchor, constant: 10),
-      cancelButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
-      cancelButton.centerYAnchor.constraint(equalTo: textField.centerYAnchor),
-      cancelButton.widthAnchor.constraint(equalToConstant: 33),
-      cancelButton.heightAnchor.constraint(equalTo: textField.heightAnchor)
+      self.cancelButton.leadingAnchor.constraint(equalTo: self.textField.trailingAnchor, constant: 10),
+      self.cancelButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
+      self.cancelButton.centerYAnchor.constraint(equalTo: self.textField.centerYAnchor),
+      self.cancelButton.widthAnchor.constraint(equalToConstant: 33),
+      self.cancelButton.heightAnchor.constraint(equalTo: self.textField.heightAnchor)
     ])
     
     NSLayoutConstraint.activate([
-      descriptionLabel.topAnchor.constraint(equalTo: textField.bottomAnchor, constant: 15),
+      descriptionLabel.topAnchor.constraint(equalTo: self.textField.bottomAnchor, constant: 15),
       descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 15),
     ] + [
-      tableView.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 15),
-      tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-      tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+      self.tableView.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 15),
+      self.tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      self.tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+      self.tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
     ])
   }
 }
@@ -126,12 +126,12 @@ extension SearchViewController {
   }
   
   private func addTargets() {
-    cancelButton.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
+    self.cancelButton.addTarget(self, action: #selector(self.cancelButtonTapped), for: .touchUpInside)
   }
   
   private func setupTableView() {
-    tableView.dataSource = self
-    tableView.delegate = self
+    self.tableView.dataSource = self
+    self.tableView.delegate = self
   }
 }
 
@@ -141,12 +141,12 @@ private extension SearchViewController {
     viewModel.reloadDataPublisher.sink { [weak self] _ in
       self?.tableView.reloadData()
     }
-    .store(in: &subscriptions)
+    .store(in: &self.subscriptions)
     
     viewModel.deleteRowsPublisher.sink { [weak self] indexPath in
       self?.tableView.deleteRows(at: [indexPath], with: .fade)
     }
-    .store(in: &subscriptions)
+    .store(in: &self.subscriptions)
   }
 }
 
@@ -156,7 +156,7 @@ extension SearchViewController: UITableViewDataSource {
     _ tableView: UITableView,
     numberOfRowsInSection section: Int
   ) -> Int {
-    viewModel.numberOfRowsInSection()
+    self.viewModel.numberOfRowsInSection()
   }
   
   func tableView(
@@ -179,7 +179,7 @@ extension SearchViewController: UITableViewDataSource {
 // MARK: - Actions
 private extension SearchViewController {
   @objc func cancelButtonTapped() {
-    viewModel.didTapCancelButton()
+    self.viewModel.didTapCancelButton()
   }
 }
 
@@ -198,6 +198,6 @@ extension SearchViewController: RecentSearchKeywordCellDelegate {
   func didTapDeleteButton(in cell: UITableViewCell) {
     guard let indexPath = tableView.indexPath(for: cell) else { return }
     
-    viewModel.didTapKeywordDeleteButton(at: indexPath)
+    self.viewModel.didTapKeywordDeleteButton(at: indexPath)
   }
 }
