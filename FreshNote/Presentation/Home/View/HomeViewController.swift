@@ -224,6 +224,7 @@ private extension HomeViewController {
   }
 }
 
+// MARK: - ProductCellDelegate
 extension HomeViewController: ProductCellDelegate {
   func didTapPin(in cell: UITableViewCell) {
     guard let indexPath = self.tableView.indexPath(for: cell) else { return }

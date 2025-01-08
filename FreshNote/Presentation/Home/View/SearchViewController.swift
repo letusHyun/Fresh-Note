@@ -30,9 +30,9 @@ final class SearchViewController: BaseViewController {
     return tf
   }()
   
-  private let cancelButton: UIButton = {
+  private let backButton: UIButton = {
     let btn = UIButton()
-    btn.setTitle("취소", for: .normal)
+    btn.setTitle("닫기", for: .normal)
     btn.titleLabel?.font = UIFont.pretendard(size: 15, weight: ._400)
     btn.setTitleColor(UIColor(fnColor: .gray2), for: .normal)
     return btn
@@ -82,7 +82,7 @@ final class SearchViewController: BaseViewController {
   // MARK: - SetupUI
   override func setupLayout() {
     self.view.addSubview(self.textField)
-    self.view.addSubview(self.cancelButton)
+    self.view.addSubview(self.backButton)
     self.view.addSubview(self.searchHistoryView)
     
     self.textField.snp.makeConstraints {
@@ -91,7 +91,7 @@ final class SearchViewController: BaseViewController {
       $0.height.equalTo(40)
     }
     
-    self.cancelButton.snp.makeConstraints {
+    self.backButton.snp.makeConstraints {
       $0.leading.equalTo(self.textField.snp.trailing).offset(10)
       $0.trailing.equalToSuperview().inset(10)
       $0.centerY.equalTo(self.textField.snp.centerY)
@@ -108,7 +108,7 @@ final class SearchViewController: BaseViewController {
   
   // MARK: - Bind
   private func bindActions() {
-    self.cancelButton.tapPublisher
+    self.backButton.tapPublisher
       .sink { [weak self] _ in
         self?.viewModel.didTapCancelButton()
       }
@@ -121,10 +121,9 @@ final class SearchViewController: BaseViewController {
 // MARK: - UITextFieldDelegate
 extension SearchViewController: UITextFieldDelegate {
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-    guard let text = textField.text else { return false }
+    guard let text = textField.text, text != "" else { return false }
     
     self.viewModel.textFieldShouldReturn(keyword: text)
-    
     return true
   }
 }

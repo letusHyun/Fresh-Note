@@ -91,7 +91,10 @@ final class DefaultSearchViewModel: SearchViewModel {
     self.actions = actions
     self.recentProductQueriesUseCase = recentProductQueriesUseCase
   }
-
+  
+  deinit {
+    print("DEBUG: \(Self.self) deinit")
+  }
   // MARK: - Input
   func viewDidLoad() {
     self.recentProductQueriesUseCase.fetchQueries()
