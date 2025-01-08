@@ -12,6 +12,7 @@ protocol RecentProductQueriesUseCase {
   func fetchQueries() -> AnyPublisher<[ProductQuery], any Error>
   func saveQuery(keyword: String) -> AnyPublisher<ProductQuery, any Error>
   func deleteQuery(uuidString: String) -> AnyPublisher<Void, any Error>
+  func deleteQueries() -> AnyPublisher<Void, any Error>
 }
 
 final class DefaultRecentProductQueriesUseCase: RecentProductQueriesUseCase {
@@ -34,5 +35,9 @@ final class DefaultRecentProductQueriesUseCase: RecentProductQueriesUseCase {
   
   func deleteQuery(uuidString: String) -> AnyPublisher<Void, any Error> {
     self.productQueriesRepository.deleteQuery(uuidString: uuidString)
+  }
+  
+  func deleteQueries() -> AnyPublisher<Void, any Error> {
+    self.productQueriesRepository.deleteQueries()
   }
 }

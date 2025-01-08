@@ -18,6 +18,7 @@ enum SearchViewModelType {
 }
 
 protocol SearchHistoryViewModelInput {
+  func didTapAllDeletionButton()
   func cellForRow(at indexPath: IndexPath) -> ProductQuery
   func didTapKeywordDeleteButton(at indexPath: IndexPath)
 }
@@ -163,6 +164,20 @@ final class DefaultSearchViewModel: SearchViewModel {
         self?.productQueries.append(productQuery)
         self?.historyReloadDataSubject.send()
 //        self?.actions.showProduct(keyword)
+      }
+      .store(in: &self.subscriptions)
+  }
+  
+  func didTapAllDeletionButton() {
+    self.recentProductQueriesUseCase
+      .deleteQueries()
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.historyError = error
+      } receiveValue: { [weak self] _ in
+        self?.productQueries.removeAll()
+        self?.historyReloadDataSubject.send()
       }
       .store(in: &self.subscriptions)
   }

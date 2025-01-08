@@ -12,4 +12,5 @@ protocol ProductQueriesRepository {
   func fetchQueries() -> AnyPublisher<[ProductQuery], any Error>
   func saveQuery(productQuery: ProductQuery) -> AnyPublisher<ProductQuery, any Error>
   func deleteQuery(uuidString: String) -> AnyPublisher<Void, any Error>
+  func deleteQueries() -> AnyPublisher<Void, any Error>
 }

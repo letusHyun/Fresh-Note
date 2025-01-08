@@ -16,29 +16,18 @@ final class CoreDataProductQueryStorage {
     self.coreDataStorage = coreDataStorage
   }
   
-  // MARK: - Private
-//  private func deleteResponse(in context: NSManagedObjectContext) throws {
-//    let request = ProductQueryEntity.fetchRequest()
-//    
-//    do {
-//      if let result = try context.fetch(request).first {
-//        context.delete(result)
-//      }
-//    } catch {
-//      throw CoreDataStorageError.deleteError(error)
-//    }
-//  }
+  deinit {
+    print("DEBUG: \(Self.self) deinit")
+  }
 }
 
 // MARK: - ProductQueryStorage
 extension CoreDataProductQueryStorage: ProductQueryStorage {
   func saveQuery(productQuery: ProductQuery) -> AnyPublisher<ProductQuery, any Error> {
     return self.coreDataStorage
-      .performBackgroundTask { [weak self] context -> ProductQuery in
-//        try self?.deleteResponse(in: context)
-        
+      .performBackgroundTask { context -> ProductQuery in
         _ = ProductQueryEntity(productQuery: productQuery, insertInto: context)
-    
+        
         do {
           try context.save()
           return productQuery
@@ -80,6 +69,24 @@ extension CoreDataProductQueryStorage: ProductQueryStorage {
         guard !entities.isEmpty else {
           throw CoreDataStorageError.noEntity
         }
+        
+        entities.forEach { entity in
+          context.delete(entity)
+        }
+        
+        do {
+          try context.save()
+        } catch {
+          throw CoreDataStorageError.saveError(error)
+        }
+      }
+  }
+  
+  func deleteQueries() -> AnyPublisher<Void, any Error> {
+    self.coreDataStorage
+      .performBackgroundTask { context -> Void in
+        let request: NSFetchRequest<ProductQueryEntity> = ProductQueryEntity.fetchRequest()
+        let entities = try context.fetch(request)
         
         entities.forEach { entity in
           context.delete(entity)

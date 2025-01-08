@@ -19,8 +19,8 @@ final class SearchHistoryView: UIView {
   // MARK: - Properties
   private let recentSearchTagLabel: UILabel = {
     let lb = UILabel()
-    lb.font = UIFont.pretendard(size: 12, weight: ._400)
-    lb.text = "최근 검색어"
+    lb.font = UIFont.pretendard(size: 15, weight: ._700)
+    lb.text = "최근 검색"
     lb.textColor = UIColor(fnColor: .gray2)
     return lb
   }()
@@ -28,6 +28,7 @@ final class SearchHistoryView: UIView {
   private let allDeletionButton: UIButton = {
     let button: UIButton = UIButton()
     button.setTitle("전체 삭제", for: .normal)
+    button.titleLabel?.font = UIFont.pretendard(size: 15, weight: ._600)
     button.setTitleColor(.black, for: .normal)
     return button
   }()
@@ -41,6 +42,7 @@ final class SearchHistoryView: UIView {
       RecentSearchKeywordCell.self,
       forCellReuseIdentifier: RecentSearchKeywordCell.id
     )
+    tv.separatorStyle = .none
     return tv
   }()
   
@@ -56,8 +58,9 @@ final class SearchHistoryView: UIView {
     self.viewModelType = SearchViewModelType.history
     super.init(frame: .zero)
     
-    self.bind(to: viewModel)
     self.setupUI()
+    self.bind(to: viewModel)
+    self.bindActions()
   }
   
   required init?(coder: NSCoder) {
@@ -75,10 +78,23 @@ final class SearchHistoryView: UIView {
   }
   
   private func setupLayout() {
+    self.addSubview(self.recentSearchTagLabel)
+    self.addSubview(self.allDeletionButton)
     self.addSubview(self.tableView)
     
+    self.recentSearchTagLabel.snp.makeConstraints {
+      $0.top.equalToSuperview().inset(20)
+      $0.leading.equalToSuperview().inset(10)
+    }
+    
+    self.allDeletionButton.snp.makeConstraints {
+      $0.centerY.equalTo(self.recentSearchTagLabel)
+      $0.trailing.equalToSuperview().inset(10)
+    }
+    
     self.tableView.snp.makeConstraints {
-      $0.edges.equalToSuperview()
+      $0.top.equalTo(allDeletionButton.snp.bottom).offset(2)
+      $0.leading.trailing.bottom.equalToSuperview()
     }
   }
   
@@ -105,6 +121,15 @@ final class SearchHistoryView: UIView {
       .sink { [weak self] indexPath in
         ActivityIndicatorView.shared.stopIndicating()
         self?.tableView.deleteRows(at: [indexPath], with: .fade)
+      }
+      .store(in: &self.subscriptions)
+  }
+  
+  private func bindActions() {
+    self.allDeletionButton
+      .tapPublisher
+      .sink { [weak self] in
+        self?.viewModel.didTapAllDeletionButton()
       }
       .store(in: &self.subscriptions)
   }

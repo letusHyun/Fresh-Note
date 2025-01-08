@@ -26,4 +26,8 @@ final class DefaultProductQueriesRepository: ProductQueriesRepository {
   func deleteQuery(uuidString: String) -> AnyPublisher<Void, any Error> {
     self.productQueryPersistentStorage.deleteQuery(uuidString: uuidString)
   }
+  
+  func deleteQueries() -> AnyPublisher<Void, any Error> {
+    self.productQueryPersistentStorage.deleteQueries()
+  }
 }

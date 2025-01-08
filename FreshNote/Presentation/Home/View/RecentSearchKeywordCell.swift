@@ -19,7 +19,7 @@ final class RecentSearchKeywordCell: UITableViewCell {
   
   private let keywordLabel: UILabel = {
     let label = UILabel()
-    label.font = UIFont.pretendard(size: 12, weight: ._400)
+    label.font = UIFont.pretendard(size: 14, weight: ._400)
     label.textColor = .black
     return label
   }()
