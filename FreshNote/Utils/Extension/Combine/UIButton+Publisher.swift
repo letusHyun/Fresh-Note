@@ -10,7 +10,8 @@ import UIKit
 
 public extension UIButton {
   var tapPublisher: AnyPublisher<Void, Never> {
-    publisher(for: .touchUpInside)
+    self.publisher(for: .touchUpInside)
+      .receive(on: DispatchQueue.main)
       .map { _ in }
       .eraseToAnyPublisher()
   }

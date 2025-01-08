@@ -30,19 +30,19 @@ extension UIControl {
       self.control = control
       self.event = event
       
-      self.control.addTarget(self, action: #selector(handleEvent), for: event)
+      self.control.addTarget(self, action: #selector(self.handleEvent), for: event)
     }
     
     @objc func handleEvent(_ sender: UIControl) {
-      _=self.subscriber?.receive(control)
+      _=self.subscriber?.receive(self.control)
     }
     
     // MARK: - Subscription
     func request(_ demand: Subscribers.Demand) {}
     
     func cancel() {
-      subscriber = nil
-      control.removeTarget(self, action: #selector(handleEvent), for: event)
+      self.subscriber = nil
+      self.control.removeTarget(self, action: #selector(self.handleEvent), for: self.event)
     }
   }
   
@@ -63,8 +63,8 @@ extension UIControl {
     func receive<S>(subscriber: S) where S: Subscriber, Never == S.Failure, UIControl == S.Input {
       let subscription = InteractionSubscription(
         subscriber: subscriber,
-        control: control,
-        event: event)
+        control: self.control,
+        event: self.event)
       
       subscriber.receive(subscription: subscription)
     }

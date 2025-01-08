@@ -5,34 +5,28 @@
 //  Created by SeokHyun on 11/1/24.
 //
 
-import UIKit
 import Combine
+import UIKit
+
+import SnapKit
 
 final class SearchViewController: BaseViewController {
   // MARK: - Properties
-  private let tableView: UITableView = {
-    let tb = UITableView()
-    tb.rowHeight = 60
-    tb.register(
-      RecentSearchKeywordCell.self,
-      forCellReuseIdentifier: RecentSearchKeywordCell.id
-    )
-    return tb
-  }()
-  
-  private let textField: PaddingTextField = {
+  private lazy var textField: PaddingTextField = {
     let tf = PaddingTextField()
     tf.layer.borderColor = UIColor(fnColor: .orange2).cgColor
     tf.layer.borderWidth = 0.8
     tf.layer.cornerRadius = 3
     let placeholderAttr = NSAttributedString(
-      string: "상품명, 카테고리, 메모를 검색해주세요.",
+      string: "상품명을 검색해주세요.",
       attributes: [
         NSAttributedString.Key.font: UIFont.pretendard(size: 12, weight: ._400),
         NSAttributedString.Key.foregroundColor: UIColor(fnColor: .gray1)
       ]
     )
+    tf.returnKeyType = .search
     tf.attributedPlaceholder = placeholderAttr
+    tf.delegate = self
     return tf
   }()
   
@@ -44,12 +38,18 @@ final class SearchViewController: BaseViewController {
     return btn
   }()
   
+  private lazy var searchHistoryView: SearchHistoryView = {
+    return SearchHistoryView(viewModel: self.viewModel)
+  }()
+  
   private let viewModel: any SearchViewModel
+  
   private var subscriptions: Set<AnyCancellable> = []
   
   // MARK: - LifeCycle
   init(viewModel: any SearchViewModel) {
     self.viewModel = viewModel
+    
     super.init(nibName: nil, bundle: nil)
   }
   
@@ -59,145 +59,72 @@ final class SearchViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    defer { self.viewModel.viewDidLoad() }
-    self.bind(to: self.viewModel)
-    self.setupTableView()
-    self.addTargets()
+    defer {
+      ActivityIndicatorView.shared.startIndicating()
+      self.viewModel.viewDidLoad()
+    }
+    
+    self.bindActions()
   }
   
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
-    navigationController?.setNavigationBarHidden(true, animated: true)
-    tabBarController?.tabBar.isHidden = true
+    self.navigationController?.setNavigationBarHidden(true, animated: true)
+    self.tabBarController?.tabBar.isHidden = true
   }
   
   override func viewWillDisappear(_ animated: Bool) {
     super.viewWillDisappear(animated)
-    navigationController?.setNavigationBarHidden(false, animated: true)
-    tabBarController?.tabBar.isHidden = false
+    self.navigationController?.setNavigationBarHidden(false, animated: true)
+    self.tabBarController?.tabBar.isHidden = false
   }
   
   // MARK: - SetupUI
   override func setupLayout() {
-    let descriptionLabel = self.makeDescriptionLabel()
+    self.view.addSubview(self.textField)
+    self.view.addSubview(self.cancelButton)
+    self.view.addSubview(self.searchHistoryView)
     
-    view.addSubview(self.textField)
-    view.addSubview(self.cancelButton)
-    view.addSubview(descriptionLabel)
-    view.addSubview(self.tableView)
-    
-    self.textField.translatesAutoresizingMaskIntoConstraints = false
-    self.cancelButton.translatesAutoresizingMaskIntoConstraints = false
-    descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-    self.tableView.translatesAutoresizingMaskIntoConstraints = false
-  
-    NSLayoutConstraint.activate([
-      self.textField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 15),
-      self.textField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
-      self.textField.heightAnchor.constraint(equalToConstant: 40)
-    ] + [
-      self.cancelButton.leadingAnchor.constraint(equalTo: self.textField.trailingAnchor, constant: 10),
-      self.cancelButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
-      self.cancelButton.centerYAnchor.constraint(equalTo: self.textField.centerYAnchor),
-      self.cancelButton.widthAnchor.constraint(equalToConstant: 33),
-      self.cancelButton.heightAnchor.constraint(equalTo: self.textField.heightAnchor)
-    ])
-    
-    NSLayoutConstraint.activate([
-      descriptionLabel.topAnchor.constraint(equalTo: self.textField.bottomAnchor, constant: 15),
-      descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 15),
-    ] + [
-      self.tableView.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 15),
-      self.tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      self.tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-      self.tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-    ])
-  }
-}
-
-// MARK: - Private Helpers
-extension SearchViewController {
-  private func makeDescriptionLabel() -> UILabel {
-    let lb = UILabel()
-    lb.font = UIFont.pretendard(size: 12, weight: ._400)
-    lb.text = "최근 검색어"
-    lb.textColor = UIColor(fnColor: .gray2)
-    return lb
-  }
-  
-  private func addTargets() {
-    self.cancelButton.addTarget(self, action: #selector(self.cancelButtonTapped), for: .touchUpInside)
-  }
-  
-  private func setupTableView() {
-    self.tableView.dataSource = self
-    self.tableView.delegate = self
-  }
-}
-
-// MARK: - Bind
-private extension SearchViewController {
-  func bind(to viewModel: any SearchViewModel) {
-    viewModel.reloadDataPublisher.sink { [weak self] _ in
-      self?.tableView.reloadData()
+    self.textField.snp.makeConstraints {
+      $0.top.equalTo(self.view.safeAreaLayoutGuide).inset(15)
+      $0.leading.equalToSuperview().inset(10)
+      $0.height.equalTo(40)
     }
-    .store(in: &self.subscriptions)
     
-    viewModel.deleteRowsPublisher.sink { [weak self] indexPath in
-      self?.tableView.deleteRows(at: [indexPath], with: .fade)
+    self.cancelButton.snp.makeConstraints {
+      $0.leading.equalTo(self.textField.snp.trailing).offset(10)
+      $0.trailing.equalToSuperview().inset(10)
+      $0.centerY.equalTo(self.textField.snp.centerY)
+      $0.width.equalTo(33)
+      $0.height.equalTo(self.textField.snp.height)
     }
-    .store(in: &self.subscriptions)
-  }
-}
-
-// MARK: - UITableViewDataSource
-extension SearchViewController: UITableViewDataSource {
-  func tableView(
-    _ tableView: UITableView,
-    numberOfRowsInSection section: Int
-  ) -> Int {
-    self.viewModel.numberOfRowsInSection()
+    
+    self.searchHistoryView.snp.makeConstraints {
+      $0.top.equalTo(self.textField.snp.bottom).offset(5)
+      $0.leading.trailing.equalToSuperview()
+      $0.bottom.equalToSuperview()
+    }
   }
   
-  func tableView(
-    _ tableView: UITableView,
-    cellForRowAt indexPath: IndexPath
-  ) -> UITableViewCell {
-    guard let cell = tableView.dequeueReusableCell(
-      withIdentifier: RecentSearchKeywordCell.id,
-      for: indexPath
-    ) as? RecentSearchKeywordCell else { return UITableViewCell() }
-    cell.delegate = self
-    
-    let keyword = viewModel.cellForRow(at: indexPath)
-    cell.configure(keyword: keyword)
-    
-    return cell
-  }
-}
-
-// MARK: - Actions
-private extension SearchViewController {
-  @objc func cancelButtonTapped() {
-    self.viewModel.didTapCancelButton()
-  }
-}
-
-extension SearchViewController: UITableViewDelegate {
-  func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
-    cell.selectionStyle = .none
+  // MARK: - Bind
+  private func bindActions() {
+    self.cancelButton.tapPublisher
+      .sink { [weak self] _ in
+        self?.viewModel.didTapCancelButton()
+      }
+      .store(in: &self.subscriptions)
   }
   
-  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-    // 버튼 클릭 시, 해당 키워드의 검색 결과 화면으로 이동
-  }
+  // MARK: - Private
 }
 
-// MARK: - RecentSearchKeywordCellDelegate
-extension SearchViewController: RecentSearchKeywordCellDelegate {
-  func didTapDeleteButton(in cell: UITableViewCell) {
-    guard let indexPath = tableView.indexPath(for: cell) else { return }
+// MARK: - UITextFieldDelegate
+extension SearchViewController: UITextFieldDelegate {
+  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+    guard let text = textField.text else { return false }
     
-    self.viewModel.didTapKeywordDeleteButton(at: indexPath)
+    self.viewModel.textFieldShouldReturn(keyword: text)
+    
+    return true
   }
 }

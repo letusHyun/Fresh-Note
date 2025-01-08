@@ -17,17 +17,17 @@ final class CoreDataProductQueryStorage {
   }
   
   // MARK: - Private
-  private func deleteResponse(in context: NSManagedObjectContext) throws {
-    let request = ProductQueryEntity.fetchRequest()
-    
-    do {
-      if let result = try context.fetch(request).first {
-        context.delete(result)
-      }
-    } catch {
-      throw CoreDataStorageError.deleteError(error)
-    }
-  }
+//  private func deleteResponse(in context: NSManagedObjectContext) throws {
+//    let request = ProductQueryEntity.fetchRequest()
+//    
+//    do {
+//      if let result = try context.fetch(request).first {
+//        context.delete(result)
+//      }
+//    } catch {
+//      throw CoreDataStorageError.deleteError(error)
+//    }
+//  }
 }
 
 // MARK: - ProductQueryStorage
@@ -35,7 +35,7 @@ extension CoreDataProductQueryStorage: ProductQueryStorage {
   func saveQuery(productQuery: ProductQuery) -> AnyPublisher<ProductQuery, any Error> {
     return self.coreDataStorage
       .performBackgroundTask { [weak self] context -> ProductQuery in
-        try self?.deleteResponse(in: context)
+//        try self?.deleteResponse(in: context)
         
         _ = ProductQueryEntity(productQuery: productQuery, insertInto: context)
     
