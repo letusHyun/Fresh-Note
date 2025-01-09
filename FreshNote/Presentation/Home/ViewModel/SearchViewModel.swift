@@ -39,6 +39,7 @@ protocol SearchResultViewModelInput {
 protocol SearchResultViewModelOutput {
   var resultErrorPublisher: AnyPublisher<(any Error)?, Never> { get }
   var resultReloadDataPublisher: AnyPublisher<Void, Never> { get }
+  var updatePinPublisher: AnyPublisher<(IndexPath, Bool), Never> { get }
 }
 
 protocol SearchViewModelInput {
@@ -65,6 +66,7 @@ final class DefaultSearchViewModel: SearchViewModel {
   private var subscriptions = Set<AnyCancellable>()
   private let recentProductQueriesUseCase: any RecentProductQueriesUseCase
   private let fetchProductUseCase: any FetchProductUseCase
+  private let updateProductUseCase: any UpdateProductUseCase
   
   // MARK: - Output
   var historyReloadDataPublisher: AnyPublisher<Void, Never> { self.historyReloadDataSubject.eraseToAnyPublisher() }
@@ -72,16 +74,16 @@ final class DefaultSearchViewModel: SearchViewModel {
     self.historyDeleteRowsSubject.eraseToAnyPublisher()
   }
   var historyErrorPublisher: AnyPublisher<(any Error)?, Never> { self.$historyError.eraseToAnyPublisher() }
-  
   private let historyReloadDataSubject: PassthroughSubject<Void, Never> = .init()
   private let historyDeleteRowsSubject: PassthroughSubject<IndexPath, Never> = .init()
   @Published private var historyError: (any Error)?
   
   var resultErrorPublisher: AnyPublisher<(any Error)?, Never> { self.$resultError.eraseToAnyPublisher() }
   var resultReloadDataPublisher: AnyPublisher<Void, Never> { self.resultReloadDataSubject.eraseToAnyPublisher() }
-  
+  var updatePinPublisher: AnyPublisher<(IndexPath, Bool), Never> { self.updatePinSubject.eraseToAnyPublisher() }
   @Published private var resultError: (any Error)?
   private let resultReloadDataSubject: PassthroughSubject<Void, Never> = .init()
+  private let updatePinSubject: PassthroughSubject<(IndexPath, Bool), Never> = .init()
   
   var updateTextPubilsher: AnyPublisher<String, Never> { self.updateTextSubject.eraseToAnyPublisher() }
   private let updateTextSubject: PassthroughSubject<String, Never> = .init()
@@ -92,11 +94,13 @@ final class DefaultSearchViewModel: SearchViewModel {
   init(
     actions: SearchViewModelActions,
     recentProductQueriesUseCase: any RecentProductQueriesUseCase,
-    fetchProductUseCase: any FetchProductUseCase
+    fetchProductUseCase: any FetchProductUseCase,
+    updateProductUseCase: any UpdateProductUseCase
   ) {
     self.actions = actions
     self.recentProductQueriesUseCase = recentProductQueriesUseCase
     self.fetchProductUseCase = fetchProductUseCase
+    self.updateProductUseCase = updateProductUseCase
     
     self.bind()
   }
@@ -140,7 +144,19 @@ final class DefaultSearchViewModel: SearchViewModel {
   
   func didTapPin(at indexPath: IndexPath) {
     let product = self.products[indexPath.row]
-    // TODO: - id값 이용해서 update
+    let updatedPinState = product.isPinned ? false : true
+    let updatingProduct = self.makeUpdatingProduct(product: product, updatedPinState: updatedPinState)
+    
+    self.updateProductUseCase.execute(product: updatingProduct, newImageData: nil)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.resultError = error
+      } receiveValue: { [weak self] updatedProduct in
+        self?.products[indexPath.row] = updatedProduct
+        self?.updatePinSubject.send((indexPath, updatedPinState))
+      }
+      .store(in: &self.subscriptions)
   }
   
   func cellForRow(at indexPath: IndexPath) -> ProductQuery {
@@ -240,5 +256,19 @@ final class DefaultSearchViewModel: SearchViewModel {
     let productID = self.products[indexPath.row].did
     self.updatingProductIndexPath = indexPath
     self.actions.showProduct(productID)
+  }
+  
+  // MARK: - Private
+  private func makeUpdatingProduct(product: Product, updatedPinState: Bool) -> Product {
+    return Product(
+      did: product.did,
+      name: product.name,
+      expirationDate: product.expirationDate,
+      category: product.category,
+      memo: product.memo,
+      imageURL: product.imageURL,
+      isPinned: updatedPinState,
+      creationDate: product.creationDate
+    )
   }
 }

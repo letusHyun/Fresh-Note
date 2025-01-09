@@ -110,6 +110,7 @@ final class OnboardingViewController: BaseViewController {
       .errorPublisher
       .sink { [weak self] error in
         guard let error = error else { return }
+        
         print("error 발생: \(error)")
       }
       .store(in: &self.subscriptions)

@@ -54,8 +54,20 @@ final class SearchResultView: UIView {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] error in
         guard let error = error else { return }
-        // MARK: - Error 핸들링
         ActivityIndicatorView.shared.stopIndicating()
+      }
+      .store(in: &self.subscriptions)
+    
+    viewModel.updatePinPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] indexPath, updatedPinState in
+        ActivityIndicatorView.shared.stopIndicating()
+        guard
+          let self,
+          let cell = self.tableView.cellForRow(at: indexPath) as? ProductCell
+        else { return }
+        
+        cell.configurePin(isPinned: updatedPinState)
       }
       .store(in: &self.subscriptions)
   }
@@ -114,6 +126,7 @@ extension SearchResultView: ProductCellDelegate {
   func didTapPin(in cell: UITableViewCell) {
     guard let indexPath = self.tableView.indexPath(for: cell) else { return }
     
+    ActivityIndicatorView.shared.startIndicating()
     self.viewModel.didTapPin(at: indexPath)
   }
 }

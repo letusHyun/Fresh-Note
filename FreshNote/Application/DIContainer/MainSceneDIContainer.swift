@@ -44,7 +44,8 @@ private extension MainSceneDIContainer {
     return DefaultSearchViewModel(
       actions: actions,
       recentProductQueriesUseCase: self.makeRecentProductQueriesUseCase(),
-      fetchProductUseCase: self.makefetchProductUseCase()
+      fetchProductUseCase: self.makefetchProductUseCase(),
+      updateProductUseCase: self.makeUpdateProductUseCase()
     )
   }
   

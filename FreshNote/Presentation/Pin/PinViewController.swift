@@ -66,11 +66,7 @@ final class PinViewController: BaseViewController {
       .errorPublisher
       .receive(on: DispatchQueue.main)
       .sink { error in
-        guard let error = error else {
-          return
-        }
-        
-        // MARK: - Error 핸들링
+        guard let error = error else { return }
         ActivityIndicatorView.shared.stopIndicating()
       }
       .store(in: &self.subscriptions)

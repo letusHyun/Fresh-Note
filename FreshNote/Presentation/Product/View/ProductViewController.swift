@@ -236,7 +236,6 @@ private extension ProductViewController {
       .sink { error in
         guard let error = error else { return }
         ActivityIndicatorView.shared.stopIndicating()
-        // TODO: - error handling
       }
       .store(in: &self.subscriptions)
     
