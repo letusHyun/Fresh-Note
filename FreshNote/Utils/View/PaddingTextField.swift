@@ -8,6 +8,8 @@
 import Combine
 import UIKit
 
+import SnapKit
+
 /// 텍스트 left padding을 제공해주는 객체입니다.
 class PaddingTextField: UITextField {
   // MARK: - Properties
@@ -21,18 +23,19 @@ class PaddingTextField: UITextField {
   }
   
   // MARK: - LifeCycle
-  init(leftPadding: CGFloat = 25) {
+  init(leftPadding: CGFloat = 25, clearButtonMode: UITextField.ViewMode = .always) {
     super.init(frame: .zero)
     self.setPadding(leftPadding: leftPadding)
     self.setupToolbar()
     self.bind()
+    self.clearButtonMode = clearButtonMode
   }
   
   required init?(coder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
-  
-  // MARK: - Private Helpers
+
+  // MARK: - Bind
   private func bind() {
     self.keyboardToolbar.tapPublisher
       .receive(on: DispatchQueue.main)
@@ -41,7 +44,8 @@ class PaddingTextField: UITextField {
       }
       .store(in: &self.subscriptions)
   }
-  
+
+  // MARK: - Private
   private func setupToolbar() {
     self.inputAccessoryView = self.keyboardToolbar
   }

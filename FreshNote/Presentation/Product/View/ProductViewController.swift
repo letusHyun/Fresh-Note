@@ -68,7 +68,7 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   }()
   
   private lazy var expirationTextField: PaddingTextField = {
-    let tf = PaddingTextField()
+    let tf = PaddingTextField(clearButtonMode: .never)
     // TODO: - 현재 날자를 placeholder로 보여주는 알고리즘 작성하기
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "yyyy"
@@ -85,7 +85,7 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   }()
   
   private let categoryTextField: PaddingTextField = {
-    let tf = PaddingTextField()
+    let tf = PaddingTextField(clearButtonMode: .never)
     tf.placeholder = "카테고리를 지정해주세요."
     tf.layer.cornerRadius = 8
     tf.layer.borderColor = UIColor(fnColor: .gray0).cgColor
@@ -156,6 +156,10 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
     super.viewWillDisappear(animated)
     ActivityIndicatorView.shared.stopIndicating()
     self.tabBarController?.tabBar.isHidden = false
+  }
+  
+  deinit {
+    print("DEBUG: \(Self.self) deinit")
   }
   
   // MARK: - SetupUI

@@ -38,6 +38,9 @@ final class ProductCoordinator: BaseCoordinator {
   
   private let deleteImageSubject: PassthroughSubject<Void, Never> = PassthroughSubject()
   
+  /// 업데이트 된 Product를 필요로 하는 곳에서 사용합니다.
+  var popCompletion: ((Product?) -> Void)?
+  
   // MARK: - LifeCycle
   init(
     dependencies: any ProductCoordinatorDependencies,
@@ -57,7 +60,8 @@ final class ProductCoordinator: BaseCoordinator {
   // MARK: - Start
   func start() {
     let actions = ProductViewModelActions(
-      pop: { [weak self] in
+      pop: { [weak self] updatedProduct in
+        self?.popCompletion?(updatedProduct)
         self?.pop()
       }, showPhotoBottomSheet: { [weak self] in
         self?.showPhotoBottomSheet()

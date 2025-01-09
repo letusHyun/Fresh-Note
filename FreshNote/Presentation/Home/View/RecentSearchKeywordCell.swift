@@ -77,7 +77,7 @@ extension RecentSearchKeywordCell {
       self.keywordLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 13),
       self.keywordLabel.trailingAnchor.constraint(lessThanOrEqualTo: self.deleteButton.leadingAnchor, constant: -30)
     ] + [
-      self.deleteButton.widthAnchor.constraint(equalToConstant: 20),
+      self.deleteButton.widthAnchor.constraint(equalToConstant: 25),
       self.deleteButton.heightAnchor.constraint(equalTo: self.deleteButton.widthAnchor),
       self.deleteButton.centerYAnchor.constraint(equalTo: self.keywordLabel.centerYAnchor),
       self.deleteButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -15)

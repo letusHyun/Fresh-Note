@@ -43,7 +43,8 @@ private extension MainSceneDIContainer {
   func makeSearchViewModel(actions: SearchViewModelActions) -> any SearchViewModel {
     return DefaultSearchViewModel(
       actions: actions,
-      recentProductQueriesUseCase: self.makeRecentProductQueriesUseCase()
+      recentProductQueriesUseCase: self.makeRecentProductQueriesUseCase(),
+      fetchProductUseCase: self.makefetchProductUseCase()
     )
   }
   

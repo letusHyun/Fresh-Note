@@ -164,6 +164,11 @@ final class DefaultProductRepository: ProductRepository {
     return self.productStorage
       .fetchProduct(category: category)
   }
+  
+  func fetchProduct(keyword: String) -> AnyPublisher<[Product], any Error> {
+    return self.productStorage
+      .fetchProduct(keyword: keyword)
+  }
 }
 
 // MARK: - Private Helpers

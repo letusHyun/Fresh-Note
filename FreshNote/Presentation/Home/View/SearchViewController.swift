@@ -39,12 +39,22 @@ final class SearchViewController: BaseViewController {
   }()
   
   private lazy var searchHistoryView: SearchHistoryView = {
-    return SearchHistoryView(viewModel: self.viewModel)
+    let view = SearchHistoryView(viewModel: self.viewModel)
+    view.delegate = self
+    return view
+  }()
+  
+  private lazy var resultView: SearchResultView = {
+    let view = SearchResultView(viewModel: self.viewModel)
+    view.isHidden = true
+    return view
   }()
   
   private let viewModel: any SearchViewModel
   
   private var subscriptions: Set<AnyCancellable> = []
+  
+  private var isFirstViewDidAppear = false
   
   // MARK: - LifeCycle
   init(viewModel: any SearchViewModel) {
@@ -59,18 +69,25 @@ final class SearchViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    defer {
-      ActivityIndicatorView.shared.startIndicating()
-      self.viewModel.viewDidLoad()
-    }
+    defer { self.viewModel.viewDidLoad() }
     
+    self.bind(to: self.viewModel)
     self.bindActions()
   }
   
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
     self.navigationController?.setNavigationBarHidden(true, animated: true)
+    self.navigationController?.interactivePopGestureRecognizer?.delegate = nil
     self.tabBarController?.tabBar.isHidden = true
+  }
+  
+  override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
+    if self.isFirstViewDidAppear {
+      self.isFirstViewDidAppear.toggle()
+      self.textField.becomeFirstResponder()
+    }
   }
   
   override func viewWillDisappear(_ animated: Bool) {
@@ -84,6 +101,7 @@ final class SearchViewController: BaseViewController {
     self.view.addSubview(self.textField)
     self.view.addSubview(self.backButton)
     self.view.addSubview(self.searchHistoryView)
+    self.view.addSubview(self.resultView)
     
     self.textField.snp.makeConstraints {
       $0.top.equalTo(self.view.safeAreaLayoutGuide).inset(15)
@@ -104,6 +122,12 @@ final class SearchViewController: BaseViewController {
       $0.leading.trailing.equalToSuperview()
       $0.bottom.equalToSuperview()
     }
+    
+    self.resultView.snp.makeConstraints {
+      $0.top.equalTo(self.textField.snp.bottom).offset(5)
+      $0.leading.trailing.equalToSuperview()
+      $0.bottom.equalToSuperview()
+    }
   }
   
   // MARK: - Bind
@@ -113,19 +137,58 @@ final class SearchViewController: BaseViewController {
         self?.viewModel.didTapCancelButton()
       }
       .store(in: &self.subscriptions)
+    
+    self.textField
+      .publisher(for: .editingDidBegin)
+      .sink { [weak self] _ in
+        guard let self else { return }
+        
+        if self.searchHistoryView.isHidden {
+          self.appearHistoryView()
+        }
+      }
+      .store(in: &self.subscriptions)
+  }
+  
+  private func bind(to viewModel: any SearchViewModel) {
+    viewModel
+      .updateTextPubilsher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] text in
+        self?.textField.text = text
+      }
+      .store(in: &self.subscriptions)
   }
   
   // MARK: - Private
+  private func appearHistoryView() {
+    self.searchHistoryView.isHidden = false
+    self.resultView.isHidden = true
+  }
+  
+  private func appearResultView() {
+    self.searchHistoryView.isHidden = true
+    self.resultView.isHidden = false
+  }
 }
 
 // MARK: - UITextFieldDelegate
 extension SearchViewController: UITextFieldDelegate {
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
     guard let text = textField.text, text != "" else { return false }
-    
+
+    self.appearResultView()
     self.viewModel.textFieldShouldReturn(keyword: text)
     textField.resignFirstResponder()
     
     return true
+  }
+}
+
+// MARK: - SearchHistoryViewDelegate
+extension SearchViewController: SearchHistoryViewDelegate {
+  func didSelectRow() {
+    self.textField.resignFirstResponder()
+    self.appearResultView()
   }
 }

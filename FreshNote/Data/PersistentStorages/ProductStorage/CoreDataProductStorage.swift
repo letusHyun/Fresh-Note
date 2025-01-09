@@ -184,4 +184,21 @@ extension CoreDataProductStorage: ProductStorage {
       }
     }
   }
+  
+  func fetchProduct(keyword: String) -> AnyPublisher<[Product], any Error> {
+    return self.coreDataStorage.performBackgroundTask { context in
+      let request = ProductEntity.fetchRequest()
+      request.predicate = NSPredicate(
+        format: "\(ProductEntity.PropertyName.name.rawValue) == %@",
+        keyword
+      )
+      
+      do {
+        let entities = try context.fetch(request)
+        return entities.map { $0.toDomain() }
+      } catch {
+        throw CoreDataStorageError.readError(error)
+      }
+    }
+  }
 }

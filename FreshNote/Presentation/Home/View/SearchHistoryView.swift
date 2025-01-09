@@ -10,12 +10,11 @@ import UIKit
 
 import SnapKit
 
+protocol SearchHistoryViewDelegate: AnyObject {
+  func didSelectRow()
+}
+
 final class SearchHistoryView: UIView {
-  typealias SearchHistoryViewModel = SearchHistoryViewModelInput
-  & SearchHistoryViewModelOutput
-  & SearchViewModelInput
-  & SearchViewModelOutput
-  
   // MARK: - Properties
   private let recentSearchTagLabel: UILabel = {
     let lb = UILabel()
@@ -48,14 +47,13 @@ final class SearchHistoryView: UIView {
   
   private let viewModel: any SearchHistoryViewModel
   
-  private let viewModelType: SearchViewModelType
-  
   private var subscriptions: Set<AnyCancellable> = []
+  
+  weak var delegate: (any SearchHistoryViewDelegate)?
   
   // MARK: - LifeCycle
   init(viewModel: any SearchHistoryViewModel) {
     self.viewModel = viewModel
-    self.viewModelType = SearchViewModelType.history
     super.init(frame: .zero)
     
     self.setupUI()
@@ -129,6 +127,7 @@ final class SearchHistoryView: UIView {
     self.allDeletionButton
       .tapPublisher
       .sink { [weak self] in
+        ActivityIndicatorView.shared.startIndicating()
         self?.viewModel.didTapAllDeletionButton()
       }
       .store(in: &self.subscriptions)
@@ -141,7 +140,7 @@ extension SearchHistoryView: UITableViewDataSource {
     _ tableView: UITableView,
     numberOfRowsInSection section: Int
   ) -> Int {
-    self.viewModel.numberOfRowsInSection(viewModelType: self.viewModelType)
+    self.viewModel.historyNumberOfRowsInSection()
   }
   
   func tableView(
@@ -168,7 +167,8 @@ extension SearchHistoryView: UITableViewDelegate {
   }
   
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-    self.viewModel.didSelectRow(at: indexPath, viewModelType: self.viewModelType)
+    self.delegate?.didSelectRow()
+    self.viewModel.historyDidSelectRow(at: indexPath)
   }
 }
 

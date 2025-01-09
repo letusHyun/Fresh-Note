@@ -14,6 +14,7 @@ protocol FetchProductUseCase {
   func fetchProduct(productID: DocumentID) -> AnyPublisher<Product, any Error>
   func fetchPinnedProducts() -> AnyPublisher<[Product], any Error>
   func fetchProduct(category: ProductCategory) -> AnyPublisher<[Product], any Error>
+  func fetchProduct(keyword: String) -> AnyPublisher<[Product], any Error>
 }
 
 final class DefaultFetchProductUseCase: FetchProductUseCase {
@@ -43,5 +44,10 @@ final class DefaultFetchProductUseCase: FetchProductUseCase {
   func fetchProduct(category: ProductCategory) -> AnyPublisher<[Product], any Error> {
     return productRepository
       .fetchProduct(category: category.rawValue)
+  }
+  
+  func fetchProduct(keyword: String) -> AnyPublisher<[Product], any Error> {
+    return productRepository
+      .fetchProduct(keyword: keyword)
   }
 }

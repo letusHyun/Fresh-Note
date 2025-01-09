@@ -9,18 +9,18 @@ import Combine
 import Foundation
 
 protocol SearchViewModel: SearchViewModelInput, SearchViewModelOutput,
-                          SearchHistoryViewModelInput, SearchHistoryViewModelOutput,
-                          SearchResultViewModelInput, SearchResultViewModelOutput { }
+                          SearchHistoryViewModel, SearchResultViewModel { }
 
-enum SearchViewModelType {
-  case history
-  case result
-}
+typealias SearchHistoryViewModel = SearchHistoryViewModelInput & SearchHistoryViewModelOutput
+
+typealias SearchResultViewModel = SearchResultViewModelInput & SearchResultViewModelOutput
 
 protocol SearchHistoryViewModelInput {
   func didTapAllDeletionButton()
   func cellForRow(at indexPath: IndexPath) -> ProductQuery
   func didTapKeywordDeleteButton(at indexPath: IndexPath)
+  func historyNumberOfRowsInSection() -> Int
+  func historyDidSelectRow(at indexPath: IndexPath)
 }
 
 protocol SearchHistoryViewModelOutput {
@@ -31,6 +31,9 @@ protocol SearchHistoryViewModelOutput {
 
 protocol SearchResultViewModelInput {
   func cellForRow(at indexPath: IndexPath) -> Product
+  func resultNumberOfRowsInSection() -> Int
+  func resultDidSelectRow(at indexPath: IndexPath)
+  func didTapPin(at indexPath: IndexPath)
 }
 
 protocol SearchResultViewModelOutput {
@@ -38,25 +41,20 @@ protocol SearchResultViewModelOutput {
   var resultReloadDataPublisher: AnyPublisher<Void, Never> { get }
 }
 
-//protocol SearchViewModelCommonInput {
-//  
-//}
-
 protocol SearchViewModelInput {
   func viewDidLoad()
   func didTapCancelButton()
-  func numberOfRowsInSection(viewModelType: SearchViewModelType) -> Int
-  func didSelectRow(at indexPath: IndexPath, viewModelType: SearchViewModelType)
   func textFieldShouldReturn(keyword: String)
 }
 
 protocol SearchViewModelOutput {
-
+  var updateTextPubilsher: AnyPublisher<String, Never> { get }
 }
 
 struct SearchViewModelActions {
   let pop: () -> Void
-//  let showProduct: (String) -> Void
+  let showProduct: (DocumentID) -> Void
+  let updateProductPublisher: AnyPublisher<Product?, Never>
 }
 
 final class DefaultSearchViewModel: SearchViewModel {
@@ -64,8 +62,9 @@ final class DefaultSearchViewModel: SearchViewModel {
   private var productQueries: [ProductQuery] = []
   private var products: [Product] = []
   private let actions: SearchViewModelActions
-  private let recentProductQueriesUseCase: any RecentProductQueriesUseCase
   private var subscriptions = Set<AnyCancellable>()
+  private let recentProductQueriesUseCase: any RecentProductQueriesUseCase
+  private let fetchProductUseCase: any FetchProductUseCase
   
   // MARK: - Output
   var historyReloadDataPublisher: AnyPublisher<Void, Never> { self.historyReloadDataSubject.eraseToAnyPublisher() }
@@ -84,18 +83,47 @@ final class DefaultSearchViewModel: SearchViewModel {
   @Published private var resultError: (any Error)?
   private let resultReloadDataSubject: PassthroughSubject<Void, Never> = .init()
   
+  var updateTextPubilsher: AnyPublisher<String, Never> { self.updateTextSubject.eraseToAnyPublisher() }
+  private let updateTextSubject: PassthroughSubject<String, Never> = .init()
+  
+  private var updatingProductIndexPath: IndexPath?
+  
   // MARK: - LifeCycle
   init(
     actions: SearchViewModelActions,
-    recentProductQueriesUseCase: any RecentProductQueriesUseCase
+    recentProductQueriesUseCase: any RecentProductQueriesUseCase,
+    fetchProductUseCase: any FetchProductUseCase
   ) {
     self.actions = actions
     self.recentProductQueriesUseCase = recentProductQueriesUseCase
+    self.fetchProductUseCase = fetchProductUseCase
+    
+    self.bind()
   }
   
   deinit {
     print("DEBUG: \(Self.self) deinit")
   }
+  
+  // MARK: - Bind
+  private func bind() {
+    self.actions.updateProductPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] updatedProduct in
+        guard
+          let updatedProduct = updatedProduct,
+          let updatingProductIndexPath = self?.updatingProductIndexPath else {
+          self?.updatingProductIndexPath = nil
+          return
+        }
+        
+        self?.updatingProductIndexPath = nil
+        self?.products[updatingProductIndexPath.row] = updatedProduct
+        self?.resultReloadDataSubject.send()
+      }
+      .store(in: &self.subscriptions)
+  }
+  
   // MARK: - Input
   func viewDidLoad() {
     self.recentProductQueriesUseCase.fetchQueries()
@@ -110,13 +138,9 @@ final class DefaultSearchViewModel: SearchViewModel {
       .store(in: &self.subscriptions)
   }
   
-  func numberOfRowsInSection(viewModelType: SearchViewModelType) -> Int {
-    switch viewModelType {
-    case .history:
-      return self.productQueries.count
-    case .result:
-      return self.products.count
-    }
+  func didTapPin(at indexPath: IndexPath) {
+    let product = self.products[indexPath.row]
+    // TODO: - id값 이용해서 update
   }
   
   func cellForRow(at indexPath: IndexPath) -> ProductQuery {
@@ -133,6 +157,7 @@ final class DefaultSearchViewModel: SearchViewModel {
   
   func didTapKeywordDeleteButton(at indexPath: IndexPath) {
     let queryID = self.productQueries[indexPath.row].uuidString
+    
     self.recentProductQueriesUseCase
       .deleteQuery(uuidString: queryID)
       .receive(on: DispatchQueue.main)
@@ -146,13 +171,6 @@ final class DefaultSearchViewModel: SearchViewModel {
       .store(in: &self.subscriptions)
   }
   
-  func didSelectRow(at indexPath: IndexPath, viewModelType: SearchViewModelType) {
-    switch viewModelType {
-    case .history: break
-    case .result: break
-    }
-  }
-  
   func textFieldShouldReturn(keyword: String) {
     self.recentProductQueriesUseCase
       .saveQuery(keyword: keyword)
@@ -163,7 +181,18 @@ final class DefaultSearchViewModel: SearchViewModel {
       } receiveValue: { [weak self] productQuery in
         self?.productQueries.append(productQuery)
         self?.historyReloadDataSubject.send()
-//        self?.actions.showProduct(keyword)
+      }
+      .store(in: &self.subscriptions)
+    
+    self.fetchProductUseCase
+      .fetchProduct(keyword: keyword)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.resultError = error
+      } receiveValue: { [weak self] products in
+        self?.products = products
+        self?.resultReloadDataSubject.send()
       }
       .store(in: &self.subscriptions)
   }
@@ -180,5 +209,36 @@ final class DefaultSearchViewModel: SearchViewModel {
         self?.historyReloadDataSubject.send()
       }
       .store(in: &self.subscriptions)
+  }
+  
+  func historyNumberOfRowsInSection() -> Int {
+    return self.productQueries.count
+  }
+  
+  func historyDidSelectRow(at indexPath: IndexPath) {
+    let query = self.productQueries[indexPath.row].keyword
+    self.updateTextSubject.send(query)
+    
+    self.fetchProductUseCase
+      .fetchProduct(keyword: query)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.resultError = error
+      } receiveValue: { [weak self] products in
+        self?.products = products
+        self?.resultReloadDataSubject.send()
+      }
+      .store(in: &self.subscriptions)
+  }
+  
+  func resultNumberOfRowsInSection() -> Int {
+    return self.products.count
+  }
+  
+  func resultDidSelectRow(at indexPath: IndexPath) {
+    let productID = self.products[indexPath.row].did
+    self.updatingProductIndexPath = indexPath
+    self.actions.showProduct(productID)
   }
 }

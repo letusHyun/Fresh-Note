@@ -12,7 +12,7 @@ struct ProductViewModelActions {
   typealias AnimateCategoryHandler = () -> Void
   typealias PassCategoryHandler = (String) -> Void
   
-  let pop: () -> Void
+  let pop: (Product?) -> Void
   let showPhotoBottomSheet: () -> Void
   let showCategoryBottomSheet: (@escaping AnimateCategoryHandler,
                                 @escaping PassCategoryHandler) -> Void
@@ -142,7 +142,7 @@ final class DefaultProductViewModel: ProductViewModel {
   }
   
   func didTapBackButton() {
-    self.actions.pop()
+    self.actions.pop(nil)
   }
   
   func didTapSaveButton(name: String, expiration: String, imageData: Data?, category: String, memo: String?) {
@@ -167,7 +167,7 @@ final class DefaultProductViewModel: ProductViewModel {
           guard case .failure(let error) = completion else { return }
           self?.error = error
         } receiveValue: { [weak self] product in
-          self?.actions.pop()
+          self?.actions.pop(nil)
         }
         .store(in: &self.subscriptions)
     case .edit(_):
@@ -191,7 +191,7 @@ final class DefaultProductViewModel: ProductViewModel {
           guard case .failure(let error) = completion else { return }
           self?.error = error
         } receiveValue: { [weak self] product in
-          self?.actions.pop()
+          self?.actions.pop(product)
         }
         .store(in: &self.subscriptions)
     }

@@ -16,4 +16,5 @@ protocol ProductRepository {
   func updateProduct(product: Product) -> AnyPublisher<Product, any Error>
   func fetchPinnedProducts() -> AnyPublisher<[Product], any Error>
   func fetchProduct(category: String) -> AnyPublisher<[Product], any Error>
+  func fetchProduct(keyword: String) -> AnyPublisher<[Product], any Error>
 }

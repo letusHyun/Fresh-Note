@@ -9,21 +9,18 @@ import Combine
 import UIKit
 
 extension UITextField {
-  var textPublisher: AnyPublisher<String?, Never> {
+  var textPublisher: AnyPublisher<String, Never> {
     self.publisher(for: .editingChanged)
+      .receive(on: DispatchQueue.main)
       .compactMap { $0 as? UITextField }
-      .map { $0.text }
+      .compactMap { $0.text }
       .eraseToAnyPublisher()
   }
   
-  var textDebouncePublisher: AnyPublisher<String?, Never> {
-    self.textPublisher.debounce(for: 0.1, scheduler: RunLoop.main)
-      .eraseToAnyPublisher()
-  }
-  
-  var didEndEditingPublisher: AnyPublisher<Void, Never> {
-    self.publisher(for: .editingDidEnd)
-      .map { _ in }
+  var textDebouncePublisher: AnyPublisher<String, Never> {
+    self.textPublisher
+      .debounce(for: 0.1, scheduler: DispatchQueue.main)
+      .removeDuplicates()
       .eraseToAnyPublisher()
   }
 }
