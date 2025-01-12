@@ -22,8 +22,8 @@ final class OnboardingSceneDIContainer {
   
   
   // MARK: - Domain Layer
-  func makeSaveAlarmUseCase() -> any SaveAlarmUseCase {
-    return DefaultSaveAlarmUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  func makeSaveDateTimeUseCase() -> any SaveDateTimeUseCase {
+    return DefaultSaveDateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
   }
   
   func makeSignInStateUseCase() -> any SignInStateUseCase {
@@ -82,7 +82,14 @@ final class OnboardingSceneDIContainer {
   }
   
   func makeDateTimeRepository() -> any DateTimeRepository {
-    return DefaultDateTimeRepository(firebaseNetworkService: self.makeFirebaseNetworkService())
+    return DefaultDateTimeRepository(
+      firebaseNetworkService: self.makeFirebaseNetworkService(),
+      dateTimeStorage: self.makeDateTimeStorage()
+    )
+  }
+  
+  func makeDateTimeStorage() -> any DateTimeStorage {
+    return CoreDataDateTimeStorage(coreDataStorage: self.makeCoreDataStorage())
   }
   
   // MARK: - Presentation Layer
@@ -101,7 +108,7 @@ final class OnboardingSceneDIContainer {
   func makeDateTimeSettingViewModel(
     actions: DateTimeSettingViewModelActions
   ) -> DateTimeSettingViewModel {
-    return DefaultDateTimeSettingViewModel(actions: actions, saveAlarmUseCase: self.makeSaveAlarmUseCase())
+    return DefaultDateTimeSettingViewModel(actions: actions, saveDateTimeUseCase: self.makeSaveDateTimeUseCase())
   }
 }
 

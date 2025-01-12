@@ -115,7 +115,8 @@ private extension MainSceneDIContainer {
   func makeSaveProductUseCase() -> any SaveProductUseCase {
     return DefaultSaveProductUseCase(
       productRepository: self.makeProductRepository(),
-      imageRepository: self.makeImageRepository()
+      imageRepository: self.makeImageRepository(),
+      savePushNotificationUseCase: self.makeSavePushNotificationUseCase()
     )
   }
   
@@ -123,7 +124,25 @@ private extension MainSceneDIContainer {
     return DefaultFetchProductUseCase(productRepository: self.makeProductRepository())
   }
   
+  func makeSavePushNotificationUseCase() -> any SavePushNotificationUseCase {
+    return DefaultSavePushNotificationUseCase(
+      fetchDateTimeUseCase: self.makeFetchDateTimeUseCase(),
+      pushNotificationRepository: self.makePushNotificationRepository()
+    )
+  }
+  
+  func makeFetchDateTimeUseCase() -> any FetchDateTimeUseCase {
+    return DefaultFetchDateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  }
+  
   // MARK: - Data Layer
+  func makeDateTimeRepository() -> DateTimeRepository {
+    return DefaultDateTimeRepository(
+      firebaseNetworkService: self.makeFirebaseNetworkService(),
+      dateTimeStorage: self.makeDateTimeStorage()
+    )
+  }
+  
   func makeProductQueriesRepository() -> any ProductQueriesRepository {
     return DefaultProductQueriesRepository(productQueryPersistentStorage: self.makeProductQueryStorage())
   }
@@ -135,6 +154,10 @@ private extension MainSceneDIContainer {
     )
   }
   
+  func makePushNotificationRepository() -> any PushNotificationRepository {
+    return DefaultPushNotificationRepository()
+  }
+  
   func makeImageRepository() -> any ImageRepository {
     return DefaultImageRepository(firebaseNetworkService: self.makeFirebaseNetworkService())
   }
@@ -143,17 +166,21 @@ private extension MainSceneDIContainer {
     return DefaultFirebaseNetworkService()
   }
   
+  // MARK: - Persistent Storage
+  func makeProductQueryStorage() -> any ProductQueryStorage {
+    return CoreDataProductQueryStorage(coreDataStorage: self.makeCoreDataStorage())
+  }
+  
+  func makeDateTimeStorage() -> any DateTimeStorage {
+    return CoreDataDateTimeStorage(coreDataStorage: self.makeCoreDataStorage())
+  }
+  
   func makeProductStorage() -> any ProductStorage {
     return CoreDataProductStorage(coreDataStorage: self.makeCoreDataStorage())
   }
   
   func makeCoreDataStorage() -> any CoreDataStorage {
     return PersistentCoreDataStorage.shared
-  }
-  
-  // MARK: - Persistent Storage
-  func makeProductQueryStorage() -> any ProductQueryStorage {
-    return CoreDataProductQueryStorage(coreDataStorage: self.makeCoreDataStorage())
   }
 }
 

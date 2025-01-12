@@ -5,8 +5,8 @@
 //  Created by SeokHyun on 10/22/24.
 //
 
+import Combine
 import UIKit
-import FirebaseAuth
 
 final class DateTimeSettingViewController: BaseViewController {
   struct Constants {
@@ -34,7 +34,7 @@ final class DateTimeSettingViewController: BaseViewController {
   private lazy var dateTextField: UITextField = {
     let textField = UITextField()
     textField.placeholder = "01"
-    textField.textColor = .black //
+    textField.textColor = .black
     textField.font = .pretendard(size: Constants.dateSize, weight: ._400)
     textField.keyboardType = .numberPad
     textField.delegate = self
@@ -52,19 +52,25 @@ final class DateTimeSettingViewController: BaseViewController {
     let datePicker = UIDatePicker()
     datePicker.datePickerMode = .time
     datePicker.preferredDatePickerStyle = .compact
-//    datePicker.tintColor = .black
     return datePicker
   }()
   
-  private let startButton: UIButton = {
+  private lazy var startButton: UIButton = {
     let button = UIButton()
     button.setTitle("시작하기", for: .normal)
     button.setTitleColor(UIColor(fnColor: .realBack), for: .normal)
-    button.backgroundColor = UIColor(fnColor: .orange2)
+    button.backgroundColor = self.startButtonDisabledColor
     button.layer.cornerRadius = 8
     button.layer.masksToBounds = true
+    button.isEnabled = false
     return button
   }()
+  
+  private var startButtonDisabledColor: UIColor {
+    UIColor(fnColor: .orange2).withAlphaComponent(0.3)
+  }
+  
+  private var subscriptions: Set<AnyCancellable> = []
   
   private let viewModel: any DateTimeSettingViewModel
   
@@ -80,7 +86,7 @@ final class DateTimeSettingViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    addTargets()
+    self.bindActions()
   }
   
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -89,38 +95,59 @@ final class DateTimeSettingViewController: BaseViewController {
   
   // MARK: - SetupUI
   override func setupLayout() {
-    view.addSubview(descriptionLabel)
-    view.addSubview(dateStackView)
-    _=[dMinusLabel, dateTextField].map { dateStackView.addArrangedSubview($0) }
-    view.addSubview(datePicker)
-    view.addSubview(startButton)
+    view.addSubview(self.descriptionLabel)
+    view.addSubview(self.dateStackView)
+    _=[self.dMinusLabel, self.dateTextField].map { self.dateStackView.addArrangedSubview($0) }
+    view.addSubview(self.datePicker)
+    view.addSubview(self.startButton)
     
-    descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-    dateStackView.translatesAutoresizingMaskIntoConstraints = false
-    datePicker.translatesAutoresizingMaskIntoConstraints = false
-    startButton.translatesAutoresizingMaskIntoConstraints = false
+    self.descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+    self.dateStackView.translatesAutoresizingMaskIntoConstraints = false
+    self.datePicker.translatesAutoresizingMaskIntoConstraints = false
+    self.startButton.translatesAutoresizingMaskIntoConstraints = false
     
     let safeArea = view.safeAreaLayoutGuide
     NSLayoutConstraint.activate([
-      descriptionLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 250),
-      descriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      self.descriptionLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 250),
+      self.descriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
     ] + [
-      dateStackView.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 40),
-      dateStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      self.dateStackView.topAnchor.constraint(equalTo: self.descriptionLabel.bottomAnchor, constant: 40),
+      self.dateStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
     ] + [
-//      datePicker.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 150),
-//      datePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -150),
-      datePicker.centerXAnchor.constraint(equalTo: dateStackView.centerXAnchor),
-      datePicker.topAnchor.constraint(equalTo: dateStackView.bottomAnchor, constant: 40)
+      self.datePicker.centerXAnchor.constraint(equalTo: self.dateStackView.centerXAnchor),
+      self.datePicker.topAnchor.constraint(equalTo: self.dateStackView.bottomAnchor, constant: 40)
     ] + [
-      startButton.heightAnchor.constraint(equalToConstant: 54),
-      startButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 26.5),
-      startButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-      startButton.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -60)
+      self.startButton.heightAnchor.constraint(equalToConstant: 54),
+      self.startButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 26.5),
+      self.startButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      self.startButton.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -60)
     ])
     
-    dMinusLabel.widthAnchor.constraint(equalTo: dateStackView.widthAnchor, multiplier: 3/5).isActive = true
-    dateTextField.widthAnchor.constraint(equalTo: dateStackView.widthAnchor, multiplier: 2/5).isActive = true
+    self.dMinusLabel.widthAnchor.constraint(equalTo: self.dateStackView.widthAnchor, multiplier: 3/5).isActive = true
+    self.dateTextField.widthAnchor.constraint(equalTo: self.dateStackView.widthAnchor, multiplier: 2/5).isActive = true
+  }
+  
+  // MARK: - Privates
+  private func bindActions() {
+    self.startButton
+      .tapPublisher
+      .sink { [weak self] in
+        guard let self else { return }
+        let dateToInt = Int(self.dateTextField.text ?? "0") ?? 0
+        self.viewModel.didTapStartButton(dateInt: dateToInt, hourMinuteDate: self.datePicker.date)
+      }
+      .store(in: &self.subscriptions)
+    
+    self.dateTextField
+      .textPublisher
+      .map { !$0.isEmpty }
+      .sink { [weak self] isEnabled in
+        self?.startButton.isEnabled = isEnabled
+        self?.startButton.backgroundColor = isEnabled ?
+        UIColor(fnColor: .orange2) :
+        self?.startButtonDisabledColor
+      }
+      .store(in: &self.subscriptions)
   }
 }
 
@@ -143,22 +170,5 @@ extension DateTimeSettingViewController: UITextFieldDelegate {
     let updatedText = (currentText as NSString).replacingCharacters(in: range, with: string)
     
     return updatedText.count <= 2
-  }
-}
-
-// MARK: - Private Helpers
-extension DateTimeSettingViewController {
-  private func addTargets() {
-    startButton.addTarget(self, action: #selector(startButtonTapped), for: .touchUpInside)
-  }
-}
- 
-// MARK: - Actions
-private extension DateTimeSettingViewController {
-  @objc func startButtonTapped() {
-    // TODO: - textField와 날짜를 입력해야 버튼 눌리도록 설정하기
-    
-    let dateToInt = Int(dateTextField.text ?? "0") ?? 0
-    viewModel.didTapStartButton(dateInt: dateToInt, hourMinuteDate: datePicker.date)
   }
 }

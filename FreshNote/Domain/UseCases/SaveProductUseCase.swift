@@ -26,14 +26,18 @@ protocol SaveProductUseCase {
 final class DefaultSaveProductUseCase: SaveProductUseCase {
   private let productRepository: any ProductRepository
   private let imageRepository: any ImageRepository
+  private let savePushNotificationUseCase: any SavePushNotificationUseCase
+  
   private var subscriptions: Set<AnyCancellable> = []
   
   init(
     productRepository: any ProductRepository,
-    imageRepository: any ImageRepository
+    imageRepository: any ImageRepository,
+    savePushNotificationUseCase: any SavePushNotificationUseCase
   ) {
     self.productRepository = productRepository
     self.imageRepository = imageRepository
+    self.savePushNotificationUseCase = savePushNotificationUseCase
   }
   
   func execute(requestValue: SaveProductUseCaseRequestValue) -> AnyPublisher<Product, any Error> {
@@ -43,7 +47,14 @@ final class DefaultSaveProductUseCase: SaveProductUseCase {
       let product = self.makeProduct(from: requestValue, url: nil)
       
       return self.productRepository.saveProduct(product: product)
-        .map { return product }
+        .flatMap { [weak self] in
+          guard let self else { return Empty<Product, any Error>().eraseToAnyPublisher() }
+          
+          return self.savePushNotificationUseCase
+            .saveProductNotification(product: product)
+            .map { return product }
+            .eraseToAnyPublisher()
+        }
         .eraseToAnyPublisher()
     }
 
@@ -64,7 +75,12 @@ final class DefaultSaveProductUseCase: SaveProductUseCase {
                 return Fail(error: SaveProductUseCaseError.failToSaveProduct).eraseToAnyPublisher()
               }
           }
-          .map { return product }
+          .flatMap { // 푸시 알림 저장
+            return self.savePushNotificationUseCase
+              .saveProductNotification(product: product)
+              .map { return product }
+              .eraseToAnyPublisher()
+          }
           .eraseToAnyPublisher()
       }
       .eraseToAnyPublisher()

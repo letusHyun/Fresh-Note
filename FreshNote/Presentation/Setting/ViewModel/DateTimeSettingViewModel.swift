@@ -30,14 +30,14 @@ final class DefaultDateTimeSettingViewModel: DateTimeSettingViewModel {
   private let actions : DateTimeSettingViewModelActions
   private var subscriptions = Set<AnyCancellable>()
   @Published private var error: (any Error)?
-  private let saveAlarmUseCase: any SaveAlarmUseCase
+  private let saveDateTimeUseCase: any SaveDateTimeUseCase
   
   // MARK: - Output
   
   // MARK: - LifeCycle
-  init(actions: DateTimeSettingViewModelActions, saveAlarmUseCase: any SaveAlarmUseCase) {
+  init(actions: DateTimeSettingViewModelActions, saveDateTimeUseCase: any SaveDateTimeUseCase) {
     self.actions = actions
-    self.saveAlarmUseCase = saveAlarmUseCase
+    self.saveDateTimeUseCase = saveDateTimeUseCase
   }
   
   // MARK: - Input
@@ -53,7 +53,7 @@ final class DefaultDateTimeSettingViewModel: DateTimeSettingViewModel {
     let hourMinute = dateFormatter.string(from: selectedTime).components(separatedBy: ":").map { Int($0) ?? 0 }
     let hour = hourMinute.first ?? 0, minute = hourMinute.last ?? 0
     
-    saveAlarmUseCase.saveAlarm(date: dateInt, hour: hour, minute: minute)
+    self.saveDateTimeUseCase.saveDateTime(date: dateInt, hour: hour, minute: minute)
       .receive(on: DispatchQueue.main)
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }

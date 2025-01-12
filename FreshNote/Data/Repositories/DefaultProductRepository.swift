@@ -30,8 +30,8 @@ final class DefaultProductRepository: ProductRepository {
   /// 로그아웃 후, 로그인을 하면 localDB에 Products가 지워져있는 상태입니다.
   /// 따라서 다시 localDB에 Products를 저장해야 합니다.
   func fetchProducts() -> AnyPublisher<[Product], any Error> {
-    // 1. 최초 로그인이면, Firestore fetch → LocalDB save
-    // 2. 최초 로그인이 아니면, LocalDB fetch
+    // 1. 최초 로그인이 아니면, LocalDB fetch
+    // 2. 최초 로그인이면, Firestore fetch → LocalDB save
     return self.productStorage.hasProducts()
       .flatMap { [weak self] hasProducts -> AnyPublisher<[Product], any Error> in
         guard let self else { return Empty().eraseToAnyPublisher() }

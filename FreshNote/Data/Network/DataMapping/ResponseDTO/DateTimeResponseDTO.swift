@@ -1,5 +1,5 @@
 //
-//  AlarmResponseDTO.swift
+//  DateTimeResponseDTO.swift
 //  FreshNote
 //
 //  Created by SeokHyun on 11/28/24.
@@ -7,15 +7,15 @@
 
 import Foundation
 
-struct AlarmResponseDTO: Decodable {
+struct DateTimeResponseDTO: Decodable {
   let date: Int
   let hour: Int
   let minute: Int
 }
 
-extension AlarmResponseDTO {
-  func toDomain() -> Alarm {
-    return Alarm(
+extension DateTimeResponseDTO {
+  func toDomain() -> DateTime {
+    return DateTime(
       date: date,
       hour: hour,
       minute: minute
