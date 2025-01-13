@@ -17,7 +17,7 @@ protocol NotificationViewModel: NotificaionViewModelInput, NotificationViewModel
 protocol NotificaionViewModelInput {
   func viewDidLoad()
   func numberOfRowsInSection() -> Int
-  func cellForRow(at indexPath: IndexPath) -> Notification
+  func cellForRow(at indexPath: IndexPath) -> ProductNotification
   func didSelectRow(at indexPath: IndexPath)
   func didTapBackButton()
 }
@@ -29,7 +29,7 @@ protocol NotificationViewModelOutput {
 
 final class DefaultNotificationViewModel: NotificationViewModel {
   // MARK: - Properties
-  private var notifications: [Notification] = []
+  private var notifications: [ProductNotification] = []
   private let actions: NotificationViewModelActions
   
   // MARK: - Output
@@ -37,10 +37,10 @@ final class DefaultNotificationViewModel: NotificationViewModel {
   private let reloadRowSubject = PassthroughSubject<IndexPath, Never>()
   
   var reloadDataPublisher: AnyPublisher<Void, Never> {
-    reloadDataSubject.eraseToAnyPublisher()
+    self.reloadDataSubject.eraseToAnyPublisher()
   }
   var reloadRowPublisher: AnyPublisher<IndexPath, Never> {
-    reloadRowSubject.eraseToAnyPublisher()
+    self.reloadRowSubject.eraseToAnyPublisher()
   }
   
   // MARK: - LifeCycle
@@ -56,34 +56,34 @@ final class DefaultNotificationViewModel: NotificationViewModel {
       let isViewed: Bool
       if i % 2 == 0 {
         isViewed = false
-        notifications.append(Notification(productName: "제품\(i+1)", dDay: i+1, isViewed: isViewed))
+        self.notifications.append(ProductNotification(productName: "제품\(i+1)", dDay: i+1, isViewed: isViewed))
       } else {
         isViewed = true
-        notifications.append(Notification(productName: "제품\(i+1)", dDay: i+1, isViewed: isViewed))
+        self.notifications.append(ProductNotification(productName: "제품\(i+1)", dDay: i+1, isViewed: isViewed))
       }
     }
-    reloadDataSubject.send()
+    self.reloadDataSubject.send()
   }
   
   func numberOfRowsInSection() -> Int {
-    return notifications.count
+    return self.notifications.count
   }
   
-  func cellForRow(at indexPath: IndexPath) -> Notification {
-    return notifications[indexPath.row]
+  func cellForRow(at indexPath: IndexPath) -> ProductNotification {
+    return self.notifications[indexPath.row]
   }
   
   func didSelectRow(at indexPath: IndexPath) {
-    guard !notifications[indexPath.row].isViewed else { return }
+    guard !self.notifications[indexPath.row].isViewed else { return }
     // fetch api
         // 성공 시, 서버는 저장만 함
     
     // 성공 시
-    notifications[indexPath.row].isViewed.toggle()
-    reloadDataSubject.send()
+    self.notifications[indexPath.row].isViewed.toggle()
+    self.reloadDataSubject.send()
   }
   
   func didTapBackButton() {
-    actions.pop()
+    self.actions.pop()
   }
 }

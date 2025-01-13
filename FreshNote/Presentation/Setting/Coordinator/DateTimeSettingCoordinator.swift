@@ -34,8 +34,8 @@ final class DateTimeSettingCoordinator: BaseCoordinator {
     let actions = DateTimeSettingViewModelActions { [weak self] in
       self?.showHome()
     }
-    let viewController = dependencies.makeDateTimeSettingViewController(actions: actions)
-    navigationController?.pushViewController(viewController, animated: true)
+    let viewController = self.dependencies.makeDateTimeSettingViewController(actions: actions)
+    self.navigationController?.pushViewController(viewController, animated: true)
   }
 }
 
@@ -43,6 +43,6 @@ final class DateTimeSettingCoordinator: BaseCoordinator {
 private extension DateTimeSettingCoordinator {
   // todo 로그인 버튼 클릭하면 OnboardingCoordinator까지 제거한 뒤에 AppCoordinator에서 MainCoordinator를 실행해야 함
   func showHome() {
-    finish()
+    self.finish()
   }
 }

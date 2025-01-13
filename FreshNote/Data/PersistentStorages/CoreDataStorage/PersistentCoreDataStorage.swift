@@ -9,6 +9,7 @@ import Combine
 import CoreData
 import Foundation
 
+/// 같은 context 접근을 위해서 shared를 사용해야 합니다.
 final class PersistentCoreDataStorage: CoreDataStorage {
   static let shared: CoreDataStorage = PersistentCoreDataStorage()
   

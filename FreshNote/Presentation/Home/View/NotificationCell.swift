@@ -55,7 +55,7 @@ extension NotificationCell {
 
 // MARK: - Helpers
 extension NotificationCell {
-  func configure(notification: Notification) {
+  func configure(notification: ProductNotification) {
     descriptionLabel.text = "\(notification.productName)의 유통기한이 D-\(notification.dDay) 남았습니다."
     
     if !notification.isViewed {

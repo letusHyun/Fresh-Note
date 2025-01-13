@@ -12,6 +12,7 @@ import UIKit
 import FirebaseAuth
 
 protocol AppCoordinatorDelegate: AnyObject {
+  ///
   func setRootViewController(_ viewController: UIViewController)
 }
 
@@ -19,6 +20,8 @@ protocol AppCoordinatorDependencies: AnyObject {
   func makeOnboardingCoordinator(navigationController: UINavigationController) -> OnboardingCoordinator
   func makeMainCoordinator(tabBarController: UITabBarController) -> MainCoordinator
   func makeSignInStateUseCase() -> any SignInStateUseCase
+  func makeCheckDateTimeStateUseCase() -> any CheckDateTimeStateUseCase
+  func makeDateTimeSettingCoordinator(navigationController: UINavigationController) -> DateTimeSettingCoordinator
 }
 
 final class AppCoordinator {
@@ -30,6 +33,7 @@ final class AppCoordinator {
   weak var delegate: AppCoordinatorDelegate?
   
   private var signInStateUseCase: (any SignInStateUseCase)?
+  private var checkDateTimeStateUseCase: (any CheckDateTimeStateUseCase)?
   
   private var subscriptions = Set<AnyCancellable>()
   
@@ -40,29 +44,54 @@ final class AppCoordinator {
   
   func start() {
     let signInStateUseCase = self.dependencies.makeSignInStateUseCase()
-    self.signInStateUseCase = signInStateUseCase
+    let checkDateTimeStateUseCase = self.dependencies.makeCheckDateTimeStateUseCase()
     
-    signInStateUseCase.checkSignIn()
-      .receive(on: DispatchQueue.main)
-      .sink { completion in
-        guard case .failure(let error) = completion else { return }
-        // TODO: - 에러 핸들링하기
-      } receiveValue: { [weak self] isSignedIn in
-        isSignedIn ? self?.startMainFlow() : self?.startOnboardingFlow()
+    self.signInStateUseCase = signInStateUseCase
+    self.checkDateTimeStateUseCase = checkDateTimeStateUseCase
+    
+    Publishers.CombineLatest(
+      signInStateUseCase.checkSignIn(),
+      checkDateTimeStateUseCase.execute()
+    )
+    .receive(on: DispatchQueue.main)
+    .sink { completion in
+      guard case .failure(let error) = completion else { return }
+      print("DEBUG: error -> \(error)")
+    } receiveValue: { [weak self] (isSignedIn, hasDateTime) in
+      if isSignedIn {
+        if hasDateTime {
+          self?.startMainFlow()
+        } else {
+          self?.startDateTimeSettingFlow()
+        }
+      } else {
+        self?.startOnboardingFlow()
       }
-      .store(in: &self.subscriptions)
+    }
+    .store(in: &self.subscriptions)
   }
 }
 
 // MARK: - Private Helpers
 private extension AppCoordinator {
+  func startDateTimeSettingFlow() {
+    let navigationController = UINavigationController()
+    
+    self.delegate?.setRootViewController(navigationController)
+    let childCoordinator = self.dependencies.makeDateTimeSettingCoordinator(
+      navigationController: navigationController
+    )
+    childCoordinator.finishDelegate = self
+    self.childCoordinator = childCoordinator
+    childCoordinator.start()
+  }
+  
   func startOnboardingFlow() {
-    let navigatonController = UINavigationController()
-    navigatonController.setupBarAppearance()
+    let navigationController = UINavigationController()
+    navigationController.setupBarAppearance()
     
-    
-    self.delegate?.setRootViewController(navigatonController)
-    let childCoordinator = self.dependencies.makeOnboardingCoordinator(navigationController: navigatonController)
+    self.delegate?.setRootViewController(navigationController)
+    let childCoordinator = self.dependencies.makeOnboardingCoordinator(navigationController: navigationController)
     childCoordinator.finishDelegate = self
     self.childCoordinator = childCoordinator
     childCoordinator.start()
@@ -86,6 +115,8 @@ extension AppCoordinator: CoordinatorFinishDelegate {
       self.startMainFlow()
     } else if childCoordinator is MainCoordinator {
       self.startOnboardingFlow()
+    } else if childCoordinator is DateTimeSettingCoordinator {
+      self.startMainFlow()
     }
   }
 }

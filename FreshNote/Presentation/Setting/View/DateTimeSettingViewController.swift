@@ -10,7 +10,8 @@ import UIKit
 
 final class DateTimeSettingViewController: BaseViewController {
   struct Constants {
-    static let dateSize: CGFloat = 50
+    static var dateSize: CGFloat { 50 }
+    static var startButtonBottomConstraint: CGFloat { 0 }
   }
   
   // MARK: - Properties
@@ -38,7 +39,7 @@ final class DateTimeSettingViewController: BaseViewController {
     textField.font = .pretendard(size: Constants.dateSize, weight: ._400)
     textField.keyboardType = .numberPad
     textField.delegate = self
-    textField.setPlaceholderColor(UIColor(fnColor: .gray2))
+    textField.setPlaceholderColor(UIColor(fnColor: .gray2).withAlphaComponent(0.3))
     return textField
   }()
   
@@ -60,7 +61,7 @@ final class DateTimeSettingViewController: BaseViewController {
     button.setTitle("시작하기", for: .normal)
     button.setTitleColor(UIColor(fnColor: .realBack), for: .normal)
     button.backgroundColor = self.startButtonDisabledColor
-    button.layer.cornerRadius = 8
+    button.layer.cornerRadius = 15
     button.layer.masksToBounds = true
     button.isEnabled = false
     return button
@@ -73,6 +74,8 @@ final class DateTimeSettingViewController: BaseViewController {
   private var subscriptions: Set<AnyCancellable> = []
   
   private let viewModel: any DateTimeSettingViewModel
+  
+  private var startButtonBottomConstraint: NSLayoutConstraint?
   
   // MARK: - LifeCycle
   init(viewModel: any DateTimeSettingViewModel) {
@@ -93,6 +96,10 @@ final class DateTimeSettingViewController: BaseViewController {
     view.endEditing(true)
   }
   
+  deinit {
+    print("DEBUG: \(Self.self) deinit")
+  }
+  
   // MARK: - SetupUI
   override func setupLayout() {
     view.addSubview(self.descriptionLabel)
@@ -108,7 +115,7 @@ final class DateTimeSettingViewController: BaseViewController {
     
     let safeArea = view.safeAreaLayoutGuide
     NSLayoutConstraint.activate([
-      self.descriptionLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 250),
+      self.descriptionLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 200),
       self.descriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
     ] + [
       self.dateStackView.topAnchor.constraint(equalTo: self.descriptionLabel.bottomAnchor, constant: 40),
@@ -118,10 +125,14 @@ final class DateTimeSettingViewController: BaseViewController {
       self.datePicker.topAnchor.constraint(equalTo: self.dateStackView.bottomAnchor, constant: 40)
     ] + [
       self.startButton.heightAnchor.constraint(equalToConstant: 54),
-      self.startButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 26.5),
-      self.startButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-      self.startButton.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -60)
+      self.startButton.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      self.startButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
     ])
+    self.startButtonBottomConstraint = self.startButton.bottomAnchor.constraint(
+      equalTo: safeArea.bottomAnchor,
+      constant: -Constants.startButtonBottomConstraint
+    )
+    self.startButtonBottomConstraint?.isActive = true
     
     self.dMinusLabel.widthAnchor.constraint(equalTo: self.dateStackView.widthAnchor, multiplier: 3/5).isActive = true
     self.dateTextField.widthAnchor.constraint(equalTo: self.dateStackView.widthAnchor, multiplier: 2/5).isActive = true
@@ -148,6 +159,61 @@ final class DateTimeSettingViewController: BaseViewController {
         self?.startButtonDisabledColor
       }
       .store(in: &self.subscriptions)
+    
+    self.setupKeyboardBind()
+  }
+  
+  // MARK: - Private
+  private func setupKeyboardBind() {
+    let keyboardWillShow = NotificationCenter.default.publisher(
+      for: UIResponder.keyboardWillShowNotification
+    )
+    let keyboardWillHide = NotificationCenter.default.publisher(
+      for: UIResponder.keyboardWillHideNotification
+    )
+    
+    Publishers
+      .Merge(keyboardWillShow, keyboardWillHide)
+      .compactMap { [weak self] in
+        return self?.calculateBottomOffset(for: $0)
+      }
+      .sink { [weak self] bottomOffset in
+        self?.updateStartButtonConstraint(bottomOffset)
+      }
+      .store(in: &self.subscriptions)
+  }
+  
+  private func calculateBottomOffset(for notification: Notification) -> CGFloat? {
+    let isKeyboardShowing = notification.name == UIResponder.keyboardWillShowNotification
+    
+    if isKeyboardShowing {
+      guard let keyboardFrame = notification
+        .userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else {
+        return nil
+      }
+      return keyboardFrame.height
+    } else {
+      return Constants.startButtonBottomConstraint
+    }
+  }
+  
+  private func updateStartButtonConstraint(_ offset: CGFloat) {
+    self.startButtonBottomConstraint?.isActive = false
+    let isKeyboardVisible = offset > Constants.startButtonBottomConstraint
+    
+    let bottomAnchor = isKeyboardVisible ?
+    self.view.bottomAnchor :
+    self.view.safeAreaLayoutGuide.bottomAnchor
+    
+    self.startButtonBottomConstraint = self.startButton.bottomAnchor.constraint(
+      equalTo: bottomAnchor,
+      constant: -offset
+    )
+    
+    self.startButtonBottomConstraint?.isActive = true
+    UIView.animate(withDuration: 0.3) {
+      self.view.layoutIfNeeded()
+    }
   }
 }
 

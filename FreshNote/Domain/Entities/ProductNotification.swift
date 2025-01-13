@@ -1,5 +1,5 @@
 //
-//  Notification.swift
+//  ProductNotification.swift
 //  FreshNote
 //
 //  Created by SeokHyun on 10/31/24.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Notification {
+struct ProductNotification {
   let productName: String
   let dDay: Int
   var isViewed: Bool

@@ -7,173 +7,97 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "12594B92-975D-44C4-931B-5A46F603E864"
+            uuid = "4831B893-4739-4B45-8019-26FAE6F3F802"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "FreshNote/Domain/UseCases/SaveProductUseCase.swift"
+            filePath = "FreshNote/Application/AppCoordinator.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "54"
-            endingLineNumber = "54"
-            landmarkName = "execute(requestValue:)"
+            startingLineNumber = "115"
+            endingLineNumber = "115"
+            landmarkName = "coordinatorDidFinish(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "E9ADE3DC-0A35-4BAD-A9BC-19B73E49DFB2"
+            uuid = "C5E7471B-356F-41CA-917B-0B0B51B3786E"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "FreshNote/Domain/UseCases/SavePushNotificationUseCase.swift"
+            filePath = "FreshNote/Application/AppCoordinator.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "58"
-            endingLineNumber = "58"
-            landmarkName = "saveProductNotification(product:)"
+            startingLineNumber = "117"
+            endingLineNumber = "117"
+            landmarkName = "coordinatorDidFinish(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "E327749A-9E3B-4D8E-AB15-550BD41C0489"
+            uuid = "A8C1E313-591A-45DB-8DF0-032C7B6EAA80"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "FreshNote/Domain/UseCases/SavePushNotificationUseCase.swift"
+            filePath = "FreshNote/Application/AppCoordinator.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "66"
-            endingLineNumber = "66"
-            landmarkName = "saveProductNotification(product:)"
+            startingLineNumber = "119"
+            endingLineNumber = "119"
+            landmarkName = "coordinatorDidFinish(_:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "4205BD51-3641-494D-BDB7-80D2B665C8D2"
+            uuid = "FFD58A65-3C8D-4C8B-89CA-D3760F7AD20C"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "FreshNote/Domain/UseCases/SavePushNotificationUseCase.swift"
+            filePath = "FreshNote/Presentation/Setting/Coordinator/DateTimeSettingCoordinator.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "76"
-            endingLineNumber = "76"
-            landmarkName = "saveProductNotification(product:)"
+            startingLineNumber = "46"
+            endingLineNumber = "46"
+            landmarkName = "showHome()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "1DB2B1BE-B694-4652-926B-53907F9748A3"
+            uuid = "C699576A-9CB7-40B9-9A71-C7F694370C68"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "FreshNote/Domain/UseCases/SaveProductUseCase.swift"
+            filePath = "FreshNote/Data/Repositories/DefaultSignInStateRepository.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "55"
-            endingLineNumber = "55"
-            landmarkName = "execute(requestValue:)"
-            landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "1DB2B1BE-B694-4652-926B-53907F9748A3 - 3c6ea9b9f57b90d5"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 () -&gt; Combine.AnyPublisher&lt;FreshNote.Product, Swift.Error&gt; in FreshNote.DefaultSaveProductUseCase.execute(requestValue: FreshNote.SaveProductUseCaseRequestValue) -&gt; Combine.AnyPublisher&lt;FreshNote.Product, Swift.Error&gt;"
-                  moduleName = "FreshNote.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/hyun2/Project/FreshNote/FreshNote/Domain/UseCases/SaveProductUseCase.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "55"
-                  endingLineNumber = "55">
-               </Location>
-               <Location
-                  uuid = "1DB2B1BE-B694-4652-926B-53907F9748A3 - 7a544e0128a1aebc"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 () -&gt; FreshNote.Product in closure #1 () -&gt; Combine.AnyPublisher&lt;FreshNote.Product, Swift.Error&gt; in FreshNote.DefaultSaveProductUseCase.execute(requestValue: FreshNote.SaveProductUseCaseRequestValue) -&gt; Combine.AnyPublisher&lt;FreshNote.Product, Swift.Error&gt;"
-                  moduleName = "FreshNote.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/hyun2/Project/FreshNote/FreshNote/Domain/UseCases/SaveProductUseCase.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "55"
-                  endingLineNumber = "55">
-               </Location>
-            </Locations>
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "C8CB1A26-3365-4EC8-B7FF-63861501ED62"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "FreshNote/Domain/UseCases/SaveProductUseCase.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "79"
-            endingLineNumber = "79"
-            landmarkName = "execute(requestValue:)"
+            startingLineNumber = "115"
+            endingLineNumber = "115"
+            landmarkName = "validateAppleCredential(userID:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "6B8BB395-F52B-4D9D-81FD-A2F68D79702B"
+            uuid = "AF3DC6BD-1B17-430A-8121-E24266AFD013"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "FreshNote/Domain/UseCases/SaveProductUseCase.swift"
+            filePath = "FreshNote/Application/AppCoordinator.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "81"
-            endingLineNumber = "81"
-            landmarkName = "execute(requestValue:)"
+            startingLineNumber = "113"
+            endingLineNumber = "113"
+            landmarkName = "coordinatorDidFinish(_:)"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "6B8BB395-F52B-4D9D-81FD-A2F68D79702B - 96d3b9854f908b3a"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #2 () -&gt; Combine.AnyPublisher&lt;FreshNote.Product, Swift.Error&gt; in closure #2 (Foundation.URL) -&gt; Combine.AnyPublisher&lt;FreshNote.Product, Swift.Error&gt; in FreshNote.DefaultSaveProductUseCase.execute(requestValue: FreshNote.SaveProductUseCaseRequestValue) -&gt; Combine.AnyPublisher&lt;FreshNote.Product, Swift.Error&gt;"
-                  moduleName = "FreshNote.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/hyun2/Project/FreshNote/FreshNote/Domain/UseCases/SaveProductUseCase.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "81"
-                  endingLineNumber = "81">
-               </Location>
-               <Location
-                  uuid = "6B8BB395-F52B-4D9D-81FD-A2F68D79702B - 233745970ee5cd87"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 () -&gt; FreshNote.Product in closure #2 () -&gt; Combine.AnyPublisher&lt;FreshNote.Product, Swift.Error&gt; in closure #2 (Foundation.URL) -&gt; Combine.AnyPublisher&lt;FreshNote.Product, Swift.Error&gt; in FreshNote.DefaultSaveProductUseCase.execute(requestValue: FreshNote.SaveProductUseCaseRequestValue) -&gt; Combine.AnyPublisher&lt;FreshNote.Product, Swift.Error&gt;"
-                  moduleName = "FreshNote.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/hyun2/Project/FreshNote/FreshNote/Domain/UseCases/SaveProductUseCase.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "81"
-                  endingLineNumber = "81">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
