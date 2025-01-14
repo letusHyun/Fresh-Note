@@ -17,22 +17,22 @@ final class DefaultPushNotificationRepository: PushNotificationRepository {
   }
   
   func scheduleNotification(
-    noficationID: DocumentID,
-    title: String,
-    body: String,
-    date: Date
+    requestEntity: UNNotificationRequestEntity
   ) -> AnyPublisher<Void, any Error> {
     return Future { promise in
       let content = UNMutableNotificationContent()
-      content.title = title
-      content.body = body
+      content.title = requestEntity.title
+      content.body = requestEntity.body
       content.sound = .default
       
-      let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+      let components = Calendar.current.dateComponents(
+        [.year, .month, .day, .hour, .minute],
+        from: requestEntity.date
+      )
       let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
       
       let request = UNNotificationRequest(
-        identifier: noficationID.didString,
+        identifier: requestEntity.noficationID,
         content: content,
         trigger: trigger
       )
@@ -43,6 +43,16 @@ final class DefaultPushNotificationRepository: PushNotificationRepository {
           return
         }
         promise(.success(()))
+      }
+    }
+    .eraseToAnyPublisher()
+  }
+  
+  func checkRegisteredNotifications() -> AnyPublisher<Bool, any Error> {
+    return Future { [weak self] promise in
+      self?.notificationCenter.getPendingNotificationRequests { requests in
+        let ifRegistered = !requests.isEmpty
+        return promise(.success(ifRegistered))
       }
     }
     .eraseToAnyPublisher()

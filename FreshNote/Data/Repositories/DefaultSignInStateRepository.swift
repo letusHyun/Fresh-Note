@@ -40,7 +40,7 @@ final class DefaultSignInStateRepository: SignInStateRepository {
         // 로그인 한 적 있다면
         return Future<Bool, any Error> { [weak self] promise in
           guard let self else { return promise(.success(false)) }
-          
+          // 토큰 유효성 검사
           currentUser.getIDToken { token, error in
             if let error = error {
               self.handleTokenError(promise: promise); return

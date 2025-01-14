@@ -28,7 +28,8 @@ private extension MainSceneDIContainer {
       actions: actions,
       fetchProductUseCase: self.makefetchProductUseCase(),
       deleteProductUseCase: self.makeDeleteProductUseCase(),
-      updateProductUseCase: self.makeUpdateProductUseCase()
+      updateProductUseCase: self.makeUpdateProductUseCase(),
+      restorePushNotificationsUseCase: self.makeRestorePushNotificationsUseCase()
     )
   }
   
@@ -94,6 +95,21 @@ private extension MainSceneDIContainer {
   }
   
   // MARK: - Domain Layer
+  func makeRestorePushNotificationsUseCase() -> any RestorePushNotificationsUseCase {
+    return DefaultRestorePushNotificationsUseCase(
+      fetchDateTimeUseCase: self.makeFetchDateTimeUseCase(),
+      checkRestorePushNotificationsUseCase: self.makeCheckRestorePushNotificationsUseCase(),
+      pushNotificationRepository: self.makePushNotificationRepository()
+    )
+  }
+  
+  func makeCheckRestorePushNotificationsUseCase() -> any CheckRestorePushNotificationsUseCase {
+    return DefaultCheckRestorePushNotificationsUseCase(
+      productRepository: self.makeProductRepository(),
+      pushNotificationRepository: self.makePushNotificationRepository()
+    )
+  }
+  
   func makeRecentProductQueriesUseCase() -> any RecentProductQueriesUseCase {
     return DefaultRecentProductQueriesUseCase(productQueriesRepository: self.makeProductQueriesRepository())
   }

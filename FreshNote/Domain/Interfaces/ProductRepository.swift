@@ -17,4 +17,5 @@ protocol ProductRepository {
   func fetchPinnedProducts() -> AnyPublisher<[Product], any Error>
   func fetchProduct(category: String) -> AnyPublisher<[Product], any Error>
   func fetchProduct(keyword: String) -> AnyPublisher<[Product], any Error>
+  func isSavedProductInLocal() -> AnyPublisher<Bool, any Error>
 }

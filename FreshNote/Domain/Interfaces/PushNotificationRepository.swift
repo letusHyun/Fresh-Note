@@ -9,19 +9,12 @@ import Combine
 import Foundation
 
 protocol PushNotificationRepository {
-  /// 푸시 알림 권한 요청
-//  func requestPermission() -> AnyPublisher<Bool, any Error>
-  
-  /// 지정된 날짜에 푸시 알림 예약
-  /// - Parameters:
-  /// - uuid: 제품의 고유 식별자
-  /// - title: 알림 제목
-  /// - body: 알림 내용
-  /// - date: 알림이 발송될 날짜의 시간
+  /// 알림을 추가합니다.
   func scheduleNotification(
-    noficationID: DocumentID,
-    title: String,
-    body: String,
-    date: Date
+    requestEntity: UNNotificationRequestEntity
   ) -> AnyPublisher<Void, any Error>
+  
+  /// 로컬 푸시 알림의 저장 여부를 확인합니다.
+  /// 저장된 적이 있다면 true, 없다면 false를 반환합니다.
+  func checkRegisteredNotifications() -> AnyPublisher<Bool, any Error>
 }

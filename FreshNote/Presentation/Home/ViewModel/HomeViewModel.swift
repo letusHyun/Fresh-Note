@@ -49,6 +49,7 @@ final class DefaultHomeViewModel: HomeViewModel {
   private let fetchProductUseCase: any FetchProductUseCase
   private let deleteProductUseCase: any DeleteProductUseCase
   private let updateProductUseCase: any UpdateProductUseCase
+  private let restorePushNotificationsUseCase: any RestorePushNotificationsUseCase
   
   // MARK: - Output
   private var reloadDataSubject: PassthroughSubject<Void, Never> = PassthroughSubject()
@@ -69,21 +70,38 @@ final class DefaultHomeViewModel: HomeViewModel {
   init(actions: HomeViewModelActions,
        fetchProductUseCase: any FetchProductUseCase,
        deleteProductUseCase: any DeleteProductUseCase,
-       updateProductUseCase: any UpdateProductUseCase
+       updateProductUseCase: any UpdateProductUseCase,
+       restorePushNotificationsUseCase: any RestorePushNotificationsUseCase
   ) {
     self.actions = actions
     self.fetchProductUseCase = fetchProductUseCase
     self.deleteProductUseCase = deleteProductUseCase
     self.updateProductUseCase = updateProductUseCase
+    self.restorePushNotificationsUseCase = restorePushNotificationsUseCase
   }
   
   // MARK: - Input
   func viewDidLoad() {
-    
+    self.fetchProductUseCase
+      .fetchProducts()
+      .flatMap { [weak self] products -> AnyPublisher<Void, any Error> in
+        guard let self else { return Empty().eraseToAnyPublisher() }
+        
+        return self.restorePushNotificationsUseCase
+          .execute(products: products)
+      }
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.error = error
+      } receiveValue: { _ in
+        print("재등록 성공!")
+      }
+      .store(in: &self.subscriptions)
+
   }
   
   func viewWillAppear() {
-    return self.fetchProductUseCase.fetchProducts()
+    self.fetchProductUseCase.fetchProducts()
       .receive(on: DispatchQueue.main)
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }

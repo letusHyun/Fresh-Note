@@ -169,6 +169,11 @@ final class DefaultProductRepository: ProductRepository {
     return self.productStorage
       .fetchProduct(keyword: keyword)
   }
+  
+  func isSavedProductInLocal() -> AnyPublisher<Bool, any Error> {
+    return self.productStorage
+      .hasProducts()
+  }
 }
 
 // MARK: - Private Helpers
