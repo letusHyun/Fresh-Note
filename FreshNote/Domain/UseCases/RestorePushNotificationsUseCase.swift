@@ -82,7 +82,7 @@ final class DefaultRestorePushNotificationsUseCase: RestorePushNotificationsUseC
       .tryMap { [weak self] dateTime -> (DateTime, [(date: Date, product: Product)]) in
         guard let self else { throw RestorePushNotificationsUseCaseError.referenceError }
         
-        let notifications = try self.makeNotifications(products: products, dateTime: dateTime)
+        let notifications = try self.makeNotificationsExceptForInvalidDate(products: products, dateTime: dateTime)
         return (dateTime, notifications)
       }
       .flatMap { [weak self] tuple -> AnyPublisher<Void, any Error> in
@@ -125,7 +125,8 @@ final class DefaultRestorePushNotificationsUseCase: RestorePushNotificationsUseC
       .eraseToAnyPublisher()
   }
   
-  private func makeNotifications(
+  // 검증 실패한 알림 날짜를 제외하고 notificationDate을 생성합니다.
+  private func makeNotificationsExceptForInvalidDate(
     products: [Product],
     dateTime: DateTime
   ) throws -> [(date: Date, product: Product)] {

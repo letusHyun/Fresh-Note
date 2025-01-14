@@ -93,11 +93,8 @@ final class DefaultHomeViewModel: HomeViewModel {
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }
         self?.error = error
-      } receiveValue: { _ in
-        print("재등록 성공!")
-      }
+      } receiveValue: { _ in }
       .store(in: &self.subscriptions)
-
   }
   
   func viewWillAppear() {

@@ -51,7 +51,7 @@ final class DefaultSaveProductUseCase: SaveProductUseCase {
           guard let self else { return Empty<Product, any Error>().eraseToAnyPublisher() }
           
           return self.savePushNotificationUseCase
-            .saveProductNotification(product: product)
+            .saveNotification(product: product)
             .map { return product }
             .eraseToAnyPublisher()
         }
@@ -77,7 +77,7 @@ final class DefaultSaveProductUseCase: SaveProductUseCase {
           }
           .flatMap { // 푸시 알림 저장
             return self.savePushNotificationUseCase
-              .saveProductNotification(product: product)
+              .saveNotification(product: product)
               .map { return product }
               .eraseToAnyPublisher()
           }

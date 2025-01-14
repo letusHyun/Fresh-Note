@@ -35,9 +35,9 @@ final class DefaultCheckRestorePushNotificationsUseCase: CheckRestorePushNotific
         if isSavedProductInLocal {
           // 푸시 알림이 저장되어있는지 판별합니다.
           return self.pushNotificationRepository
-            .checkRegisteredNotifications()
-            .map { isRegisteredNotifications -> Bool in
-              return isRegisteredNotifications ? false : true
+            .shouldReRegisterNotifications()
+            .map { shouldRegister -> Bool in
+              return shouldRegister ? true : false
             }
             .eraseToAnyPublisher()
         }

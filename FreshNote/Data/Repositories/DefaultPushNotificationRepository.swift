@@ -9,6 +9,10 @@ import Combine
 import Foundation
 import UserNotifications
 
+enum PushNotificationRepositoryError: Error {
+  case referenceError
+}
+
 final class DefaultPushNotificationRepository: PushNotificationRepository {
   private let notificationCenter: UNUserNotificationCenter
   
@@ -19,7 +23,11 @@ final class DefaultPushNotificationRepository: PushNotificationRepository {
   func scheduleNotification(
     requestEntity: UNNotificationRequestEntity
   ) -> AnyPublisher<Void, any Error> {
-    return Future { promise in
+    return Future { [weak self] promise in
+      guard let self else {
+        return promise(.failure(PushNotificationRepositoryError.referenceError))
+      }
+      
       let content = UNMutableNotificationContent()
       content.title = requestEntity.title
       content.body = requestEntity.body
@@ -39,22 +47,26 @@ final class DefaultPushNotificationRepository: PushNotificationRepository {
       
       self.notificationCenter.add(request) { error in
         if let error = error {
-          promise(.failure(error))
-          return
+          return promise(.failure(error))
         }
-        promise(.success(()))
+        return promise(.success(()))
       }
     }
     .eraseToAnyPublisher()
   }
   
-  func checkRegisteredNotifications() -> AnyPublisher<Bool, any Error> {
+  func shouldReRegisterNotifications() -> AnyPublisher<Bool, any Error> {
     return Future { [weak self] promise in
       self?.notificationCenter.getPendingNotificationRequests { requests in
-        let ifRegistered = !requests.isEmpty
-        return promise(.success(ifRegistered))
+        let shouldRegister = requests.isEmpty
+        return promise(.success(shouldRegister))
       }
     }
     .eraseToAnyPublisher()
+  }
+  
+  func deleteNotificaion(notificationIDs: [DocumentID]) {
+    let notificationIDs = notificationIDs.map { $0.didString }
+    self.notificationCenter.removePendingNotificationRequests(withIdentifiers: notificationIDs)
   }
 }

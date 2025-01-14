@@ -117,14 +117,23 @@ private extension MainSceneDIContainer {
   func makeUpdateProductUseCase() -> any UpdateProductUseCase {
     return DefaultUpdateProductUseCase(
       productRepository: self.makeProductRepository(),
-      imageRepository: self.makeImageRepository()
+      imageRepository: self.makeImageRepository(),
+      updatePushNotificationUseCase: self.makeUpdatePushNotificationUseCase()
+    )
+  }
+  
+  func makeUpdatePushNotificationUseCase() -> any UpdatePushNotificationUseCase {
+    return DefaultUpdatePushNotificationUseCase(
+      savePushNotificationUseCase: self.makeSavePushNotificationUseCase(),
+      deletePushNotificationUseCase: self.makeDeletePushNotificationUseCase()
     )
   }
   
   func makeDeleteProductUseCase() -> any DeleteProductUseCase {
     return DefaultDeleteProductUseCase(
       imageRepository: self.makeImageRepository(),
-      productRepository: self.makeProductRepository()
+      productRepository: self.makeProductRepository(),
+      deletePushNotificationUseCase: self.makeDeletePushNotificationUseCase()
     )
   }
   
@@ -152,6 +161,12 @@ private extension MainSceneDIContainer {
   }
   
   // MARK: - Data Layer
+  func makeDeletePushNotificationUseCase() -> any DeletePushNotificationUseCase {
+    return DefaultDeletePushNotificationUseCase(
+      pushNotificationRepository: self.makePushNotificationRepository()
+    )
+  }
+  
   func makeDateTimeRepository() -> DateTimeRepository {
     return DefaultDateTimeRepository(
       firebaseNetworkService: self.makeFirebaseNetworkService(),
