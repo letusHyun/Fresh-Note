@@ -39,7 +39,7 @@ final class SettingViewController: BaseViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     defer { self.viewModel.viewDidLoad() }
-    
+    self.setupNavigationBar()
     self.bind(to: viewModel)
   }
   
@@ -59,7 +59,9 @@ final class SettingViewController: BaseViewController {
   }
   
   // MARK: - Private
-  
+  private func setupNavigationBar() {
+    self.navigationItem.title = "마이"
+  }
 }
 
 
