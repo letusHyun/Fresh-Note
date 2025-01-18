@@ -64,29 +64,36 @@ final class PinViewController: BaseViewController {
   private func bind(to viewModel: any PinViewModel) {
     self.viewModel
       .errorPublisher
+      .compactMap { $0 }
       .receive(on: DispatchQueue.main)
-      .sink { error in
-        guard let error = error else { return }
+      .sink(receiveCompletion: { completion in
         ActivityIndicatorView.shared.stopIndicating()
-      }
+      }, receiveValue: { error in
+        ActivityIndicatorView.shared.stopIndicating()
+        // MARK: - Error Handling
+      })
       .store(in: &self.subscriptions)
     
     self.viewModel
       .reloadDataPublisher
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] _ in
+      .sink(receiveCompletion: { completion in
+        ActivityIndicatorView.shared.stopIndicating()
+      }, receiveValue: { [weak self] _ in
         ActivityIndicatorView.shared.stopIndicating()
         self?.tableView.reloadData()
-      }
+      })
       .store(in: &self.subscriptions)
     
     self.viewModel
       .deleteRowsPublisher
       .receive(on: DispatchQueue.main)
-      .sink { [weak self]indexPath in
+      .sink(receiveCompletion: { completion in
+        ActivityIndicatorView.shared.stopIndicating()
+      }, receiveValue: { [weak self]indexPath in
         ActivityIndicatorView.shared.stopIndicating()
         self?.tableView.deleteRows(at: [indexPath], with: .fade)
-      }
+      })
       .store(in: &self.subscriptions)
   }
   

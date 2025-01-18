@@ -35,7 +35,7 @@ final class CategoryCoordinator: BaseCoordinator {
     )
     
     let viewController = self.dependencies.makeCategoryViewController(actions: actions)
-    self.navigationController?.pushViewController(viewController, animated: true)
+    self.navigationController?.viewControllers = [viewController]
   }
   
   // MARK: - Private

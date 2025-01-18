@@ -83,7 +83,7 @@ private extension AppCoordinator {
     )
     childCoordinator.finishDelegate = self
     self.childCoordinator = childCoordinator
-    childCoordinator.start()
+    childCoordinator.start(mode: .start)
   }
   
   func startOnboardingFlow() {

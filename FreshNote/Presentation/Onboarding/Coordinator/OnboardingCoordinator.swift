@@ -57,6 +57,6 @@ extension OnboardingCoordinator {
     let childCoordinator = dependencies.makeDateTimeSettingCoordinator(navigationController: navigationController)
     childCoordinator.finishDelegate = self
     childCoordinators[childCoordinator.identifier] = childCoordinator
-    childCoordinator.start()
+    childCoordinator.start(mode: .start)
   }
 }

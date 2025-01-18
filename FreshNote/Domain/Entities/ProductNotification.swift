@@ -9,6 +9,6 @@ import Foundation
 
 struct ProductNotification {
   let productName: String
-  let dDay: Int
+  let remainingDay: Int
   var isViewed: Bool
 }

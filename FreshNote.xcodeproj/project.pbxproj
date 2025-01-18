@@ -34,6 +34,19 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		13AFC2332D379623001483D2 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		1383D20E2CC3923800F822A9 /* FreshNote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FreshNote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1383D2242CC3923A00F822A9 /* FreshNoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FreshNoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -139,6 +152,7 @@
 				1383D20A2CC3923800F822A9 /* Sources */,
 				1383D20B2CC3923800F822A9 /* Frameworks */,
 				1383D20C2CC3923800F822A9 /* Resources */,
+				13AFC2332D379623001483D2 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -211,7 +225,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1600;
+				LastSwiftUpdateCheck = 1610;
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					1383D20D2CC3923800F822A9 = {
@@ -331,6 +345,8 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = BH624LXP8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FreshNote/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "카메라 사진 찍기";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "앨범에서 사진 찍기";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -366,6 +382,8 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = BH624LXP8S;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = FreshNote/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "카메라 사진 찍기";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "앨범에서 사진 찍기";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

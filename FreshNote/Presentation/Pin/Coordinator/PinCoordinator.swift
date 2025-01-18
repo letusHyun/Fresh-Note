@@ -34,7 +34,7 @@ final class PinCoordinator: BaseCoordinator {
     })
     
     let viewController = self.dependencies.makePinViewController(actions: actions)
-    self.navigationController?.pushViewController(viewController, animated: true)
+    self.navigationController?.viewControllers = [viewController]
   }
   
   // MARK: - Private

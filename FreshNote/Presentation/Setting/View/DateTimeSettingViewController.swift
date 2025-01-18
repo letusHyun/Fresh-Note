@@ -11,7 +11,7 @@ import UIKit
 final class DateTimeSettingViewController: BaseViewController {
   struct Constants {
     static var dateSize: CGFloat { 50 }
-    static var startButtonBottomConstraint: CGFloat { 0 }
+    static var completionButtonBottomConstraint: CGFloat { 0 }
   }
   
   // MARK: - Properties
@@ -56,18 +56,18 @@ final class DateTimeSettingViewController: BaseViewController {
     return datePicker
   }()
   
-  private lazy var startButton: UIButton = {
+  private lazy var completionButton: UIButton = {
     let button = UIButton()
     button.setTitle("시작하기", for: .normal)
     button.setTitleColor(UIColor(fnColor: .realBack), for: .normal)
-    button.backgroundColor = self.startButtonDisabledColor
+    button.backgroundColor = self.completionButtonDisabledColor
     button.layer.cornerRadius = 15
     button.layer.masksToBounds = true
     button.isEnabled = false
     return button
   }()
   
-  private var startButtonDisabledColor: UIColor {
+  private var completionButtonDisabledColor: UIColor {
     UIColor(fnColor: .orange2).withAlphaComponent(0.3)
   }
   
@@ -75,11 +75,14 @@ final class DateTimeSettingViewController: BaseViewController {
   
   private let viewModel: any DateTimeSettingViewModel
   
-  private var startButtonBottomConstraint: NSLayoutConstraint?
+  private var completionButtonBottomConstraint: NSLayoutConstraint?
+  
+  private let mode: DateTimeSettingViewModelMode
   
   // MARK: - LifeCycle
-  init(viewModel: any DateTimeSettingViewModel) {
+  init(viewModel: any DateTimeSettingViewModel, mode: DateTimeSettingViewModelMode) {
     self.viewModel = viewModel
+    self.mode = mode
     super.init(nibName: nil, bundle: nil)
   }
   
@@ -89,11 +92,25 @@ final class DateTimeSettingViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    defer { self.viewModel.viewDidLoad() }
+    
     self.bindActions()
+    self.bind(to: self.viewModel)
+    self.configure(with: self.mode)
   }
   
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-    view.endEditing(true)
+    self.view.endEditing(true)
+  }
+  
+  override func viewWillAppear(_ animated: Bool) {
+    self.tabBarController?.tabBar.isHidden = true
+  }
+  
+  override func viewWillDisappear(_ animated: Bool) {
+    super.viewWillDisappear(animated)
+    self.tabBarController?.tabBar.isHidden = false
+    self.viewModel.viewWillDisappear()
   }
   
   deinit {
@@ -106,12 +123,12 @@ final class DateTimeSettingViewController: BaseViewController {
     view.addSubview(self.dateStackView)
     _=[self.dMinusLabel, self.dateTextField].map { self.dateStackView.addArrangedSubview($0) }
     view.addSubview(self.datePicker)
-    view.addSubview(self.startButton)
+    view.addSubview(self.completionButton)
     
     self.descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
     self.dateStackView.translatesAutoresizingMaskIntoConstraints = false
     self.datePicker.translatesAutoresizingMaskIntoConstraints = false
-    self.startButton.translatesAutoresizingMaskIntoConstraints = false
+    self.completionButton.translatesAutoresizingMaskIntoConstraints = false
     
     let safeArea = view.safeAreaLayoutGuide
     NSLayoutConstraint.activate([
@@ -124,28 +141,45 @@ final class DateTimeSettingViewController: BaseViewController {
       self.datePicker.centerXAnchor.constraint(equalTo: self.dateStackView.centerXAnchor),
       self.datePicker.topAnchor.constraint(equalTo: self.dateStackView.bottomAnchor, constant: 40)
     ] + [
-      self.startButton.heightAnchor.constraint(equalToConstant: 54),
-      self.startButton.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      self.startButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+      self.completionButton.heightAnchor.constraint(equalToConstant: 54),
+      self.completionButton.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      self.completionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
     ])
-    self.startButtonBottomConstraint = self.startButton.bottomAnchor.constraint(
+    self.completionButtonBottomConstraint = self.completionButton.bottomAnchor.constraint(
       equalTo: safeArea.bottomAnchor,
-      constant: -Constants.startButtonBottomConstraint
+      constant: -Constants.completionButtonBottomConstraint
     )
-    self.startButtonBottomConstraint?.isActive = true
+    self.completionButtonBottomConstraint?.isActive = true
     
     self.dMinusLabel.widthAnchor.constraint(equalTo: self.dateStackView.widthAnchor, multiplier: 3/5).isActive = true
     self.dateTextField.widthAnchor.constraint(equalTo: self.dateStackView.widthAnchor, multiplier: 2/5).isActive = true
   }
   
-  // MARK: - Privates
+  // MARK: - Bind
+  private func bind(to viewModel: any DateTimeSettingViewModel) {
+    viewModel.errorPublisher
+      .receive(on: DispatchQueue.main)
+      .compactMap { $0 }
+      .sink { [weak self] error in
+        // TODO: - Error handling
+      }
+      .store(in: &self.subscriptions)
+    
+    viewModel.dateTimePublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] dateTime in
+        self?.configureDateAndTime(with: dateTime)
+      }
+      .store(in: &self.subscriptions)
+  }
+  
   private func bindActions() {
-    self.startButton
+    self.completionButton
       .tapPublisher
       .sink { [weak self] in
         guard let self else { return }
         let dateToInt = Int(self.dateTextField.text ?? "0") ?? 0
-        self.viewModel.didTapStartButton(dateInt: dateToInt, hourMinuteDate: self.datePicker.date)
+        self.viewModel.didTapCompletionButton(dateInt: dateToInt, hourMinuteDate: self.datePicker.date)
       }
       .store(in: &self.subscriptions)
     
@@ -153,17 +187,13 @@ final class DateTimeSettingViewController: BaseViewController {
       .textPublisher
       .map { !$0.isEmpty }
       .sink { [weak self] isEnabled in
-        self?.startButton.isEnabled = isEnabled
-        self?.startButton.backgroundColor = isEnabled ?
-        UIColor(fnColor: .orange2) :
-        self?.startButtonDisabledColor
+        self?.configureCompletionButton(isEnabled: isEnabled)
       }
       .store(in: &self.subscriptions)
     
     self.setupKeyboardBind()
   }
   
-  // MARK: - Private
   private func setupKeyboardBind() {
     let keyboardWillShow = NotificationCenter.default.publisher(
       for: UIResponder.keyboardWillShowNotification
@@ -178,9 +208,32 @@ final class DateTimeSettingViewController: BaseViewController {
         return self?.calculateBottomOffset(for: $0)
       }
       .sink { [weak self] bottomOffset in
-        self?.updateStartButtonConstraint(bottomOffset)
+        self?.updateCompletionButtonConstraint(bottomOffset)
       }
       .store(in: &self.subscriptions)
+  }
+  
+  // MARK: - Private
+  private func configure(with mode: DateTimeSettingViewModelMode) {
+    let buttonIsEnabled: Bool
+    switch mode {
+    case .edit:
+      // button
+      self.completionButton.setTitle("변경하기", for: .normal)
+      buttonIsEnabled = true
+    case .start:
+      self.completionButton.setTitle("시작하기", for: .normal)
+      buttonIsEnabled = false
+    }
+    
+    self.configureCompletionButton(isEnabled: buttonIsEnabled)
+  }
+  
+  private func configureCompletionButton(isEnabled: Bool) {
+    self.completionButton.isEnabled = isEnabled
+    self.completionButton.backgroundColor = isEnabled ?
+    UIColor(fnColor: .orange2) :
+    self.completionButtonDisabledColor
   }
   
   private func calculateBottomOffset(for notification: Notification) -> CGFloat? {
@@ -193,27 +246,38 @@ final class DateTimeSettingViewController: BaseViewController {
       }
       return keyboardFrame.height
     } else {
-      return Constants.startButtonBottomConstraint
+      return Constants.completionButtonBottomConstraint
     }
   }
   
-  private func updateStartButtonConstraint(_ offset: CGFloat) {
-    self.startButtonBottomConstraint?.isActive = false
-    let isKeyboardVisible = offset > Constants.startButtonBottomConstraint
+  private func updateCompletionButtonConstraint(_ offset: CGFloat) {
+    self.completionButtonBottomConstraint?.isActive = false
+    let isKeyboardVisible = offset > Constants.completionButtonBottomConstraint
     
     let bottomAnchor = isKeyboardVisible ?
     self.view.bottomAnchor :
     self.view.safeAreaLayoutGuide.bottomAnchor
     
-    self.startButtonBottomConstraint = self.startButton.bottomAnchor.constraint(
+    self.completionButtonBottomConstraint = self.completionButton.bottomAnchor.constraint(
       equalTo: bottomAnchor,
       constant: -offset
     )
     
-    self.startButtonBottomConstraint?.isActive = true
+    self.completionButtonBottomConstraint?.isActive = true
     UIView.animate(withDuration: 0.3) {
       self.view.layoutIfNeeded()
     }
+  }
+  
+  private func configureDateAndTime(with dateTime: DateTime) {
+    self.dateTextField.text = "\(dateTime.date)"
+    
+    var components = DateComponents()
+    components.hour = dateTime.hour
+    components.minute = dateTime.minute
+    
+    guard let date = Calendar.current.date(from: components) else { return }
+    self.datePicker.date = date
   }
 }
 

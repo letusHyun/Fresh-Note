@@ -45,6 +45,14 @@ final class OnboardingSceneDIContainer {
     return DefaultCheckDateTimeStateUseCase(dateTimeRepository: self.makeDateTimeRepository())
   }
   
+  func makeFetchDateTimeUseCase() -> any FetchDateTimeUseCase {
+    return DefaultFetchDateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  }
+  
+  func makeUpdateDateTimeUseCase() -> any UpdateDateTimeUseCase {
+    return DefaultUpdateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  }
+  
   // MARK: - Data Layer
   func makeImageRepository() -> any ImageRepository {
     return DefaultImageRepository(firebaseNetworkService: self.makeFirebaseNetworkService())
@@ -106,9 +114,14 @@ final class OnboardingSceneDIContainer {
   }
   
   func makeDateTimeSettingViewModel(
-    actions: DateTimeSettingViewModelActions
+    actions: DateTimeSettingViewModelActions,
+    mode: DateTimeSettingViewModelMode
   ) -> DateTimeSettingViewModel {
-    return DefaultDateTimeSettingViewModel(actions: actions, saveDateTimeUseCase: self.makeSaveDateTimeUseCase())
+    return DefaultDateTimeSettingViewModel(
+      actions: actions,
+      mode: mode,
+      saveDateTimeUseCase: self.makeSaveDateTimeUseCase()
+    )
   }
 }
 
@@ -132,9 +145,10 @@ extension OnboardingSceneDIContainer: OnboardingCoordinatorDependencies {
 // MARK: - DateTimeSettingCoordinatorDependencies
 extension OnboardingSceneDIContainer: DateTimeSettingCoordinatorDependencies {
   func makeDateTimeSettingViewController(
-    actions: DateTimeSettingViewModelActions
+    actions: DateTimeSettingViewModelActions,
+    mode: DateTimeSettingViewModelMode
   ) -> DateTimeSettingViewController {
-    let viewModel = self.makeDateTimeSettingViewModel(actions: actions)
-    return DateTimeSettingViewController(viewModel: viewModel)
+    let viewModel = self.makeDateTimeSettingViewModel(actions: actions, mode: mode)
+    return DateTimeSettingViewController(viewModel: viewModel, mode: mode)
   }
 }

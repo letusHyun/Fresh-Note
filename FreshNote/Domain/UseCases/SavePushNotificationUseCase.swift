@@ -56,7 +56,7 @@ final class DefaultSavePushNotificationUseCase: SavePushNotificationUseCase {
           noficationID: product.did,
           productName: product.name,
           remainingDay: dateTime.date,
-          date: notificationDate
+          notificationDate: notificationDate
         )
         return self.pushNotificationRepository
           .scheduleNotification(requestEntity: requestEntity)

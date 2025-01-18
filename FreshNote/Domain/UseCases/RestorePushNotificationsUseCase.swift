@@ -108,7 +108,7 @@ final class DefaultRestorePushNotificationsUseCase: RestorePushNotificationsUseC
           noficationID: product.did,
           productName: product.name,
           remainingDay: dateTime.date,
-          date: date
+          notificationDate: date
         )
         
         return self.pushNotificationRepository

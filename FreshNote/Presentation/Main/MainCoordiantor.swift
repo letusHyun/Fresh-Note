@@ -13,6 +13,7 @@ protocol MainCoordinatorDependencies: AnyObject {
   func makeCalendarCoordinator(navigationController: UINavigationController) -> CalendarCoordinator
   func makePinCoordinator(navigationController: UINavigationController) -> PinCoordinator
   func makeCategoryCoordinator(navigationController: UINavigationController) -> CategoryCoordinator
+  func makeSettingCoordinator(navigationController: UINavigationController) -> SettingCoordinator
 }
 
 final class MainCoordinator: BaseCoordinator {
@@ -57,6 +58,11 @@ final class MainCoordinator: BaseCoordinator {
       tabBarImage: UIImage(systemName: "list.dash"),
       tag: 3
     )
+    let settingNavigationController = self.makeNavigationControllerWithTitle(
+      title: "마이",
+      tabBarImage: UIImage(systemName: "person"),
+      tag: 4
+    )
     
     self.tabBarController?.tabBar.tintColor = UIColor(fnColor: .gray3)
     self.tabBarController?.tabBar.unselectedItemTintColor = UIColor(fnColor: .gray1)
@@ -64,7 +70,8 @@ final class MainCoordinator: BaseCoordinator {
       homeNavigationController,
       calendarNavigationController,
       pinNavigationController,
-      categoryNavigationController
+      categoryNavigationController,
+      settingNavigationController
     ]
     
     let homeCoordinator = self.dependencies.makeHomeCoordinator(
@@ -90,6 +97,12 @@ final class MainCoordinator: BaseCoordinator {
     )
     self.childCoordinators[categoryCoordinator.identifier] = categoryCoordinator
     categoryCoordinator.start()
+    
+    let settingCoordinator = self.dependencies.makeSettingCoordinator(
+      navigationController: settingNavigationController
+    )
+    self.childCoordinators[settingCoordinator.identifier] = settingCoordinator
+    settingCoordinator.start()
   }
   
   // MARK: - Private

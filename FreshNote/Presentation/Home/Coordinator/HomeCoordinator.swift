@@ -46,7 +46,7 @@ extension HomeCoordinator {
     )
     
     let homeViewController = self.dependencies.makeHomeViewController(actions: actions)
-    self.navigationController?.pushViewController(homeViewController, animated: true)
+    self.navigationController?.viewControllers = [homeViewController]
   }
 }
 

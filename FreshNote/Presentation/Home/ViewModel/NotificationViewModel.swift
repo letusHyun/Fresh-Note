@@ -25,16 +25,20 @@ protocol NotificaionViewModelInput {
 protocol NotificationViewModelOutput {
   var reloadDataPublisher: AnyPublisher<Void, Never> { get }
   var reloadRowPublisher: AnyPublisher<IndexPath, Never> { get }
+  var errorPublisher: AnyPublisher<(any Error)?, Never> { get }
 }
 
 final class DefaultNotificationViewModel: NotificationViewModel {
   // MARK: - Properties
   private var notifications: [ProductNotification] = []
   private let actions: NotificationViewModelActions
+  private let productNotificationUseCase: any ProductNotificationUseCase
+  private var subscriptions = Set<AnyCancellable>()
   
   // MARK: - Output
   private let reloadDataSubject = PassthroughSubject<Void, Never>()
   private let reloadRowSubject = PassthroughSubject<IndexPath, Never>()
+  @Published private var error: (any Error)?
   
   var reloadDataPublisher: AnyPublisher<Void, Never> {
     self.reloadDataSubject.eraseToAnyPublisher()
@@ -42,27 +46,29 @@ final class DefaultNotificationViewModel: NotificationViewModel {
   var reloadRowPublisher: AnyPublisher<IndexPath, Never> {
     self.reloadRowSubject.eraseToAnyPublisher()
   }
+  var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
   
   // MARK: - LifeCycle
-  init(actions: NotificationViewModelActions) {
+  init(
+    actions: NotificationViewModelActions,
+    productNotificationUseCase: any ProductNotificationUseCase
+  ) {
     self.actions = actions
+    self.productNotificationUseCase = productNotificationUseCase
   }
   // MARK: - Input
   func viewDidLoad() {
-    // fetch api
-    
-    // mock
-    for i in 0..<20 {
-      let isViewed: Bool
-      if i % 2 == 0 {
-        isViewed = false
-        self.notifications.append(ProductNotification(productName: "제품\(i+1)", dDay: i+1, isViewed: isViewed))
-      } else {
-        isViewed = true
-        self.notifications.append(ProductNotification(productName: "제품\(i+1)", dDay: i+1, isViewed: isViewed))
+    self.productNotificationUseCase
+      .fetchProductNotifications()
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.error = error
+      } receiveValue: { [weak self] productNotifications in
+        self?.notifications = productNotifications
+        self?.reloadDataSubject.send()
       }
-    }
-    self.reloadDataSubject.send()
+      .store(in: &self.subscriptions)
   }
   
   func numberOfRowsInSection() -> Int {

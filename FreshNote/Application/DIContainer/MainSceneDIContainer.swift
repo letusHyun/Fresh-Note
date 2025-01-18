@@ -38,7 +38,10 @@ private extension MainSceneDIContainer {
   }
   
   func makeNotificationViewModel(actions: NotificationViewModelActions) -> any NotificationViewModel {
-    return DefaultNotificationViewModel(actions: actions)
+    return DefaultNotificationViewModel(
+      actions: actions,
+      productNotificationUseCase: self.makeProductNotificationUseCase()
+    )
   }
   
   func makeSearchViewModel(actions: SearchViewModelActions) -> any SearchViewModel {
@@ -94,7 +97,34 @@ private extension MainSceneDIContainer {
     )
   }
   
+  func makeSettingViewModel(actions: SettingViewModelActions) -> any SettingViewModel {
+    DefaultSettingViewModel(actions: actions)
+  }
+  
+  func makeDateTimeSettingViewModel(
+    actions: DateTimeSettingViewModelActions,
+    mode: DateTimeSettingViewModelMode
+  ) -> any DateTimeSettingViewModel {
+    return DefaultDateTimeSettingViewModel(
+      actions: actions,
+      mode: mode,
+      updateDateTimeUseCase: self.makeUpdateDateTimeUseCase(),
+      fetchDateTimeUseCase: self.makeFetchDateTimeUseCase(),
+      updatePushNotificationUseCase: self.makeUpdateAllPushNotificationsUseCase()
+    )
+  }
+  
   // MARK: - Domain Layer
+  func makeUpdateDateTimeUseCase() -> any UpdateDateTimeUseCase {
+    DefaultUpdateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  }
+  
+  func makeProductNotificationUseCase() -> any ProductNotificationUseCase {
+    return DefaultProductNotificaionUseCase(
+      productNotificationRepository: self.makeProductNotificationRepository()
+    )
+  }
+  
   func makeRestorePushNotificationsUseCase() -> any RestorePushNotificationsUseCase {
     return DefaultRestorePushNotificationsUseCase(
       fetchDateTimeUseCase: self.makeFetchDateTimeUseCase(),
@@ -126,6 +156,14 @@ private extension MainSceneDIContainer {
     return DefaultUpdatePushNotificationUseCase(
       savePushNotificationUseCase: self.makeSavePushNotificationUseCase(),
       deletePushNotificationUseCase: self.makeDeletePushNotificationUseCase()
+    )
+  }
+  
+  func makeUpdateAllPushNotificationsUseCase() -> any UpdatePushNotificationUseCase {
+    return DefaultUpdatePushNotificationUseCase(
+      savePushNotificationUseCase: self.makeSavePushNotificationUseCase(),
+      deletePushNotificationUseCase: self.makeDeletePushNotificationUseCase(),
+      fetchProductUseCase: self.makefetchProductUseCase()
     )
   }
   
@@ -161,6 +199,12 @@ private extension MainSceneDIContainer {
   }
   
   // MARK: - Data Layer
+  func makeProductNotificationRepository() -> any ProductNotificationRepository {
+    return DefaultProductNotificationRepository(
+      productNotificationStorage: self.makeProductNotificationStorage()
+    )
+  }
+  
   func makeDeletePushNotificationUseCase() -> any DeletePushNotificationUseCase {
     return DefaultDeletePushNotificationUseCase(
       pushNotificationRepository: self.makePushNotificationRepository()
@@ -198,6 +242,10 @@ private extension MainSceneDIContainer {
   }
   
   // MARK: - Persistent Storage
+  func makeProductNotificationStorage() -> ProductNotificationStorage {
+    return CoreDataProductNotificationStorage(coreDataStorage: self.makeCoreDataStorage())
+  }
+  
   func makeProductQueryStorage() -> any ProductQueryStorage {
     return CoreDataProductQueryStorage(coreDataStorage: self.makeCoreDataStorage())
   }
@@ -217,6 +265,10 @@ private extension MainSceneDIContainer {
 
 // MARK: - MainCoordinatorDependencies
 extension MainSceneDIContainer: MainCoordinatorDependencies {
+  func makeSettingCoordinator(navigationController: UINavigationController) -> SettingCoordinator {
+    return SettingCoordinator(navigationController: navigationController, dependencies: self)
+  }
+  
   func makeCategoryCoordinator(navigationController: UINavigationController) -> CategoryCoordinator {
     return CategoryCoordinator(navigationController: navigationController, dependencies: self)
   }
@@ -231,6 +283,30 @@ extension MainSceneDIContainer: MainCoordinatorDependencies {
   
   func makeHomeCoordinator(navigationController: UINavigationController) -> HomeCoordinator {
     return HomeCoordinator(navigationController: navigationController, dependencies: self)
+  }
+}
+
+// MARK: - SettingCoordinatorDependencies
+extension MainSceneDIContainer: SettingCoordinatorDependencies {
+  func makeSettingViewController(actions: SettingViewModelActions) -> SettingViewController {
+    SettingViewController(viewModel: self.makeSettingViewModel(actions: actions))
+  }
+  
+  func makeDateTimeSettingCoordinator(navigationController: UINavigationController?) -> DateTimeSettingCoordinator {
+    DateTimeSettingCoordinator(dependencies: self, navigationController: navigationController)
+  }
+}
+
+// MARK: - DateTimeSettingCoordinatorDependencies
+extension MainSceneDIContainer: DateTimeSettingCoordinatorDependencies {
+  func makeDateTimeSettingViewController(
+    actions: DateTimeSettingViewModelActions,
+    mode: DateTimeSettingViewModelMode
+  ) -> DateTimeSettingViewController {
+    DateTimeSettingViewController(
+      viewModel: self.makeDateTimeSettingViewModel(actions: actions, mode: mode),
+      mode: mode
+    )
   }
 }
 

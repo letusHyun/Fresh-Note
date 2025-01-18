@@ -15,6 +15,11 @@
         <attribute name="memo" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="ProductNotificationEntity" representedClassName="ProductNotificationEntity" syncable="YES">
+        <attribute name="isViewed" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="remainingDay" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+    </entity>
     <entity name="ProductQueryEntity" representedClassName="ProductQueryEntity" syncable="YES">
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="keyword" optional="YES" attributeType="String"/>

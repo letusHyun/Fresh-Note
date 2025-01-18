@@ -35,12 +35,11 @@ final class DefaultDateTimeRepository: DateTimeRepository {
           return self.dateTimeStorage.fetchDateTime()
         }
         
-        // storage에 dateTime이 존재하지 않는다면
         guard let userID = FirebaseUserManager.shared.userID else {
           return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
         }
-        
-        // firestore fetch -> localDB save
+        // storage에 dateTime이 존재하지 않는다면
+          // firestore fetch -> localDB save
         let publisher: AnyPublisher<DateTimeResponseDTO, any Error> = self.firebaseNetworkService.getDocument(
           documentPath: FirestorePath.userID(userID: userID)
         )
@@ -72,11 +71,51 @@ final class DefaultDateTimeRepository: DateTimeRepository {
       .eraseToAnyPublisher()
   }
   
-  func saveDateTime(date: Int, hour: Int, minute: Int) -> AnyPublisher<Void, any Error> {
+  func saveDateTime(dateTime: DateTime) -> AnyPublisher<Void, any Error> {
     guard let userID = FirebaseUserManager.shared.userID
     else { return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher() }
     
-    let requestDTO = DateTimeRequestDTO(date: date, hour: hour, minute: minute)
+    let publisher = self.requestDateTimeFromFireBase(dateTime: dateTime)
+    
+    return publisher
+    .flatMap { [weak self] _ in
+      guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
+      
+      return self.dateTimeStorage
+        .saveDateTime(dateTime: dateTime)
+        .map { _ in }
+        .eraseToAnyPublisher()
+    }
+    .receive(on: self.backgroundQueue)
+    .eraseToAnyPublisher()
+  }
+  
+  func updateDateTime(dateTime: DateTime) -> AnyPublisher<Void, any Error> {
+    // 1. firebase
+    let publisher = self.requestDateTimeFromFireBase(dateTime: dateTime)
+    
+    return publisher
+      .flatMap { [weak self] _ in
+        guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
+        
+        // 2. storage
+        return self.dateTimeStorage
+          .updateDateTime(dateTime: dateTime)
+          .map { _ in }
+          .eraseToAnyPublisher()
+      }
+      .receive(on: self.backgroundQueue)
+      .eraseToAnyPublisher()
+  }
+  
+  // MARK: - Private
+  
+  /// save 및 update
+  private func requestDateTimeFromFireBase(dateTime: DateTime) -> AnyPublisher<Void, any Error> {
+    guard let userID = FirebaseUserManager.shared.userID
+    else { return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher() }
+    
+    let requestDTO = DateTimeRequestDTO(date: dateTime.date, hour: dateTime.hour, minute: dateTime.minute)
     let publisher: AnyPublisher<Void, any Error> = self.firebaseNetworkService.setDocument(
       documentPath: FirestorePath.userID(userID: userID),
       requestDTO: requestDTO,
@@ -84,14 +123,5 @@ final class DefaultDateTimeRepository: DateTimeRepository {
     )
     
     return publisher
-    .flatMap { [weak self] _ in
-      guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
-      let dateTime = DateTime(date: date, hour: hour, minute: minute)
-      return self.dateTimeStorage.saveDateTime(dateTime: dateTime)
-        .map { _ in }
-        .eraseToAnyPublisher()
-    }
-    .receive(on: self.backgroundQueue)
-    .eraseToAnyPublisher()
   }
 }

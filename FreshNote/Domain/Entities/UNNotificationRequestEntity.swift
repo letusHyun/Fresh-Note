@@ -10,15 +10,22 @@ import Foundation
 /// 푸시 알림을 생성할 때 사용됩니다.
 struct UNNotificationRequestEntity {
   let noficationID: String
+  /// 푸시 알림 title
   let title: String
-  let body: String
   /// 알림 발송날짜
   let date: Date
+  /// 푸시 알림 body
+  let body: String
   
-  init(noficationID: DocumentID, productName: String, remainingDay: Int, date: Date) {
+  init(noficationID: DocumentID, productName: String, remainingDay: Int, notificationDate: Date) {
     self.noficationID = noficationID.didString
-    self.title = "유통기한 알림"
-    self.body = "\(productName)의 유통기한이 \(remainingDay)일 남았습니다."
-    self.date = date
+    self.title = NotificationHelper.title
+    self.date = notificationDate
+    
+    let body = NotificationHelper.makeBody(
+      productName: productName,
+      remainingDay: remainingDay
+    )
+    self.body = body
   }
 }

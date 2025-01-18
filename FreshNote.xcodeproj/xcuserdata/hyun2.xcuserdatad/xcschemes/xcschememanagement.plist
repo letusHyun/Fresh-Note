@@ -7,12 +7,12 @@
 		<key>FreshNote.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>1</integer>
+			<integer>0</integer>
 		</dict>
 		<key>Promises (Playground).xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>0</integer>
+			<integer>3</integer>
 		</dict>
 		<key>SnapKitPlayground (Playground).xcscheme</key>
 		<dict>
@@ -33,6 +33,11 @@
 			<true/>
 		</dict>
 		<key>1383D22D2CC3923A00F822A9</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>13AFC22A2D379623001483D2</key>
 		<dict>
 			<key>primary</key>
 			<true/>

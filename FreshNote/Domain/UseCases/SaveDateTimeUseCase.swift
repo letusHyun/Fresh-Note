@@ -20,6 +20,7 @@ final class DefaultSaveDateTimeUseCase: SaveDateTimeUseCase {
   }
   
   func saveDateTime(date: Int, hour: Int, minute: Int) -> AnyPublisher<Void, any Error> {
-    return dateTimeRepository.saveDateTime(date: date, hour: hour, minute: minute)
+    let dateTime = DateTime(date: date, hour: hour, minute: minute)
+    return dateTimeRepository.saveDateTime(dateTime: dateTime)
   }
 }
