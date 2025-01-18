@@ -29,13 +29,17 @@ final class CategoryCell: UITableViewCell {
     fatalError("init(coder:) has not been implemented")
   }
   
+  override func prepareForReuse() {
+    super.prepareForReuse()
+    self.titleLabel.text = nil
+  }
+  
   // MARK: - SetupUI
   private func setupLayout() {
     contentView.addSubview(self.titleLabel)
     
     self.titleLabel.snp.makeConstraints {
-      $0.leading.equalToSuperview().inset(10)
-      $0.centerY.equalToSuperview()
+      $0.center.equalToSuperview()
     }
   }
   
