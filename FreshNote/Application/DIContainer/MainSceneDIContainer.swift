@@ -114,6 +114,12 @@ private extension MainSceneDIContainer {
     )
   }
   
+  func makeSignOutAlertViewModel(
+    actions: SignOutAlertViewModelActions
+  ) -> any SignOutAlertViewModel {
+    return DefaultSignOutAlertViewModel(actions: actions)
+  }
+  
   // MARK: - Domain Layer
   func makeUpdateDateTimeUseCase() -> any UpdateDateTimeUseCase {
     DefaultUpdateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
@@ -288,6 +294,10 @@ extension MainSceneDIContainer: MainCoordinatorDependencies {
 
 // MARK: - SettingCoordinatorDependencies
 extension MainSceneDIContainer: SettingCoordinatorDependencies {
+  func makeSignOutAlertViewController(actions: SignOutAlertViewModelActions) -> SignOutAlertViewController {
+    SignOutAlertViewController(viewModel: self.makeSignOutAlertViewModel(actions: actions))
+  }
+  
   func makeSettingViewController(actions: SettingViewModelActions) -> SettingViewController {
     SettingViewController(viewModel: self.makeSettingViewModel(actions: actions))
   }

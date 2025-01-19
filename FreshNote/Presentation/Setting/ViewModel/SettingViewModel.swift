@@ -13,6 +13,7 @@ struct SettingViewModelActions {
   let showDateTimeSetting: () -> Void
   let showAppGuide: () -> Void
   let showInquire: () -> Void
+  let presentSignOutAlert: () -> Void
 }
 
 struct SettingMenuItem {
@@ -49,6 +50,8 @@ protocol SettingViewModelInput {
   func numberOfRows(in section: Int) -> Int
   func viewForHeader(in section: Int) -> String
   func heightForFooter(in section: Int) -> CGFloat
+  func didTapCancelButton()
+  func didTapSignOutButton()
 }
 
 protocol SettingViewModelOutput {
@@ -105,9 +108,17 @@ final class DefaultSettingViewModel: SettingViewModel {
     return 14
   }
   
+  func didTapCancelButton() {
+    
+  }
+  
+  func didTapSignOutButton() {
+    
+  }
+  
   // MARK: - Private
   private func makeDataSource() -> [SettingDataSource] {
-    let logout = SettingMenuItem(title: "로그아웃", action: { [weak self] in self?.alertLogout() })
+    let logout = SettingMenuItem(title: "로그아웃", action: { [weak self] in self?.actions.presentSignOutAlert() })
     let accountSection = SettingDataSource(section: .account, items: [logout])
     
     let notification = SettingMenuItem(
@@ -121,9 +132,5 @@ final class DefaultSettingViewModel: SettingViewModel {
     let usageSection = SettingDataSource(section: .usage, items: [appGuide, inquire])
     
     return [accountSection, settingSection, usageSection]
-  }
-  
-  private func alertLogout() {
-    // TODO: -
   }
 }

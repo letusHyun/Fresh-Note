@@ -15,6 +15,8 @@ protocol SettingCoordinatorDependencies {
     navigationController: UINavigationController?
   ) -> DateTimeSettingCoordinator
   
+  func makeSignOutAlertViewController(actions: SignOutAlertViewModelActions) -> SignOutAlertViewController
+  
   // TODO: - 다른 화면에 대한 makeCoordinators..
 }
 
@@ -36,15 +38,14 @@ final class SettingCoordinator: BaseCoordinator {
     let actions = SettingViewModelActions(
       showDateTime: { [weak self] in
         
-      },
-      showDateTimeSetting: { [weak self] in
+      }, showDateTimeSetting: { [weak self] in
         self?.showDateTimeSetting()
-      },
-      showAppGuide: { [weak self] in
+      }, showAppGuide: { [weak self] in
         
-      },
-      showInquire: { [weak self] in
+      }, showInquire: { [weak self] in
         
+      }, presentSignOutAlert: { [weak self] in
+        self?.presentSignOutAlert()
       }
     )
     
@@ -60,6 +61,25 @@ final class SettingCoordinator: BaseCoordinator {
     childCoordinator.finishDelegate = self
     self.childCoordinators[childCoordinator.identifier] = childCoordinator
     childCoordinator.start(mode: .edit)
+  }
+  
+  private func presentSignOutAlert() {
+    let actions = SignOutAlertViewModelActions(
+      pop: { [weak self] in
+        print("로그아웃 알람 화면 pop!")
+        self?.popSignOutAlert()
+      }
+    )
+    let alertViewController = self.dependencies.makeSignOutAlertViewController(actions: actions)
+    alertViewController.modalPresentationStyle = .overFullScreen
+    alertViewController.modalTransitionStyle = .crossDissolve
+    self.navigationController?.present(alertViewController, animated: true)
+  }
+  
+  private func popSignOutAlert() {
+    if self.navigationController?.presentedViewController != nil {
+      self.navigationController?.dismiss(animated: true)
+    }
   }
 }
 
