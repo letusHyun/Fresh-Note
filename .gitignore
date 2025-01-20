@@ -127,7 +127,11 @@ xcuserdata
 *.entitlements
 *.pdf
 *.zip
-.DS_Store
-.DS_Store?
+*.DS_Store
+*.DS_Store?
 
-
+*.mobileprovision
+*.certSigningRequest
+*.p8
+*.p16
+*.cer

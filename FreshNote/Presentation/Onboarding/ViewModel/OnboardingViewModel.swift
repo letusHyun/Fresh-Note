@@ -48,12 +48,12 @@ final class DefaultOnboardingViewModel: NSObject {
   private let dataSource: [OnboardingCellInfo] = {
     return [
       OnboardingCellInfo(
-        description: "내가 입력한 유통 & 소비기한으로\n원하는 디데이 알림을 받아보세요.",
-        lottieName: "firstOnboardingLottie"
+        description: "식품을 더 맛있게, 그리고 안전하게\n보관하기 위한 첫걸음",
+        lottieName: "secondOnboardingLottie"
       ),
       OnboardingCellInfo(
-        description: "식품을  더 맛있게, 그리고 안전하게\n보관하기 위한  첫걸음",
-        lottieName: "secondOnboardingLottie"
+        description: "내가 입력한 유통 & 소비기한으로\n원하는 디데이 알림을 받아보세요.",
+        lottieName: "firstOnboardingLottie"
       )
     ]
   }()
@@ -196,6 +196,10 @@ extension DefaultOnboardingViewModel: ASAuthorizationControllerDelegate {
         .flatMap { [weak self] _ -> AnyPublisher<Void, any Error> in
           guard let self else { return Empty().eraseToAnyPublisher() }
           
+          
+          // TODO: - 여기서 블로그에 나오는 코드를 적용하면 될듯
+          // 1. cloud Functions 호출
+          // 2. 가져온 refreshToken을 keychain에 저장
           return self.signInStateUseCase.updateSignInState(updateToValue: true)
         }
         .catch { [weak self] error -> AnyPublisher<Void, any Error> in

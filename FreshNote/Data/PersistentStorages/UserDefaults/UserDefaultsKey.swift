@@ -9,4 +9,5 @@ import Foundation
 
 enum UserDefaultsKey: String {
   case signInState
+  case firstLaunchState
 }

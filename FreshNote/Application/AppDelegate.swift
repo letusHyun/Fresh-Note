@@ -12,16 +12,21 @@ import Firebase
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
-  private lazy var productNotificationUseCase: any ProductNotificationUseCase = {
-    let repository = DefaultProductNotificationRepository(
-      productNotificationStorage: CoreDataProductNotificationStorage(
-        coreDataStorage: PersistentCoreDataStorage.shared
-      )
-    )
-    return DefaultProductNotificaionUseCase(productNotificationRepository: repository)
-  }()
+  // MARK: - Private
+//  private lazy var productNotificationUseCase: any ProductNotificationUseCase = {
+//    let repository = DefaultProductNotificationRepository(
+//      productNotificationStorage: CoreDataProductNotificationStorage(
+//        coreDataStorage: PersistentCoreDataStorage.shared
+//      )
+//    )
+//    return DefaultProductNotificaionUseCase(productNotificationRepository: repository)
+//  }()
   
   private var cancellable: Set<AnyCancellable> = []
+  
+  private lazy var setFirstLaunchUseCase: any SetFirstLaunchUseCase = {
+    return self.makeSetFirstLaunchUseCase()
+  }()
   
   func application(
     _ application: UIApplication,
@@ -29,45 +34,55 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   ) -> Bool {
     FirebaseApp.configure()
     
-    // 알림 센터 가져오기
-    let center = UNUserNotificationCenter.current()
-    center.delegate = self
-    
-    let options = UNAuthorizationOptions(arrayLiteral: [.badge, .sound])
-    center.requestAuthorization(options: options) { success, error in
-      if let error = error {
-        print("에러 발생: \(error.localizedDescription)")
+    self.setFirstLaunchUseCase
+      .execute()
+      .sink { _ in
+        
+      } receiveValue: { _ in
+        
       }
-    }
+      .store(in: &self.cancellable)
+
     
-    Future<[UNNotification], Never> { promise in
-      UNUserNotificationCenter.current().getDeliveredNotifications { notifications in
-        promise(.success(notifications))
-      }
-    }
-    .flatMap { notifications -> Publishers.Sequence<[UNNotification], Never> in
-      Publishers.Sequence(sequence: notifications)
-    }
-    .flatMap(maxPublishers: .max(3)) { [weak self] unNotification -> AnyPublisher<Void, any Error> in
-      guard let self  else { return Empty().eraseToAnyPublisher() }
-      let (productName, remainingDay) = NotificationHelper
-        .extractTitleAndDay(from: unNotification.request.content.body
-        ) ?? ("", 0)
-      let productNotification = ProductNotification(
-        productName: productName,
-        remainingDay: remainingDay,
-        isViewed: false
-      )
-      
-      return self.productNotificationUseCase.saveProductNotification(productNotification)
-    }
-    .receive(on: DispatchQueue.main)
-    .sink { _ in
-      
-    } receiveValue: { _ in
-      UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-    }
-    .store(in: &self.cancellable)
+//    // 알림 센터 가져오기
+//    let center = UNUserNotificationCenter.current()
+//    center.delegate = self
+//    
+//    let options = UNAuthorizationOptions(arrayLiteral: [.badge, .sound])
+//    center.requestAuthorization(options: options) { success, error in
+//      if let error = error {
+//        print("에러 발생: \(error.localizedDescription)")
+//      }
+//    }
+//    
+//    Future<[UNNotification], Never> { promise in
+//      UNUserNotificationCenter.current().getDeliveredNotifications { notifications in
+//        promise(.success(notifications))
+//      }
+//    }
+//    .flatMap { notifications -> Publishers.Sequence<[UNNotification], Never> in
+//      Publishers.Sequence(sequence: notifications)
+//    }
+//    .flatMap(maxPublishers: .max(3)) { [weak self] unNotification -> AnyPublisher<Void, any Error> in
+//      guard let self  else { return Empty().eraseToAnyPublisher() }
+//      let (productName, remainingDay) = NotificationHelper
+//        .extractTitleAndDay(from: unNotification.request.content.body
+//        ) ?? ("", 0)
+//      let productNotification = ProductNotification(
+//        productName: productName,
+//        remainingDay: remainingDay,
+//        isViewed: false
+//      )
+//      
+//      return self.productNotificationUseCase.saveProductNotification(productNotification)
+//    }
+//    .receive(on: DispatchQueue.main)
+//    .sink { _ in
+//      
+//    } receiveValue: { _ in
+//      UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+//    }
+//    .store(in: &self.cancellable)
     return true
   }
 }
@@ -96,5 +111,23 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     UNUserNotificationCenter.current().getDeliveredNotifications { notifications in
       print("사용자가 알림을 터치했을 때의 getDeliveredNotifications: \(notifications)")
     }
+  }
+}
+
+// MARK: - Private
+extension AppDelegate {
+  private func makeSetFirstLaunchUseCase() -> any SetFirstLaunchUseCase {
+    let refreshTokenStorage = KeychainRefreshTokenStorage(backgroundQueue: DispatchQueue.main)
+    let refreshTokenRepository = DefaultRefreshTokenRepository(
+      refreshTokenStorage: refreshTokenStorage
+    )
+    let firstLaunchStorage = UserDefaultsFirstLaunchStorage(backgroundQueue: DispatchQueue.main)
+    let firstLaunchRepository = DefaultFirstLaunchRepository(
+      firstLaunchStorage: firstLaunchStorage
+    )
+    return DefaultSetFirstLaunchUseCase(
+      refreshTokenRepository: refreshTokenRepository,
+      firstLaunchRepository: firstLaunchRepository
+    )
   }
 }

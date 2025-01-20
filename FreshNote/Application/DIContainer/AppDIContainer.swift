@@ -8,6 +8,7 @@
 import UIKit
 
 final class AppDIContainer {
+  // MARK: - Private
   private func makeMainSceneDIContainer() -> MainSceneDIContainer {
     return MainSceneDIContainer(dependencies: MainSceneDIContainer.Dependencies())
   }
