@@ -14,6 +14,7 @@ struct SettingViewModelActions {
   let showAppGuide: () -> Void
   let showInquire: () -> Void
   let presentSignOutAlert: () -> Void
+  let showAccountDeletion: () -> Void
 }
 
 struct SettingMenuItem {
@@ -118,15 +119,22 @@ final class DefaultSettingViewModel: SettingViewModel {
   
   // MARK: - Private
   private func makeDataSource() -> [SettingDataSource] {
+    // 계정
     let logout = SettingMenuItem(title: "로그아웃", action: { [weak self] in self?.actions.presentSignOutAlert() })
-    let accountSection = SettingDataSource(section: .account, items: [logout])
+    let deleteAccount = SettingMenuItem(
+      title: "회원탈퇴",
+      action: { [weak self] in self?.actions.showAccountDeletion() }
+    )
+    let accountSection = SettingDataSource(section: .account, items: [logout, deleteAccount])
     
+    // 설정
     let notification = SettingMenuItem(
       title: "알림 설정",
       action: { [weak self] in self?.actions.showDateTimeSetting() }
     )
     let settingSection = SettingDataSource(section: .settings, items: [notification])
     
+    // 이용안내
     let appGuide = SettingMenuItem(title: "앱 가이드", action: { [weak self] in self?.actions.showAppGuide() })
     let inquire = SettingMenuItem(title: "문의하기", action: { [weak self] in self?.actions.showInquire() })
     let usageSection = SettingDataSource(section: .usage, items: [appGuide, inquire])

@@ -17,6 +17,10 @@ protocol SettingCoordinatorDependencies {
   
   func makeSignOutAlertViewController(actions: SignOutAlertViewModelActions) -> SignOutAlertViewController
   
+  func makeAccountDeletionCoordinator(
+    navigationController: UINavigationController?
+  ) -> AccountDeletionCoordinator
+  
   // TODO: - 다른 화면에 대한 makeCoordinators..
 }
 
@@ -46,6 +50,8 @@ final class SettingCoordinator: BaseCoordinator {
         
       }, presentSignOutAlert: { [weak self] in
         self?.presentSignOutAlert()
+      }, showAccountDeletion: { [weak self] in
+        self?.showAccountDeletion()
       }
     )
     
@@ -80,6 +86,15 @@ final class SettingCoordinator: BaseCoordinator {
     if self.navigationController?.presentedViewController != nil {
       self.navigationController?.dismiss(animated: true)
     }
+  }
+  
+  private func showAccountDeletion() {
+    let childCoordinator = self.dependencies.makeAccountDeletionCoordinator(
+      navigationController: self.navigationController
+    )
+    childCoordinator.finishDelegate = self
+    self.childCoordinators[childCoordinator.identifier] = childCoordinator
+    childCoordinator.start()
   }
 }
 

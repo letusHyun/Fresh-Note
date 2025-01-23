@@ -39,8 +39,7 @@ final class KeychainRefreshTokenStorage: RefreshTokenStorage {
         let query: [String: Any] = [
           kSecClass as String: kSecClassGenericPassword,
           kSecAttrService as String: self.serviceName,
-          kSecAttrAccount as String: self.accountName,
-          kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+          kSecAttrAccount as String: self.accountName
         ]
         
         // 안정성 보장을 위해 delete 이후 save

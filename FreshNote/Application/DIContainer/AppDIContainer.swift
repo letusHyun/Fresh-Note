@@ -10,11 +10,18 @@ import UIKit
 final class AppDIContainer {
   // MARK: - Private
   private func makeMainSceneDIContainer() -> MainSceneDIContainer {
-    return MainSceneDIContainer(dependencies: MainSceneDIContainer.Dependencies())
+    return MainSceneDIContainer(
+      dependencies: MainSceneDIContainer.Dependencies(
+        apiDataTransferService: self.makeAPIDataTranferService()
+      )
+    )
   }
   
   private func makeOnboardingSceneDIContainer() -> OnboardingSceneDIContainer {
-    return OnboardingSceneDIContainer(dependencies: OnboardingSceneDIContainer.Dependencies())
+    let dependencies = OnboardingSceneDIContainer
+      .Dependencies(apiDataTransferService: self.makeAPIDataTranferService())
+    
+    return OnboardingSceneDIContainer(dependencies: dependencies)
   }
   
   private func makeSignInStateRepository() -> any SignInStateRepository {
@@ -42,6 +49,16 @@ final class AppDIContainer {
   
   private func makeCoreDataStorage() -> any CoreDataStorage {
     return PersistentCoreDataStorage.shared
+  }
+  
+  private func makeAPIDataTranferService() -> any DataTransferService {
+    let config = APIDataNetworkConfig(
+      // TODO: - URLString을 Bundle에서 불러오기
+      baseURL: URL(string:"https://us-central1-freshnote-6bee5.cloudfunctions.net")!
+    )
+    
+    let apiDataNetwork = DefaultNetworkService(config: config)
+    return DefaultDataTransferService(networkService: apiDataNetwork)
   }
 }
 

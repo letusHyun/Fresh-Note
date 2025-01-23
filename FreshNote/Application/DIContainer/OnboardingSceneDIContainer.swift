@@ -9,7 +9,7 @@ import UIKit
 
 final class OnboardingSceneDIContainer {
   struct Dependencies {
-//    let apiDataTransferService: DataTransferService
+    let apiDataTransferService: any DataTransferService
   }
   
   // MARK: - Properties
@@ -31,7 +31,11 @@ final class OnboardingSceneDIContainer {
   }
   
   func makeSignInUseCase() -> any SignInUseCase {
-    return DefaultSignInUseCase(appleSignInRepository: self.makeAppleSignInRepository())
+    return DefaultSignInUseCase(
+      appleSignInRepository: self.makeAppleSignInRepository(),
+      getRefreshTokenRepository: self.makeGetRefreshTokenRepository(),
+      refreshTokenCacheRepository: self.makeRefreshTokenCacheRepository()
+    )
   }
   
   func makeSaveUserProfileUseCase() -> any SaveUserProfileUseCase {
@@ -54,6 +58,10 @@ final class OnboardingSceneDIContainer {
   }
   
   // MARK: - Data Layer
+  func makeGetRefreshTokenRepository() -> any GetRefreshTokenRepository {
+    return DefaultGetRefreshTokenRepository(dataTransferService: self.dependencies.apiDataTransferService)
+  }
+  
   func makeImageRepository() -> any ImageRepository {
     return DefaultImageRepository(firebaseNetworkService: self.makeFirebaseNetworkService())
   }
@@ -98,6 +106,14 @@ final class OnboardingSceneDIContainer {
   
   func makeDateTimeStorage() -> any DateTimeStorage {
     return CoreDataDateTimeStorage(coreDataStorage: self.makeCoreDataStorage())
+  }
+  
+  func makeRefreshTokenCacheRepository() -> any RefreshTokenCacheRepository {
+    return DefaultRefreshTokenCacheRepository(refreshTokenStorage: self.makeRefreshTokenStorage())
+  }
+  
+  func makeRefreshTokenStorage() -> any RefreshTokenStorage {
+    return KeychainRefreshTokenStorage()
   }
   
   // MARK: - Presentation Layer

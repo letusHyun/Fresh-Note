@@ -59,7 +59,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Data/PersistentStorages/CoreDataStorage/CoreDataStorage.swift,
-				Infrastructure/Network/FirebaseNetworkService.swift,
+				Infrastructure/Network/Firebase/FirebaseNetworkService.swift,
 				"Utils/Extension/Encodable+.swift",
 			);
 			target = 1383D2232CC3923A00F822A9 /* FreshNoteTests */;

@@ -8,7 +8,7 @@
 import Foundation
 
 enum AuthenticationProvider {
-  case apple(idToken: String, nonce: String, fullName: PersonNameComponents?)
+  case apple(idToken: String, nonce: String, fullName: PersonNameComponents?, authorizationCode: Data)
   // kakao
   // google
   // naver

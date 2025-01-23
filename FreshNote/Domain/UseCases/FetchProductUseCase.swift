@@ -8,7 +8,6 @@
 import Combine
 import Foundation
 
-
 protocol FetchProductUseCase {
   func fetchProducts() -> AnyPublisher<[Product], any Error>
   func fetchProduct(productID: DocumentID) -> AnyPublisher<Product, any Error>

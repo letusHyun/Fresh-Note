@@ -5,10 +5,10 @@
 //  Created by SeokHyun on 12/13/24.
 //
 
-import FirebaseAuth
 import Combine
 import Foundation
 
+/// 외부 api로부터 로그인을 수행합니다.
 protocol AppleSignInRepository {
   func signIn(
     idToken: String,

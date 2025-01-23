@@ -9,7 +9,7 @@ import UIKit
 
 final class MainSceneDIContainer {
   struct Dependencies {
-    // service객체
+    let apiDataTransferService: any DataTransferService
   }
   
   // MARK: - Properties
@@ -118,6 +118,10 @@ private extension MainSceneDIContainer {
     actions: SignOutAlertViewModelActions
   ) -> any SignOutAlertViewModel {
     return DefaultSignOutAlertViewModel(actions: actions)
+  }
+  
+  func makeAccountDeletionViewModel(actions: AccountDeletionViewModelActions) -> any AccountDeletionViewModel {
+    return DefaultAccountDeletionViewModel(actions: actions)
   }
   
   // MARK: - Domain Layer
@@ -294,6 +298,15 @@ extension MainSceneDIContainer: MainCoordinatorDependencies {
 
 // MARK: - SettingCoordinatorDependencies
 extension MainSceneDIContainer: SettingCoordinatorDependencies {
+  func makeAccountDeletionCoordinator(
+    navigationController: UINavigationController?
+  ) -> AccountDeletionCoordinator {
+    AccountDeletionCoordinator(
+      navigationController: navigationController,
+      dependencies: self
+    )
+  }
+  
   func makeSignOutAlertViewController(actions: SignOutAlertViewModelActions) -> SignOutAlertViewController {
     SignOutAlertViewController(viewModel: self.makeSignOutAlertViewModel(actions: actions))
   }
@@ -441,5 +454,16 @@ extension MainSceneDIContainer: CategoryDetailCoordinatorDependencies {
   ) -> CategoryDetailViewController {
     CategoryDetailViewController(viewModel: self.makeCategoryDetailViewModel(actions: actions,
                                                                              category: category))
+  }
+}
+
+// MARK: - AccountDeletionCoordinatorDependencies
+extension MainSceneDIContainer: AccountDeletionCoordinatorDependencies {
+  func makeAccountDeletionViewController(
+    actions: AccountDeletionViewModelActions
+  ) -> AccountDeletionViewController {
+    AccountDeletionViewController(
+      viewModel: self.makeAccountDeletionViewModel(actions: actions)
+    )
   }
 }

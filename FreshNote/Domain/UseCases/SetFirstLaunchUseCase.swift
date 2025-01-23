@@ -15,14 +15,14 @@ protocol SetFirstLaunchUseCase {
 }
 
 final class DefaultSetFirstLaunchUseCase: SetFirstLaunchUseCase {
-  private let refreshTokenRepository: any RefreshTokenRepository
+  private let refreshTokenCacheRepository: any RefreshTokenCacheRepository
   private let firstLaunchRepository: any FirstLaunchRepository
 
   init(
-    refreshTokenRepository: any RefreshTokenRepository,
+    refreshTokenCacheRepository: any RefreshTokenCacheRepository,
     firstLaunchRepository: any FirstLaunchRepository
   ) {
-    self.refreshTokenRepository = refreshTokenRepository
+    self.refreshTokenCacheRepository = refreshTokenCacheRepository
     self.firstLaunchRepository = firstLaunchRepository
   }
   
@@ -37,7 +37,7 @@ final class DefaultSetFirstLaunchUseCase: SetFirstLaunchUseCase {
       .flatMap { [weak self] _ in
         guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
       
-        return self.refreshTokenRepository
+        return self.refreshTokenCacheRepository
           .deleteRefreshToken()
       }
       .eraseToAnyPublisher()

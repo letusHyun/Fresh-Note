@@ -118,7 +118,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
 extension AppDelegate {
   private func makeSetFirstLaunchUseCase() -> any SetFirstLaunchUseCase {
     let refreshTokenStorage = KeychainRefreshTokenStorage(backgroundQueue: DispatchQueue.main)
-    let refreshTokenRepository = DefaultRefreshTokenRepository(
+    let refreshTokenCacheRepository = DefaultRefreshTokenCacheRepository(
       refreshTokenStorage: refreshTokenStorage
     )
     let firstLaunchStorage = UserDefaultsFirstLaunchStorage(backgroundQueue: DispatchQueue.main)
@@ -126,7 +126,7 @@ extension AppDelegate {
       firstLaunchStorage: firstLaunchStorage
     )
     return DefaultSetFirstLaunchUseCase(
-      refreshTokenRepository: refreshTokenRepository,
+      refreshTokenCacheRepository: refreshTokenCacheRepository,
       firstLaunchRepository: firstLaunchRepository
     )
   }

@@ -17,6 +17,7 @@ enum AppleAuthorizationError: Error {
   case invalidAppleIDToken
   case faildToConvertIDTokenString
   case currentNonceIsNil
+  case noAuthorizationCode
 }
 
 struct OnboardingViewModelActions {
@@ -161,7 +162,7 @@ extension DefaultOnboardingViewModel {
     guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
       return .failure(AppleAuthorizationError.invalIDState)
     }
-    
+  
     guard let nonce = self.currentNonce else {
       return .failure(AppleAuthorizationError.currentNonceIsNil)
     }
@@ -171,11 +172,15 @@ extension DefaultOnboardingViewModel {
     guard let idTokenString = String(data: appleIDToken, encoding: .utf8) else {
       return .failure(AppleAuthorizationError.faildToConvertIDTokenString)
     }
+    guard let authorizationCode = appleIDCredential.authorizationCode else {
+      return .failure(AppleAuthorizationError.noAuthorizationCode)
+    }
     
     let appleAuthProvider = AuthenticationProvider.apple(
       idToken: idTokenString,
       nonce: nonce,
-      fullName: appleIDCredential.fullName
+      fullName: appleIDCredential.fullName,
+      authorizationCode: authorizationCode
     )
     return .success(appleAuthProvider)
   }
@@ -187,6 +192,7 @@ extension DefaultOnboardingViewModel: ASAuthorizationControllerDelegate {
     controller: ASAuthorizationController,
     didCompleteWithAuthorization authorization: ASAuthorization
   ) {
+    
     switch self.makeAppleAuthProvider(from: authorization) {
 
     case let .success(appleAuthProvider):
@@ -195,7 +201,6 @@ extension DefaultOnboardingViewModel: ASAuthorizationControllerDelegate {
         .retry(3)
         .flatMap { [weak self] _ -> AnyPublisher<Void, any Error> in
           guard let self else { return Empty().eraseToAnyPublisher() }
-          
           
           // TODO: - 여기서 블로그에 나오는 코드를 적용하면 될듯
           // 1. cloud Functions 호출

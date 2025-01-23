@@ -41,38 +41,77 @@ function makeJWT() {
 
 // Refresh Token 얻기
 exports.getRefreshToken = functions.https.onRequest(async (request, response) => {
+    // 응답 헤더 명시적 설정
+    response.setHeader('Content-Type', 'application/json');
+  
     try {
-        // authorization code로 apple 서버에 refresh token 요청
-        const code = request.query.code;
-        if (!code) {
-            response.status(400).send("Authorization code is required");
-            return;
+      const code = request.query.code;
+      if (!code) {
+        return response.status(400).json({
+          status: false,
+          message: "Authorization code is required",
+          data: null
+        });
+      }
+  
+      const client_secret = makeJWT();
+      const data = {
+        code: code,
+        client_id: "com.seokhyun.freshnote",
+        client_secret: client_secret,
+        grant_type: "authorization_code"
+      };
+  
+      const res = await axios.post(
+        "https://appleid.apple.com/auth/token",
+        qs.stringify(data),
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          }
         }
-
-        const client_secret = makeJWT();
-        const data = {
-            code: code,
-            client_id: "com.seokhyun.freshnote",
-            client_secret: client_secret,
-            grant_type: "authorization_code"
-        };
-
-        const res = await axios.post(
-            "https://appleid.apple.com/auth/token",
-            qs.stringify(data),
-            {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                }
-            }
-        );
-        // refresh token을 받아서 iOS에 전달
-        response.send(res.data.refresh_token);
+      );
+  
+      // Apple로부터 받은 응답 확인
+      console.log("Apple response:", JSON.stringify(res.data));
+  
+      // refresh_token 확인
+      if (!res.data?.refresh_token) {
+        return response.status(400).json({
+          status: false,
+          message: "No refresh token in response",
+          data: null
+        });
+      }
+  
+      // 응답 객체 생성
+      const responseData = {
+        status: true,
+        message: "Success",
+        data: {
+          refresh_token: res.data.refresh_token
+        }
+      };
+  
+      // 응답 보내기 전에 로깅
+      console.log("Sending response:", JSON.stringify(responseData));
+      
+      // 응답 전송
+      return response.status(200).json(responseData);
+  
     } catch (error) {
-        console.error("Error getting refresh token:", error);
-        response.status(500).send("Error getting refresh token: " + error.message);
+      console.error("Error details:", error);
+      
+      const errorResponse = {
+        status: false,
+        message: error.message || "Error getting refresh token",
+        data: null
+      };
+  
+      console.log("Sending error response:", JSON.stringify(errorResponse));
+      return response.status(500).json(errorResponse);
     }
-});
+  });
 
 // Token 폐기
 exports.revokeToken = functions.https.onRequest(async (request, response) => {
