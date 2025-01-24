@@ -29,13 +29,13 @@ final class AccountDeletionViewController: BaseViewController {
   
   private let descriptionView = AccountDeletionDescriptionView()
   
-  private lazy var recognizeButton: UIButton = {
-    return self.makeRecognizeButton()
+  private lazy var agreeButton: UIButton = {
+    return self.makeAgreeButton()
   }()
   
   private var subscriptions: Set<AnyCancellable> = []
   
-  @Published private var isRecognizeButtonTapped: Bool = false
+  @Published private var isAgreeButtonTapped: Bool = false
   
   // MARK: - LifeCycle
   init(viewModel: any AccountDeletionViewModel) {
@@ -57,7 +57,7 @@ final class AccountDeletionViewController: BaseViewController {
   override func setupLayout() {
     self.view.addSubview(self.alertLabel)
     self.view.addSubview(self.descriptionView)
-    self.view.addSubview(self.recognizeButton)
+    self.view.addSubview(self.agreeButton)
     
     self.alertLabel.snp.makeConstraints {
       $0.top.equalTo(self.view.safeAreaLayoutGuide).offset(24)
@@ -69,7 +69,7 @@ final class AccountDeletionViewController: BaseViewController {
       $0.leading.trailing.equalToSuperview().inset(20)
     }
     
-    self.recognizeButton.snp.makeConstraints {
+    self.agreeButton.snp.makeConstraints {
       $0.top.equalTo(self.descriptionView.snp.bottom).offset(23.5)
       $0.leading.trailing.equalTo(self.descriptionView)
       $0.height.equalTo(63)
@@ -78,16 +78,16 @@ final class AccountDeletionViewController: BaseViewController {
   
   // MARK: - Bind
   private func bindActions() {
-    self.recognizeButton
+    self.agreeButton
       .tapPublisher
       .sink { [weak self] _ in
-        self?.isRecognizeButtonTapped.toggle()
+        self?.isAgreeButtonTapped.toggle()
       }
       .store(in: &self.subscriptions)
     
-    self.$isRecognizeButtonTapped
-      .sink { [weak self] isRecognizeButtonTapped in
-        self?.configureRecognizeButtonState(isRecognizeButtonTapped)
+    self.$isAgreeButtonTapped
+      .sink { [weak self] isAgreeButtonTapped in
+        self?.configureAgreeButtonState(isAgreeButtonTapped)
       }
       .store(in: &self.subscriptions)
   }
@@ -97,7 +97,7 @@ final class AccountDeletionViewController: BaseViewController {
     self.title = "탈퇴하기"
   }
   
-  private func makeRecognizeButton() -> UIButton {
+  private func makeAgreeButton() -> UIButton {
     var config = UIButton.Configuration.filled()
     config.attributedTitle = AttributedString(
       "Fresh Note 계정을 탈퇴합니다.",
@@ -116,22 +116,22 @@ final class AccountDeletionViewController: BaseViewController {
     return button
   }
   
-  private func configureRecognizeButtonState(_ isRecognizeButtonTapped: Bool) {
+  private func configureAgreeButtonState(_ isAgreeButtonTapped: Bool) {
     let imageName: String
-    let recognizeButtonColor: UIColor
-    if isRecognizeButtonTapped {
+    let AgreeButtonColor: UIColor
+    if isAgreeButtonTapped {
       imageName = ImageName.checkmarkTap.rawValue
-      recognizeButtonColor = UIColor(fnColor: .orange2).withAlphaComponent(0.2)
+      AgreeButtonColor = UIColor(fnColor: .orange2).withAlphaComponent(0.2)
     } else {
       imageName = ImageName.checkmark.rawValue
-      recognizeButtonColor = UIColor(fnColor: .base)
+      AgreeButtonColor = UIColor(fnColor: .base)
     }
     
-    self.recognizeButton.setImage(
+    self.agreeButton.setImage(
       UIImage(systemName: imageName)?
         .withTintColor(UIColor(fnColor: .orange2), renderingMode: .alwaysOriginal),
       for: .normal
     )
-    self.recognizeButton.configuration?.baseBackgroundColor = recognizeButtonColor
+    self.agreeButton.configuration?.baseBackgroundColor = AgreeButtonColor
   }
 }
