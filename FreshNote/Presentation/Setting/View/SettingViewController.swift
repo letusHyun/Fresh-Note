@@ -61,6 +61,7 @@ final class SettingViewController: BaseViewController {
   // MARK: - Private
   private func setupNavigationBar() {
     self.navigationItem.title = "마이"
+    self.navigationItem.backButtonDisplayMode = .minimal
   }
 }
 

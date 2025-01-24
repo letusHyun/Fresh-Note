@@ -11,15 +11,15 @@ import SnapKit
 
 final class AccountDeletionDescriptionView: UIView {
   // MARK: - Properties
-  private let firstLabel: UILabel = {
+  private lazy var firstLabel: UILabel = {
     let lb = UILabel()
-    lb.numberOfLines = .zero
+    self.configureFirstLabel(with: lb)
     return lb
   }()
   
-  private let secondLabel: UILabel = {
+  private lazy var secondLabel: UILabel = {
     let lb = UILabel()
-    lb.numberOfLines = .zero
+    self.configureSecondLabel(with: lb)
     return lb
   }()
   
@@ -30,8 +30,7 @@ final class AccountDeletionDescriptionView: UIView {
   private var verticalPadding: CGFloat { 12 }
   
   private var interPadding: CGFloat { 20 }
-  
-  
+ 
   override var intrinsicContentSize: CGSize {
     let firstLabelHeight = self.firstLabel.intrinsicContentSize.height
     let secondLabelHeight = self.secondLabel.intrinsicContentSize.height
@@ -96,6 +95,7 @@ final class AccountDeletionDescriptionView: UIView {
     self.configureRedBold(at: attributedString, range: redBoldRange)
     
     label.attributedText = attributedString
+    label.numberOfLines = .zero
   }
   
   private func configureSecondLabel(with label: UILabel) {
@@ -112,6 +112,7 @@ final class AccountDeletionDescriptionView: UIView {
     self.configureBlackBold(at: attributedString, range: blackBoldRange)
     
     label.attributedText = attributedString
+    label.numberOfLines = .zero
   }
   
   private func configureGray(at attributedString: NSMutableAttributedString, range: NSRange) {

@@ -125,7 +125,7 @@ final class SearchHistoryView: UIView {
   
   private func bindActions() {
     self.allDeletionButton
-      .tapPublisher
+      .tapThrottlePublisher
       .sink { [weak self] in
         ActivityIndicatorView.shared.startIndicating()
         self?.viewModel.didTapAllDeletionButton()

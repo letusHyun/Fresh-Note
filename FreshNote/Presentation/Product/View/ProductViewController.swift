@@ -339,7 +339,7 @@ private extension ProductViewController {
       }
       .store(in: &self.subscriptions)
     
-    self.saveButton.tapPublisher
+    self.saveButton.tapThrottlePublisher
       .sink { [weak self] _ in
         ActivityIndicatorView.shared.startIndicating()
         

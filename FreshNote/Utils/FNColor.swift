@@ -27,4 +27,6 @@ enum FNColor: String {
   case gray3 = "#333333"
   /// #000000
   case black = "#000000"
+  /// #F9F9F9
+  case base = "#F9F9F9"
 }

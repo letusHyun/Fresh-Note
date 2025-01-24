@@ -204,19 +204,19 @@ extension HomeViewController: UITableViewDelegate {
 // MARK: - Actions
 private extension HomeViewController {
   func bindActions() {
-    self.notificationButton.tapPublisher
+    self.notificationButton.tapThrottlePublisher
       .sink { [weak self] _ in
         self?.viewModel.didTapNotificationButton()
       }
       .store(in: &self.subscriptions)
     
-    self.searchButton.tapPublisher
+    self.searchButton.tapThrottlePublisher
       .sink { [weak self] _ in
         self?.viewModel.didTapSearchButton()
       }
       .store(in: &self.subscriptions)
     
-    self.addProductButton.tapPublisher
+    self.addProductButton.tapThrottlePublisher
       .sink { [weak self] _ in
         self?.viewModel.didTapAddProductButton()
       }

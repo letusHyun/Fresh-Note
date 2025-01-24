@@ -175,7 +175,7 @@ final class DateTimeSettingViewController: BaseViewController {
   
   private func bindActions() {
     self.completionButton
-      .tapPublisher
+      .tapThrottlePublisher
       .sink { [weak self] in
         guard let self else { return }
         let dateToInt = Int(self.dateTextField.text ?? "0") ?? 0

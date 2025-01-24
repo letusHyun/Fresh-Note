@@ -136,7 +136,7 @@ final class SignOutAlertViewController: UIViewController {
       .store(in: &self.subscriptions)
     
     self.signOutButton
-      .tapPublisher
+      .tapThrottlePublisher
       .sink { [weak self] _ in
         self?.viewModel.didTapSignOutButton()
       }

@@ -18,7 +18,6 @@ final class ActivityIndicatorView: UIView {
   private init() {
     super.init(frame: .zero)
     self.setupUI()
-    
   }
   
   required init?(coder: NSCoder) {
@@ -49,6 +48,7 @@ final class ActivityIndicatorView: UIView {
   }
   
   private func setupStyles() {
+    self.isHidden = true
     self.backgroundColor = .clear
   }
   

@@ -28,7 +28,6 @@ final class CategoryViewController: BaseViewController {
   // MARK: - LifeCycle
   init(viewModel: any CategoryViewModel) {
     self.viewModel = viewModel
-    
     super.init(nibName: nil, bundle: nil)
   }
   
@@ -55,6 +54,7 @@ final class CategoryViewController: BaseViewController {
   // MARK: - Private
   private func setupNavigationBar() {
     self.navigationItem.title = "카테고리"
+    self.navigationItem.backButtonDisplayMode = .minimal
   }
   
   private func bind(to viewModel: any CategoryViewModel) {
