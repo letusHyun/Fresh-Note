@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 
+/// DateTime 저장 여부를 판별하는 UseCase입니다.
 protocol CheckDateTimeStateUseCase {
   func execute() -> AnyPublisher<Bool, any Error>
 }

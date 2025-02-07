@@ -12,6 +12,8 @@ import SnapKit
 
 final class PinViewController: BaseViewController {
   // MARK: - Properties
+  private let activityIndicatorView = ActivityIndicatorView()
+  
   private let viewModel: any PinViewModel
   
   private lazy var tableView: UITableView = {
@@ -46,15 +48,26 @@ final class PinViewController: BaseViewController {
   
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
-    ActivityIndicatorView.shared.startIndicating()
+    self.activityIndicatorView.startIndicating()
     self.viewModel.viewWillAppear()
+  }
+  
+  override func viewWillDisappear(_ animated: Bool) {
+    super.viewWillDisappear(animated)
+    self.activityIndicatorView.stopIndicating()
   }
   
   // MARK: - SetupUI
   override func setupLayout() {
     self.view.addSubview(self.tableView)
+    self.view.addSubview(self.activityIndicatorView)
     
     self.tableView.snp.makeConstraints {
+      $0.top.bottom.equalTo(self.view.safeAreaLayoutGuide)
+      $0.leading.trailing.equalToSuperview()
+    }
+    
+    self.activityIndicatorView.snp.makeConstraints {
       $0.top.bottom.equalTo(self.view.safeAreaLayoutGuide)
       $0.leading.trailing.equalToSuperview()
     }
@@ -66,34 +79,28 @@ final class PinViewController: BaseViewController {
       .errorPublisher
       .compactMap { $0 }
       .receive(on: DispatchQueue.main)
-      .sink(receiveCompletion: { completion in
-        ActivityIndicatorView.shared.stopIndicating()
-      }, receiveValue: { error in
-        ActivityIndicatorView.shared.stopIndicating()
+      .sink { [weak self] error in
+        self?.activityIndicatorView.stopIndicating()
         // MARK: - Error Handling
-      })
+      }
       .store(in: &self.subscriptions)
     
     self.viewModel
       .reloadDataPublisher
       .receive(on: DispatchQueue.main)
-      .sink(receiveCompletion: { completion in
-        ActivityIndicatorView.shared.stopIndicating()
-      }, receiveValue: { [weak self] _ in
-        ActivityIndicatorView.shared.stopIndicating()
+      .sink { [weak self] _ in
+        self?.activityIndicatorView.stopIndicating()
         self?.tableView.reloadData()
-      })
+      }
       .store(in: &self.subscriptions)
     
     self.viewModel
       .deleteRowsPublisher
       .receive(on: DispatchQueue.main)
-      .sink(receiveCompletion: { completion in
-        ActivityIndicatorView.shared.stopIndicating()
-      }, receiveValue: { [weak self]indexPath in
-        ActivityIndicatorView.shared.stopIndicating()
+      .sink { [weak self]indexPath in
+        self?.activityIndicatorView.stopIndicating()
         self?.tableView.deleteRows(at: [indexPath], with: .fade)
-      })
+      }
       .store(in: &self.subscriptions)
   }
   
@@ -139,7 +146,7 @@ extension PinViewController: ProductCellDelegate {
   func didTapPin(in cell: UITableViewCell) {
     guard let indexPath = self.tableView.indexPath(for: cell) else { return }
     
-    ActivityIndicatorView.shared.startIndicating()
+    self.activityIndicatorView.startIndicating()
     self.viewModel.didTapPin(at: indexPath)
   }
 }

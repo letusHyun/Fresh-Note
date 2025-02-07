@@ -12,14 +12,22 @@ enum UpdateProductUseCaseError: Error {
   case referenceError
 }
 
+/// 제품을 업데이트하는 UseCase입니다.
 protocol UpdateProductUseCase {
-  func execute(product: Product, newImageData: Data?) -> AnyPublisher<Product, any Error>
+  func execute(
+    product: Product,
+    newImageData: Data?
+  ) -> AnyPublisher<Product, any Error>
+  
+  /// 이미지를 삭제 여부를 담당하는 값을 저장하는 메소드입니다.
+  func setImageDeletionValue(_ isDeleteImage: Bool)
 }
 
 final class DefaultUpdateProductUseCase: UpdateProductUseCase {
   private let productRepository: any ProductRepository
   private let imageRepository: any ImageRepository
   private let updatePushNotificationUseCase: any UpdatePushNotificationUseCase
+  private var isDeleteImage: Bool = false
   
   init(
     productRepository: any ProductRepository,
@@ -31,14 +39,20 @@ final class DefaultUpdateProductUseCase: UpdateProductUseCase {
     self.updatePushNotificationUseCase = updatePushNotificationUseCase
   }
   
-  func execute(product: Product, newImageData: Data?) -> AnyPublisher<Product, any Error> {
+  func execute(
+    product: Product,
+    newImageData: Data?
+  ) -> AnyPublisher<Product, any Error> {
     switch (product.imageURL, newImageData) {
     case (nil, nil): // 기존 이미지 x, 새 이미지 x
       return self.updateProductOnly(product: product)
     case (nil, let newImageData?): // 기존 이미지 x, 새 이미지 o
       return self.saveNewImageAndUpdateProduct(product: product, imageData: newImageData)
     case (let existingImageURL?, nil): // 기존 이미지 o, 새 이미지 x
-      return self.deleteExistingImageAndUpdateProduct(product: product, existingImageURL: existingImageURL)
+      if self.isDeleteImage { // 기존 이미지를 제거한 경우
+        return self.deleteExistingImageAndUpdateProduct(product: product, existingImageURL: existingImageURL)
+      }
+      return self.updateProductOnly(product: product)
     case (let existingImageURL?, let newImageData?): // 기존 이미지 o, 새 이미지 o
       return self.replaceImageAndUpdateProduct(
         product: product,
@@ -46,6 +60,10 @@ final class DefaultUpdateProductUseCase: UpdateProductUseCase {
         newImageData: newImageData
       )
     }
+  }
+  
+  func setImageDeletionValue(_ isDeleteImage: Bool) {
+    self.isDeleteImage = isDeleteImage
   }
 }
 
@@ -68,7 +86,9 @@ extension DefaultUpdateProductUseCase {
     return self.productRepository
       .updateProduct(product: product)
       .flatMap { [weak self] product in
-        guard let self else { return Empty<Product, any Error>().eraseToAnyPublisher() }
+        guard let self else {
+          return Fail<Product, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
         
         return self.updatePushNotification(with: product)
       }
@@ -115,7 +135,7 @@ extension DefaultUpdateProductUseCase {
         let updatingProduct = self.makeNewProduct(product: product, url: nil)
         
         return self.productRepository
-          .updateProduct(product: updatingProduct)
+          .updateProductWithImageDeletion(product: updatingProduct)
           .flatMap { product in
             return self.updatePushNotification(with: product)
           }

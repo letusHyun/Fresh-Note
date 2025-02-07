@@ -24,29 +24,32 @@ final class DefaultDateTimeRepository: DateTimeRepository {
     self.dateTimeStorage = dateTimeStorage
   }
   
+  /// fetchDateTime으로 하는데, storage에 존재하면 가져오고, 없으면 firestore에서 가져오기
   func fetchDateTime() -> AnyPublisher<DateTime, any Error> {
-    return self.dateTimeStorage
-      .hasDateTime()
-      .flatMap { [weak self] hasDateTime -> AnyPublisher<DateTime, any Error> in
-        guard let self else { return Empty().eraseToAnyPublisher() }
+    self.dateTimeStorage
+      .fetchDateTime()
+      .catch { [weak self] error -> AnyPublisher<DateTime, any Error> in
+        guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
         
-        // storage에 dateTime이 존재한다면
-        if hasDateTime {
-          return self.dateTimeStorage.fetchDateTime()
+        guard case CoreDataStorageError.readError(let wrappedError) = error,
+              case CoreDataStorageError.noEntity = wrappedError else {
+          return Fail(error: error).eraseToAnyPublisher()
         }
+        
+        // storage에 존재하지 않으면 firestore에서 가져오기
         
         guard let userID = FirebaseUserManager.shared.userID else {
           return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
         }
         // storage에 dateTime이 존재하지 않는다면
-          // firestore fetch -> localDB save
+        // firestore fetch -> localDB save
         let publisher: AnyPublisher<DateTimeResponseDTO, any Error> = self.firebaseNetworkService.getDocument(
           documentPath: FirestorePath.userID(userID: userID)
         )
           .receive(on: self.backgroundQueue)
           .eraseToAnyPublisher()
         
-        return publisher.tryMap { $0.toDomain() }
+        return publisher.map { $0.toDomain() }
           .flatMap { dateTime in
             return self.dateTimeStorage
               .saveDateTime(dateTime: dateTime)
@@ -56,10 +59,14 @@ final class DefaultDateTimeRepository: DateTimeRepository {
       .eraseToAnyPublisher()
   }
   
+  // 앱 시작 -> refresh token 존재 o -> 로그아웃 상태 x -> 이 메소드의 value가
+  // true인 경우: 메인 홈 화면 이동
+  // false인 경우: 날짜 설정 화면 이동
   func isSavedDateTime() -> AnyPublisher<Bool, any Error> {
     return self.fetchDateTime()
       .map { _ in return true }
       .catch { error -> AnyPublisher<Bool, any Error> in
+        // firestore에 데이터가 저장되어있지 않으면 false
         if case FirebaseNetworkServiceError.invalidData = error {
           return Just(false)
             .setFailureType(to: Error.self)
@@ -71,23 +78,23 @@ final class DefaultDateTimeRepository: DateTimeRepository {
       .eraseToAnyPublisher()
   }
   
+  /// 1. api save, 2. cache save
   func saveDateTime(dateTime: DateTime) -> AnyPublisher<Void, any Error> {
-    guard let userID = FirebaseUserManager.shared.userID
-    else { return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher() }
-    
     let publisher = self.requestDateTimeFromFireBase(dateTime: dateTime)
     
     return publisher
-    .flatMap { [weak self] _ in
-      guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
-      
-      return self.dateTimeStorage
-        .saveDateTime(dateTime: dateTime)
-        .map { _ in }
-        .eraseToAnyPublisher()
-    }
-    .receive(on: self.backgroundQueue)
-    .eraseToAnyPublisher()
+      .flatMap { [weak self] _ in
+        guard let self else {
+          return Fail<Void, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
+        
+        return self.dateTimeStorage
+          .saveDateTime(dateTime: dateTime)
+          .map { _ in }
+          .eraseToAnyPublisher()
+      }
+      .receive(on: self.backgroundQueue)
+      .eraseToAnyPublisher()
   }
   
   func updateDateTime(dateTime: DateTime) -> AnyPublisher<Void, any Error> {
@@ -96,7 +103,9 @@ final class DefaultDateTimeRepository: DateTimeRepository {
     
     return publisher
       .flatMap { [weak self] _ in
-        guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
+        guard let self else {
+          return Fail<Void, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
         
         // 2. storage
         return self.dateTimeStorage
@@ -106,6 +115,11 @@ final class DefaultDateTimeRepository: DateTimeRepository {
       }
       .receive(on: self.backgroundQueue)
       .eraseToAnyPublisher()
+  }
+  
+  func deleteCachedDateTime() -> AnyPublisher<Void, any Error> {
+    self.dateTimeStorage
+      .deleteDateTime()
   }
   
   // MARK: - Private

@@ -16,6 +16,8 @@ protocol SearchHistoryViewDelegate: AnyObject {
 
 final class SearchHistoryView: UIView {
   // MARK: - Properties
+  private let activityIndicatorView = ActivityIndicatorView()
+  
   private let recentSearchTagLabel: UILabel = {
     let lb = UILabel()
     lb.font = UIFont.pretendard(size: 15, weight: ._700)
@@ -79,6 +81,7 @@ final class SearchHistoryView: UIView {
     self.addSubview(self.recentSearchTagLabel)
     self.addSubview(self.allDeletionButton)
     self.addSubview(self.tableView)
+    self.addSubview(self.activityIndicatorView)
     
     self.recentSearchTagLabel.snp.makeConstraints {
       $0.top.equalToSuperview().inset(20)
@@ -94,6 +97,10 @@ final class SearchHistoryView: UIView {
       $0.top.equalTo(allDeletionButton.snp.bottom).offset(2)
       $0.leading.trailing.bottom.equalToSuperview()
     }
+    
+    self.activityIndicatorView.snp.makeConstraints {
+      $0.edges.equalToSuperview()
+    }
   }
   
   // MARK: - Bind
@@ -102,14 +109,14 @@ final class SearchHistoryView: UIView {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] error in
         guard let error = error else { return }
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
       }
       .store(in: &self.subscriptions)
     
     viewModel.historyReloadDataPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
         self?.tableView.reloadData()
       }
       .store(in: &self.subscriptions)
@@ -117,7 +124,7 @@ final class SearchHistoryView: UIView {
     viewModel.historyDeleteRowsPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] indexPath in
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
         self?.tableView.deleteRows(at: [indexPath], with: .fade)
       }
       .store(in: &self.subscriptions)
@@ -127,7 +134,7 @@ final class SearchHistoryView: UIView {
     self.allDeletionButton
       .tapThrottlePublisher
       .sink { [weak self] in
-        ActivityIndicatorView.shared.startIndicating()
+        self?.activityIndicatorView.startIndicating()
         self?.viewModel.didTapAllDeletionButton()
       }
       .store(in: &self.subscriptions)
@@ -177,7 +184,7 @@ extension SearchHistoryView: RecentSearchKeywordCellDelegate {
   func didTapDeleteButton(in cell: UITableViewCell) {
     guard let indexPath = tableView.indexPath(for: cell) else { return }
     
-    ActivityIndicatorView.shared.startIndicating()
+    self.activityIndicatorView.startIndicating()
     self.viewModel.didTapKeywordDeleteButton(at: indexPath)
   }
 }

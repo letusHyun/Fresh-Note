@@ -19,18 +19,27 @@ protocol SignOutAlertViewModelInput {
   func didTapSignOutButton()
 }
 
-protocol SignOutAlertViewModelOutput { }
+protocol SignOutAlertViewModelOutput {
+  var errorPublisher: AnyPublisher<(any Error)?, Never> { get }
+}
 
 final class DefaultSignOutAlertViewModel: SignOutAlertViewModel {
   // MARK: - Properties
   private var subscriptions: Set<AnyCancellable> = []
   private let actions: SignOutAlertViewModelActions
+  private let deleteCacheUseCase: any DeleteCacheUseCase
   
   // MARK: - Output
+  var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
+  @Published private var error: (any Error)?
   
   // MARK: - LifeCycle
-  init(actions: SignOutAlertViewModelActions) {
+  init(
+    actions: SignOutAlertViewModelActions,
+    deleteCacheUseCase: any DeleteCacheUseCase
+  ) {
     self.actions = actions
+    self.deleteCacheUseCase = deleteCacheUseCase
   }
   
   // MARK: - Input
@@ -40,7 +49,19 @@ final class DefaultSignOutAlertViewModel: SignOutAlertViewModel {
   }
   
   func didTapSignOutButton() {
-    print("signOutButton tapped!")
-    self.actions.pop()
+    self.deleteCacheUseCase
+      .execute()
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.error = error
+      } receiveValue: { [weak self] _ in
+        
+        // 1. firebase signOut
+        // 2. 알림 삭제, coredata 삭제, useDefaults
+        self?.actions.pop()
+      }
+      .store(in: &self.subscriptions)
+
+    
   }
 }

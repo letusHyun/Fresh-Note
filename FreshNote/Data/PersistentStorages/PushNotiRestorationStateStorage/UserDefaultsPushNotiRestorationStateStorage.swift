@@ -1,16 +1,15 @@
 //
-//  UserDefaultsFirstLaunchStorage.swift
+//  UserDefaultsPushNotiRestorationStateStorage.swift
 //  FreshNote
 //
-//  Created by SeokHyun on 1/20/25.
+//  Created by SeokHyun on 2/1/25.
 //
 
 import Combine
 import Foundation
 
-final class UserDefaultsFirstLaunchStorage: FirstLaunchStorage {
+final class UserDefaultsPushNotiRestorationStateStorage: PushNotiRestorationStateStorage {
   private let userDefaults: UserDefaults
-  
   private let backgroundQueue: DispatchQueue
   
   init(
@@ -21,18 +20,18 @@ final class UserDefaultsFirstLaunchStorage: FirstLaunchStorage {
     self.backgroundQueue = backgroundQueue
   }
   
-  func saveFirstLaunchState() -> AnyPublisher<Void, any Error> {
-    Deferred {
+  func save(restorationState: PushNotiRestorationState) -> AnyPublisher<Void, any Error> {
+    return Deferred {
       Future { [weak self] promise in
         guard let self else { return }
-        let firstLaunchStateUDS = FirstLaunchStateUDS(isFirstLaunched: true)
+        let uds = PushNotiRestorationStateUDS(shouldRestore: restorationState.shouldRestore)
         let encoder = JSONEncoder()
         
-        guard let encodedData = try? encoder.encode(firstLaunchStateUDS) else {
+        guard let encodedData = try? encoder.encode(uds) else {
           return promise(.failure(UserDefaultsError.failedToEncode))
         }
         
-        self.userDefaults.set(encodedData, forKey: UserDefaultsKey.firstLaunchState.rawValue)
+        self.userDefaults.set(encodedData, forKey: UserDefaultsKey.pushNotiRestorationState.rawValue)
         promise(.success(()))
       }
     }
@@ -40,25 +39,19 @@ final class UserDefaultsFirstLaunchStorage: FirstLaunchStorage {
     .eraseToAnyPublisher()
   }
   
-  func fetchFirstLaunchState() -> AnyPublisher<Bool, any Error> {
+  func fetch() -> AnyPublisher<PushNotiRestorationState, any Error> {
     return Deferred {
       Future { [weak self] promise in
         guard let self else { return }
         
-        // userDefaults에 값이 존재하지 않으면 false 반환
         guard let data = self.userDefaults.object(
-          forKey: UserDefaultsKey.firstLaunchState.rawValue
-        ) as? Data else {
-          return promise(.success(false))
-        }
+          forKey: UserDefaultsKey.pushNotiRestorationState.rawValue
+        ) as? Data else { return promise(.failure(UserDefaultsError.failedToConvertData)) }
         
-        guard let firstLaunchStateUDS = try? JSONDecoder().decode(
-          FirstLaunchStateUDS.self, from: data
-        ) else {
+        guard let uds = try? JSONDecoder().decode(PushNotiRestorationStateUDS.self, from: data) else {
           return promise(.failure(UserDefaultsError.failedToDecode))
         }
-        
-        return promise(.success(firstLaunchStateUDS.isFirstLaunched))
+        return promise(.success(uds.toDomain()))
       }
     }
     .subscribe(on: self.backgroundQueue)

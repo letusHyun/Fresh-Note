@@ -78,30 +78,35 @@ final class MainCoordinator: BaseCoordinator {
       navigationController: homeNavigationController
     )
     self.childCoordinators[homeCoordinator.identifier] = homeCoordinator
+    homeCoordinator.finishDelegate = self
     homeCoordinator.start()
     
     let calendarCoordinator = self.dependencies.makeCalendarCoordinator(
       navigationController: calendarNavigationController
     )
     self.childCoordinators[calendarCoordinator.identifier] = calendarCoordinator
+    calendarCoordinator.finishDelegate = self
     calendarCoordinator.start()
     
     let pinCoordinator = self.dependencies.makePinCoordinator(
       navigationController: pinNavigationController
     )
     self.childCoordinators[pinCoordinator.identifier] = pinCoordinator
+    pinCoordinator.finishDelegate = self
     pinCoordinator.start()
     
     let categoryCoordinator = self.dependencies.makeCategoryCoordinator(
       navigationController: categoryNavigationController
     )
     self.childCoordinators[categoryCoordinator.identifier] = categoryCoordinator
+    categoryCoordinator.finishDelegate = self
     categoryCoordinator.start()
     
     let settingCoordinator = self.dependencies.makeSettingCoordinator(
       navigationController: settingNavigationController
     )
     self.childCoordinators[settingCoordinator.identifier] = settingCoordinator
+    settingCoordinator.finishDelegate = self
     settingCoordinator.start()
   }
   
@@ -124,7 +129,6 @@ final class MainCoordinator: BaseCoordinator {
     
     return navigationController
   }
-  
   
   private func makeNavigationControllerWithTitle(
     title: String,
@@ -150,5 +154,25 @@ final class MainCoordinator: BaseCoordinator {
     navigationController.tabBarItem = tabBarItem
     
     return navigationController
+  }
+  
+  private func clearAllNavigationStacks() {
+    self.tabBarController?.viewControllers?.forEach { viewController in
+      if let navigationController = viewController as? UINavigationController {
+        navigationController.viewControllers = []
+      }
+    }
+  }
+}
+
+// MARK: - CoordinatorFinishDelegate
+extension MainCoordinator: CoordinatorFinishDelegate {
+  func coordinatorDidFinish(_ childCoordinator: BaseCoordinator) {
+    self.clearAllNavigationStacks() // navigation stack 제거
+    // child coordinator 재귀적으로 제거
+    self.childCoordinators.values.forEach { childCoordinator in
+      childCoordinator.finishAllChildren()
+    }
+    self.finish()
   }
 }

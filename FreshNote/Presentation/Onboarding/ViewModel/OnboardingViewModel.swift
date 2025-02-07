@@ -40,6 +40,11 @@ protocol OnboardingViewModelOutput {
   var errorPublisher: AnyPublisher<(any Error)?, Never> { get }
 }
 
+enum OnboardingNextPage {
+  case dateTimeSetting
+  case home
+}
+
 final class DefaultOnboardingViewModel: NSObject {
   // MARK: - Properties
   fileprivate var currentNonce: String?
@@ -62,8 +67,8 @@ final class DefaultOnboardingViewModel: NSObject {
   private let actions: OnboardingViewModelActions
   private let saveUserProfileUseCase: any SaveUserProfileUseCase
   private let signInUseCase: any SignInUseCase
-  private let checkDateTimeStateUseCase: any CheckDateTimeStateUseCase
-  private let signInStateUseCase: any SignInStateUseCase
+  private let checkInitialStateUseCase: any CheckInitialStateUseCase
+  private var authController: ASAuthorizationController?
   
   // MARK: - Output
   var errorPublisher: AnyPublisher<(any Error)?, Never> {
@@ -76,14 +81,12 @@ final class DefaultOnboardingViewModel: NSObject {
   init(
     actions: OnboardingViewModelActions,
     signInUseCase: any SignInUseCase,
-    signInStateUseCase: any SignInStateUseCase,
-    checkDateTimeStateUseCase: any CheckDateTimeStateUseCase,
+    checkInitialStateUseCase: any CheckInitialStateUseCase,
     saveUserProfileUseCase: any SaveUserProfileUseCase
   ) {
     self.actions = actions
     self.signInUseCase = signInUseCase
-    self.signInStateUseCase = signInStateUseCase
-    self.checkDateTimeStateUseCase = checkDateTimeStateUseCase
+    self.checkInitialStateUseCase = checkInitialStateUseCase
     self.saveUserProfileUseCase = saveUserProfileUseCase
   }
 }
@@ -98,7 +101,9 @@ extension DefaultOnboardingViewModel: OnboardingViewModel {
     request.requestedScopes = [.fullName, .email]
     request.nonce = self.sha256(nonce)
     
-    return ASAuthorizationController(authorizationRequests: [request])
+    let authController = ASAuthorizationController(authorizationRequests: [request])
+    self.authController = authController
+    return authController
   }
   
   func didTapAppleButton(authController: ASAuthorizationController) {
@@ -199,36 +204,20 @@ extension DefaultOnboardingViewModel: ASAuthorizationControllerDelegate {
       return self.signInUseCase
         .signIn(authProvider: appleAuthProvider)
         .retry(3)
-        .flatMap { [weak self] _ -> AnyPublisher<Void, any Error> in
-          guard let self else { return Empty().eraseToAnyPublisher() }
-          
-          // TODO: - 여기서 블로그에 나오는 코드를 적용하면 될듯
-          // 1. cloud Functions 호출
-          // 2. 가져온 refreshToken을 keychain에 저장
-          return self.signInStateUseCase.updateSignInState(updateToValue: true)
-        }
-        .catch { [weak self] error -> AnyPublisher<Void, any Error> in
-          guard let self else { return Empty().eraseToAnyPublisher() }
-          
-          if case SignInStateUseCaseError.failedToUpdate = error {
-            return self.signInStateUseCase
-              .saveSignInState()
-          }
-          return Fail(error: error)
-            .eraseToAnyPublisher()
-        }
         .flatMap { [weak self] _ -> AnyPublisher<Bool, any Error> in
-          guard let self else { return Empty().eraseToAnyPublisher() }
+          guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
           
-          return self.checkDateTimeStateUseCase.execute()
+          // DateTime 설정 여부에 따라 화면 전환
+          return self.checkInitialStateUseCase
+            .checkDateTimeSetting()
         }
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
           guard case let .failure(error) = completion else { return }
           self?.error = error
         } receiveValue: { [weak self] isSavedDateTime in
-          // TODO: - SignIn을 통해 로그인 성공하면 로그인 최초 로그인인지 아니면, 로그인 경력이 있는지 확인해야 함
-          isSavedDateTime ? self?.actions.showMain() : self?.actions.showDateTimeSetting()
+          guard let self else { return }
+          isSavedDateTime ? self.actions.showMain() : self.actions.showDateTimeSetting()
         }
         .store(in: &self.subscriptions)
       

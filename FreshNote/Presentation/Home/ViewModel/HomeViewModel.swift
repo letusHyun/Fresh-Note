@@ -51,6 +51,9 @@ final class DefaultHomeViewModel: HomeViewModel {
   private let updateProductUseCase: any UpdateProductUseCase
   private let restorePushNotificationsUseCase: any RestorePushNotificationsUseCase
   
+  /// viewDidLoad, viewWillAppear시점의 비동기 작업의 경쟁상태를 해결하기 위한 변수입니다.
+  private var isInitialLoad: Bool = true
+  
   // MARK: - Output
   private var reloadDataSubject: PassthroughSubject<Void, Never> = PassthroughSubject()
   private var deleteRowsSubject: PassthroughSubject<([IndexPath], SwipeCompletion), Never> = PassthroughSubject()
@@ -67,11 +70,12 @@ final class DefaultHomeViewModel: HomeViewModel {
   @Published private var error: (any Error)?
   
   // MARK: - LifeCycle
-  init(actions: HomeViewModelActions,
-       fetchProductUseCase: any FetchProductUseCase,
-       deleteProductUseCase: any DeleteProductUseCase,
-       updateProductUseCase: any UpdateProductUseCase,
-       restorePushNotificationsUseCase: any RestorePushNotificationsUseCase
+  init(
+    actions: HomeViewModelActions,
+    fetchProductUseCase: any FetchProductUseCase,
+    deleteProductUseCase: any DeleteProductUseCase,
+    updateProductUseCase: any UpdateProductUseCase,
+    restorePushNotificationsUseCase: any RestorePushNotificationsUseCase
   ) {
     self.actions = actions
     self.fetchProductUseCase = fetchProductUseCase
@@ -84,20 +88,28 @@ final class DefaultHomeViewModel: HomeViewModel {
   func viewDidLoad() {
     self.fetchProductUseCase
       .fetchProducts()
-      .flatMap { [weak self] products -> AnyPublisher<Void, any Error> in
-        guard let self else { return Empty().eraseToAnyPublisher() }
+      .flatMap { [weak self] products -> AnyPublisher<[Product], any Error> in
+        guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
         
         return self.restorePushNotificationsUseCase
           .execute(products: products)
+          .map { products }
+          .eraseToAnyPublisher()
       }
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }
         self?.error = error
-      } receiveValue: { _ in }
+      } receiveValue: { [weak self] products in
+        self?.isInitialLoad = false
+        self?.dataSource = products
+        self?.reloadDataSubject.send()
+      }
       .store(in: &self.subscriptions)
   }
   
   func viewWillAppear() {
+    guard !self.isInitialLoad else { return }
+    
     self.fetchProductUseCase.fetchProducts()
       .receive(on: DispatchQueue.main)
       .sink { [weak self] completion in

@@ -92,7 +92,7 @@ final class SettingCoordinator: BaseCoordinator {
     let childCoordinator = self.dependencies.makeAccountDeletionCoordinator(
       navigationController: self.navigationController
     )
-    childCoordinator.finishDelegate = self
+    childCoordinator.accountDeletionFinishDelegate = self
     self.childCoordinators[childCoordinator.identifier] = childCoordinator
     childCoordinator.start()
   }
@@ -102,5 +102,13 @@ final class SettingCoordinator: BaseCoordinator {
 extension SettingCoordinator: CoordinatorFinishDelegate {
   func coordinatorDidFinish(_ childCoordinator: BaseCoordinator) {
     self.childCoordinators.removeValue(forKey: childCoordinator.identifier)
+  }
+}
+
+// MARK: - AccountDeletionCoordinatorFinishDelegate
+extension SettingCoordinator: AccountDeletionCoordinatorFinishDelegate {
+  func accountDeletionCoordinatorDidFinish(_ childCoordinator: AccountDeletionCoordinator) {
+    self.childCoordinators.removeValue(forKey: childCoordinator.identifier)
+    self.finish()
   }
 }

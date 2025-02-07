@@ -31,6 +31,7 @@ class CalendarCoordinator: BaseCoordinator {
     print("DEBUG: \(Self.self) deinit")
   }
   
+  // MARK: - Start
   func start() {
     let actions = CalendarViewModelActions(
       showProduct: { [weak self] productID in

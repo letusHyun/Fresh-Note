@@ -193,10 +193,6 @@ extension OnboardingViewController {
 
 // MARK: - Actions
 private extension OnboardingViewController {
-  @objc func startButtonTapped() {
-//    viewModel.didTapLoginButton()
-  }
-  
   @objc func appleButtonTapped() {
     let authController = self.viewModel.makeASAuthorizationController()
     authController.presentationContextProvider = self

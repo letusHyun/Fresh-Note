@@ -11,11 +11,9 @@ import UIKit
 import SnapKit
 
 final class ActivityIndicatorView: UIView {
-  static let shared = ActivityIndicatorView()
-  
   private let activityIndicator = UIActivityIndicatorView(style: .large)
   
-  private init() {
+  init() {
     super.init(frame: .zero)
     self.setupUI()
   }
@@ -30,16 +28,7 @@ final class ActivityIndicatorView: UIView {
   }
   
   private func setupLayouts() {
-    guard
-      let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-      let window = windowScene.windows.first else { return }
-    
-    window.addSubview(self)
     self.addSubview(self.activityIndicator)
-    
-    self.snp.makeConstraints {
-      $0.edges.equalToSuperview()
-    }
     
     self.activityIndicator.snp.makeConstraints {
       $0.centerX.equalToSuperview()

@@ -55,16 +55,6 @@ final class DefaultPushNotificationRepository: PushNotificationRepository {
     .eraseToAnyPublisher()
   }
   
-  func shouldReRegisterNotifications() -> AnyPublisher<Bool, any Error> {
-    return Future { [weak self] promise in
-      self?.notificationCenter.getPendingNotificationRequests { requests in
-        let shouldRegister = requests.isEmpty
-        return promise(.success(shouldRegister))
-      }
-    }
-    .eraseToAnyPublisher()
-  }
-  
   func deleteNotificaion(notificationIDs: [DocumentID]) {
     let notificationIDs = notificationIDs.map { $0.didString }
     self.notificationCenter.removePendingNotificationRequests(withIdentifiers: notificationIDs)

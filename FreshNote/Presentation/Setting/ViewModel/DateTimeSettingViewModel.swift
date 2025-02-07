@@ -123,7 +123,7 @@ final class DefaultDateTimeSettingViewModel: DateTimeSettingViewModel {
         .execute(dateTime: DateTime(date: dateInt, hour: hour, minute: minute))
         .flatMap { [weak self] _ -> AnyPublisher<Void, any Error> in
           guard let updatePushNotificationUseCase = self?.updatePushNotificationUseCase else {
-            return Empty().eraseToAnyPublisher()
+            return Fail(error: CommonError.referenceError).eraseToAnyPublisher()
           }
           
           return updatePushNotificationUseCase

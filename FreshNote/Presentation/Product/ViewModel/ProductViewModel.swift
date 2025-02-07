@@ -16,6 +16,7 @@ struct ProductViewModelActions {
   let showPhotoBottomSheet: () -> Void
   let showCategoryBottomSheet: (@escaping AnimateCategoryHandler,
                                 @escaping PassCategoryHandler) -> Void
+  /// 앨범에서 이미지를 가져오거나, 사진을 찍어서 이미지를 가져올 때 image의 Data를 방출하는 Publisher입니다.
   let imageDataPublisher: AnyPublisher<Data, Never>
   let deleteImagePublisher: AnyPublisher<Void, Never>
 }
@@ -39,8 +40,9 @@ protocol ProductViewModelOutput {
   var expirationPublisher: AnyPublisher<ExpirationOutputState, Never> { get }
   var errorPublisher: AnyPublisher<Error?, Never> { get }
   var expirationTextPublisher: AnyPublisher<String, Never> { get }
-  var isCustomImage: Bool { get }
+  var isDefaultImage: Bool { get }
   var setupProductPublisher: AnyPublisher<Product, Never> { get }
+  var isChangedImageIfNotDefaultImage: Bool { get }
 }
 
 enum ExpirationOutputState {
@@ -69,10 +71,7 @@ final class DefaultProductViewModel: ProductViewModel {
   
   /// 이전 text 길이를 저장해서 delete 감지할 때 사용하는 변수입니다.
   private var previousExpirationTextLength = 0
-  
-  /// 사용자가 정의한 이미지인지 판별하는 변수입니다.
-  var isCustomImage: Bool = false
-  
+
   private let saveProductUseCase: any SaveProductUseCase
   private let updateProductUseCase: any UpdateProductUseCase
   private let fetchProductUseCase: any FetchProductUseCase
@@ -99,6 +98,19 @@ final class DefaultProductViewModel: ProductViewModel {
   @Published private var expirationFormattedText = ""
   @Published private var error: (any Error)?
   
+  /// 기본 이미지인지 사용자가 정의한 이미지인지 판별하는 변수입니다.
+  var isDefaultImage: Bool = false
+  
+  /// 이미지가 변경되었는지 판별하는 변수입니다.
+  ///
+  /// true인 경우:
+    /// - 사용자가 기존(default or custom)이미지에서 다른 이미지로 변경한 경우
+  ///
+  /// false인 경우:
+    /// - default 이미지인 경우
+    /// - 커스텀 이미지 상태에서 이미지를 삭제하는 경우
+  lazy var isChangedImageIfNotDefaultImage: Bool = false
+  
   // MARK: - LifeCycle
   init(
     saveProductUseCase: any SaveProductUseCase,
@@ -124,7 +136,6 @@ final class DefaultProductViewModel: ProductViewModel {
   func viewDidLoad() {
     switch self.mode {
     case .create: break
-      
     case .edit(let productID):
       self.fetchProductUseCase
         .fetchProduct(productID: productID)
@@ -134,7 +145,7 @@ final class DefaultProductViewModel: ProductViewModel {
           self?.error = error
         } receiveValue: { [weak self] product in
           self?.fetchedProduct = product
-          self?.isCustomImage = product.imageURL != nil
+          self?.isDefaultImage = product.imageURL == nil
           self?.setupProductSubejct.send(product)
         }
         .store(in: &self.subscriptions)
@@ -167,7 +178,8 @@ final class DefaultProductViewModel: ProductViewModel {
           guard case .failure(let error) = completion else { return }
           self?.error = error
         } receiveValue: { [weak self] product in
-          self?.actions.pop(nil)
+          guard let self else { return }
+          self.actions.pop(nil)
         }
         .store(in: &self.subscriptions)
     case .edit(_):
@@ -183,15 +195,21 @@ final class DefaultProductViewModel: ProductViewModel {
         isPinned: fetchedProduct.isPinned,
         creationDate: fetchedProduct.creationDate
       )
+      self.updateProductUseCase.setImageDeletionValue(self.isDefaultImage)
       
       self.updateProductUseCase
-        .execute(product: updatedProductExcludedImageURL, newImageData: imageData)
+        .execute(
+          product: updatedProductExcludedImageURL,
+          newImageData: imageData
+        )
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
           guard case .failure(let error) = completion else { return }
           self?.error = error
         } receiveValue: { [weak self] product in
-          self?.actions.pop(product)
+          guard let self else { return }
+          
+          self.actions.pop(product)
         }
         .store(in: &self.subscriptions)
     }
@@ -272,13 +290,13 @@ final class DefaultProductViewModel: ProductViewModel {
     }
   }
   
-  // MARK: - Private Helpers
+  // MARK: - Bind
   private func bind() {
-    /// 사용자가 이미지를 추가할때마다 호출됩니다.
     self.actions.imageDataPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] imageData in
-        self?.isCustomImage = true
+        self?.isDefaultImage = false
+        self?.isChangedImageIfNotDefaultImage = true
         self?.imageDataSubject.send(imageData)
       }
       .store(in: &self.subscriptions)
@@ -286,12 +304,14 @@ final class DefaultProductViewModel: ProductViewModel {
     self.actions.deleteImagePublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
-        self?.isCustomImage = false
+        self?.isDefaultImage = true
+        self?.isChangedImageIfNotDefaultImage = false
         self?.imageDataSubject.send(nil)
       }
       .store(in: &self.subscriptions)
   }
   
+  // MARK: - Private Helpers
   private func validateDate(with dateString: String) {
     let associatedSring = "잘못된 유통기한입니다."
     

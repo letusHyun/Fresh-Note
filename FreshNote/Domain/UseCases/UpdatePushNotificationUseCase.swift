@@ -58,13 +58,13 @@ final class DefaultUpdatePushNotificationUseCase: UpdatePushNotificationUseCase 
   
   func updateNotifications() -> AnyPublisher<Void, any Error> {
     guard let fetchProductUseCase = self.fetchProductUseCase else {
-      return Empty<Void, any Error>().eraseToAnyPublisher()
+      return Fail<Void, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
     }
     
     return fetchProductUseCase
       .fetchProducts()
       .flatMap { [weak self] products -> AnyPublisher<Void, any Error> in
-        guard let self else { return Empty().eraseToAnyPublisher() }
+        guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
         let productIDs = products.map { $0.did }
         self.deletePushNotificationUseCase
           .deleteAllNotifications(productIDs: productIDs)
@@ -72,7 +72,9 @@ final class DefaultUpdatePushNotificationUseCase: UpdatePushNotificationUseCase 
         return Publishers
           .Sequence(sequence: products)
           .flatMap(maxPublishers: .max(3)) { [weak self] product -> AnyPublisher<Void, any Error> in
-            guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
+            guard let self else {
+              return Fail<Void, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+            }
             
             return self.savePushNotificationUseCase
               .saveNotification(product: product)

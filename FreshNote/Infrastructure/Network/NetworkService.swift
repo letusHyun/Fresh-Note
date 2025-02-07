@@ -65,7 +65,6 @@ extension DefaultNetworkService: NetworkService {
     guard let url = try? endpoint.url(with: self.config) else {
       return Fail(error: NetworkError.urlGeneration).eraseToAnyPublisher()
     }
-    print("DEBUG: url: \(url)")
      return self.sessionManager
       .request(url)
       .mapError { [weak self] error -> NetworkError in // URLError 발생시, NetworkError로 변환

@@ -12,7 +12,7 @@ final class DefaultProductRepository: ProductRepository {
   private let firebaseNetworkService: any FirebaseNetworkService
   private let productStorage: any ProductStorage
   private let backgroundQueue: DispatchQueue
-
+  
   init(
     firebaseNetworkService: any FirebaseNetworkService,
     productStorage: any ProductStorage,
@@ -22,7 +22,7 @@ final class DefaultProductRepository: ProductRepository {
     self.productStorage = productStorage
     self.backgroundQueue = backgroundQueue
   }
-
+  
   deinit {
     print("DEBUG: \(Self.self) deinit")
   }
@@ -32,34 +32,39 @@ final class DefaultProductRepository: ProductRepository {
   func fetchProducts() -> AnyPublisher<[Product], any Error> {
     // 1. 최초 로그인이 아니면, LocalDB fetch
     // 2. 최초 로그인이면, Firestore fetch → LocalDB save
-    return self.productStorage.hasProducts()
-      .flatMap { [weak self] hasProducts -> AnyPublisher<[Product], any Error> in
-        guard let self else { return Empty().eraseToAnyPublisher() }
-        
-        // 최초 로그인이 아니면
-        if hasProducts {
-          return self.productStorage.fetchProducts()
+    return self.productStorage
+      .fetchProducts()
+      .flatMap { [weak self] products -> AnyPublisher<[Product], any Error> in
+        guard let self else {
+          return Fail(error: CommonError.referenceError).eraseToAnyPublisher()
         }
         
-        guard let userID = FirebaseUserManager.shared.userID else {
-          return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
-        }
-        
-        let fullPath = FirestorePath.products(userID: userID)
-        
-        // 최초 로그인이면
-        // firestore fetch -> localDB save
-        return self.firebaseNetworkService
-          .getDocuments(collectionPath: fullPath)
-          .receive(on: self.backgroundQueue)
-          .map { (dtoArray: [ProductResponseDTO]) -> [Product] in
-            return dtoArray.compactMap {
-              self.convertProduct($0)
+        // storage에 entity 존재하지 않으면 api 호출
+        if products.isEmpty {
+          guard let userID = FirebaseUserManager.shared.userID else {
+            return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
+          }
+          
+          let fullPath = FirestorePath.products(userID: userID)
+          
+          // 최초 로그인이면
+          // firestore fetch -> localDB save
+          return self.firebaseNetworkService
+            .getDocuments(collectionPath: fullPath)
+            .receive(on: self.backgroundQueue)
+            .map { (dtoArray: [ProductResponseDTO]) -> [Product] in
+              return dtoArray.compactMap {
+                self.convertProduct($0)
+              }
             }
-          }
-          .flatMap { products in
-            return self.productStorage.saveProducts(with: products)
-          }
+            .flatMap { products in
+              return self.productStorage.saveProducts(with: products)
+            }
+            .eraseToAnyPublisher()
+        }
+        
+        return Just(products)
+          .setFailureType(to: Error.self)
           .eraseToAnyPublisher()
       }
       .eraseToAnyPublisher()
@@ -84,11 +89,13 @@ final class DefaultProductRepository: ProductRepository {
       didString: didString,
       creationDate: product.creationDate
     )
-
+    
     return self.firebaseNetworkService
       .setDocument(documentPath: fullPath, requestDTO: requestDTO, merge: true)
       .flatMap { [weak self] in
-        guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
+        guard let self else {
+          return Fail<Void, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
         
         return self.productStorage.saveProduct(with: product)
       }
@@ -96,6 +103,7 @@ final class DefaultProductRepository: ProductRepository {
       .eraseToAnyPublisher()
   }
   
+  /// firestore delete -> cache delete
   func deleteProduct(didString: String) -> AnyPublisher<Void, any Error> {
     guard let userID = FirebaseUserManager.shared.userID else {
       return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
@@ -106,7 +114,9 @@ final class DefaultProductRepository: ProductRepository {
     return self.firebaseNetworkService
       .deleteDocument(documentPath: fullPath)
       .flatMap { [weak self] in
-        guard let self else { return Empty<Void, any Error>().eraseToAnyPublisher() }
+        guard let self else {
+          return Fail<Void, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
         
         return self.productStorage.deleteProduct(uid: didString)
       }
@@ -134,11 +144,46 @@ final class DefaultProductRepository: ProductRepository {
       didString: didString,
       creationDate: product.creationDate
     )
-
+    
     return self.firebaseNetworkService
       .setDocument(documentPath: fullPath, requestDTO: requestDTO, merge: true)
       .flatMap { [weak self] in
-        guard let self else { return Empty<Product, any Error>().eraseToAnyPublisher() }
+        guard let self else {
+          return Fail<Product, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
+        
+        return self.productStorage.updateProduct(with: product)
+      }
+      .receive(on: self.backgroundQueue)
+      .eraseToAnyPublisher()
+  }
+  
+  func updateProductWithImageDeletion(product: Product) -> AnyPublisher<Product, any Error> {
+    guard let userID = FirebaseUserManager.shared.userID else {
+      return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
+    }
+    
+    let urlString = product.imageURL?.absoluteString
+    let didString = product.did.didString
+    let fullPath = FirestorePath.product(userID: userID, productID: didString)
+    
+    let requestDTO = ProductRequestDTO(
+      name: product.name,
+      memo: product.memo,
+      imageURLString: urlString,
+      expirationDate: product.expirationDate,
+      category: product.category,
+      isPinned: product.isPinned,
+      didString: didString,
+      creationDate: product.creationDate
+    )
+    
+    return self.firebaseNetworkService
+      .setDocument(documentPath: fullPath, requestDTO: requestDTO, merge: false)
+      .flatMap { [weak self] in
+        guard let self else {
+          return Fail<Product, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
         
         return self.productStorage.updateProduct(with: product)
       }
@@ -170,9 +215,22 @@ final class DefaultProductRepository: ProductRepository {
       .fetchProduct(keyword: keyword)
   }
   
-  func isSavedProductInLocal() -> AnyPublisher<Bool, any Error> {
+  func deleteCachedProducts() -> AnyPublisher<[DocumentID], any Error> {
     return self.productStorage
-      .hasProducts()
+      .fetchProducts()
+      .flatMap { [weak self] products -> AnyPublisher<[DocumentID], any Error> in
+        guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
+        
+        return products
+          .publisher
+          .flatMap {
+            self.productStorage.deleteProduct(uid: $0.did.didString)
+          }
+          .collect(3)
+          .map { _ in products.map { $0.did } }
+          .eraseToAnyPublisher()
+      }
+      .eraseToAnyPublisher()
   }
 }
 

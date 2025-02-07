@@ -30,7 +30,9 @@ final class DefaultSaveUserProfileUseCase: SaveUserProfileUseCase {
       return self.imageRepository
         .saveImage(with: imageData, fileName: fileName)
         .flatMap { [weak self] url in
-          guard let self else { return Empty<UserProfile, any Error>().eraseToAnyPublisher() }
+          guard let self else {
+            return Fail<UserProfile, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+          }
           
           let userProfile = UserProfile(name: requestValue.name, imageURL: url)
           return self.userProfileRepository.saveUserProfile(userProfile: userProfile)

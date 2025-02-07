@@ -13,21 +13,22 @@ protocol SignInUseCase {
   func signIn(
     authProvider: AuthenticationProvider
   ) -> AnyPublisher<Void, any Error>
+  
+  func reauthenticate(
+    authProvider: AuthenticationProvider
+  ) -> AnyPublisher<Void, any Error>
 }
 
 final class DefaultSignInUseCase: SignInUseCase {
-  private let appleSignInRepository: any AppleSignInRepository
-  private let getRefreshTokenRepository: any GetRefreshTokenRepository
-  private let refreshTokenCacheRepository: any RefreshTokenCacheRepository
+  private let firebaseAuthRepository: any FirebaseAuthRepository
+  private let refreshTokenRepository: any RefreshTokenRepository
   
   init(
-    appleSignInRepository: any AppleSignInRepository,
-    getRefreshTokenRepository: any GetRefreshTokenRepository,
-    refreshTokenCacheRepository: any RefreshTokenCacheRepository
+    firebaseAuthRepository: any FirebaseAuthRepository,
+    refreshTokenRepository: any RefreshTokenRepository
   ) {
-    self.appleSignInRepository = appleSignInRepository
-    self.getRefreshTokenRepository = getRefreshTokenRepository
-    self.refreshTokenCacheRepository = refreshTokenCacheRepository
+    self.firebaseAuthRepository = firebaseAuthRepository
+    self.refreshTokenRepository = refreshTokenRepository
   }
   
   func signIn(
@@ -36,23 +37,38 @@ final class DefaultSignInUseCase: SignInUseCase {
     switch authProvider {
     case let .apple(idToken, nonce, fullName, authorizationCode):
       
-      return self.appleSignInRepository
+      // 애플 로그인
+      return self.firebaseAuthRepository
         .signIn(idToken: idToken, nonce: nonce, fullName: fullName)
         .flatMap { [weak self] () -> AnyPublisher<RefreshToken, any Error> in
-          guard let self else { return Empty().eraseToAnyPublisher() }
+          guard let self else {
+            return Fail(error: CommonError.referenceError).eraseToAnyPublisher()
+          }
           
           // 파베 로그인 완료 후, network를 통해 refreshToken 가져옵니다.
-          return self.getRefreshTokenRepository
-            .execute(with: authorizationCode)
+          return self.refreshTokenRepository
+            .issuedFirstRefreshToken(with: authorizationCode)
         }
         .flatMap { [weak self] refreshToken -> AnyPublisher<Void, any Error> in
-          guard let self else { return Empty().eraseToAnyPublisher() }
+          guard let self else {
+            return Fail(error: CommonError.referenceError).eraseToAnyPublisher()
+          }
           
           // refreshToken을 cache에 저장합니다.
-          return self.refreshTokenCacheRepository
+          return self.refreshTokenRepository
             .saveRefreshToken(refreshToken: refreshToken)
         }
         .eraseToAnyPublisher()
+    }
+  }
+  
+  func reauthenticate(
+    authProvider: AuthenticationProvider
+  ) -> AnyPublisher<Void, any Error> {
+    switch authProvider {
+    case let .apple(idToken, nonce, fullName, authorizationCode):
+      return self.firebaseAuthRepository
+        .reauthenticate(idToken: idToken, nonce: nonce, fullName: fullName)
     }
   }
 }

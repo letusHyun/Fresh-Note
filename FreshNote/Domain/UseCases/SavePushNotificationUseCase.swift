@@ -42,7 +42,9 @@ final class DefaultSavePushNotificationUseCase: SavePushNotificationUseCase {
         return (dateTime, notificationDate)
       }
       .flatMap { [weak self] tuple -> AnyPublisher<Void, any Error> in
-        guard let self else { return Empty().eraseToAnyPublisher() }
+        guard let self else {
+          return Fail(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
         
         let (dateTime, notificationDate) = tuple
         

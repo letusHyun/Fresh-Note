@@ -10,6 +10,8 @@ import Foundation
 
 enum KeychainRefreshTokenStorageError: Error {
   case referenceError
+  case noData
+  case decodingError
 }
 
 final class KeychainRefreshTokenStorage: RefreshTokenStorage {
@@ -36,11 +38,12 @@ final class KeychainRefreshTokenStorage: RefreshTokenStorage {
           return promise(.failure(KeychainError.convertToData))
         }
         
-        let query: [String: Any] = [
-          kSecClass as String: kSecClassGenericPassword,
-          kSecAttrService as String: self.serviceName,
-          kSecAttrAccount as String: self.accountName
-        ]
+        let query = [
+          kSecValueData: tokenData,
+          kSecClass: kSecClassGenericPassword,
+          kSecAttrService: self.serviceName,
+          kSecAttrAccount: self.accountName
+        ] as [CFString: Any]
         
         // 안정성 보장을 위해 delete 이후 save
         SecItemDelete(query as CFDictionary)
@@ -73,11 +76,21 @@ final class KeychainRefreshTokenStorage: RefreshTokenStorage {
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         
-        guard status == errSecSuccess,
-              let tokenData = result as? Data,
-              let token = String(data: tokenData, encoding: .utf8) else {
+        guard status == errSecSuccess else {
+          if status == errSecItemNotFound {
+            return promise(.failure(KeychainRefreshTokenStorageError.noData))
+          }
           return promise(.failure(KeychainError.readError))
         }
+        
+        guard let tokenData = result as? Data else {
+          return promise(.failure(KeychainRefreshTokenStorageError.noData))
+        }
+        
+        guard let token = String(data: tokenData, encoding: .utf8) else {
+          return promise(.failure(KeychainRefreshTokenStorageError.decodingError))
+        }
+        
         return promise(.success(token))
       }
       .eraseToAnyPublisher()

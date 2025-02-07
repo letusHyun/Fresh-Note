@@ -28,6 +28,7 @@ final class PinCoordinator: BaseCoordinator {
     super.init(navigationController: navigationController)
   }
   
+  // MARK: - Start
   func start() {
     let actions = PinViewModelActions(showProduct: { [weak self] productID in
       self?.showProduct(productID: productID)
@@ -35,6 +36,11 @@ final class PinCoordinator: BaseCoordinator {
     
     let viewController = self.dependencies.makePinViewController(actions: actions)
     self.navigationController?.viewControllers = [viewController]
+  }
+  
+  // MARK: - Finish
+  override func finish() {
+    self.navigationController?.viewControllers = []
   }
   
   // MARK: - Private

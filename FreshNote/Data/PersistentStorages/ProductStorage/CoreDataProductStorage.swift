@@ -35,6 +35,20 @@ final class CoreDataProductStorage {
 
 // MARK: - ProductStorage
 extension CoreDataProductStorage: ProductStorage {
+  func deleteAll() -> AnyPublisher<Void, any Error> {
+    return self.coreDataStorage.performBackgroundTask { context in
+      let request = ProductEntity.fetchRequest()
+      
+      do {
+        let entities = try context.fetch(request)
+        entities.forEach { context.delete($0) }
+        try context.save()
+      } catch {
+        throw CoreDataStorageError.deleteError(error)
+      }
+    }
+  }
+  
   func fetchProduct(didString: String) -> AnyPublisher<Product, any Error> {
     return self.coreDataStorage.performBackgroundTask { context in
       let request = ProductEntity.fetchRequest()
@@ -56,19 +70,6 @@ extension CoreDataProductStorage: ProductStorage {
     }
   }
   
-  func hasProducts() -> AnyPublisher<Bool, any Error> {
-    return self.coreDataStorage.performBackgroundTask { context in
-      let request = ProductEntity.fetchRequest()
-      
-      do {
-        let count = try context.count(for: request)
-        return count > 0
-      } catch {
-        throw CoreDataStorageError.contextCountError(error)
-      }
-    }
-  }
-  
   func saveProduct(with product: Product) -> AnyPublisher<Void, any Error> {
     return self.coreDataStorage.performBackgroundTask { context in
       _ = ProductEntity(product: product, createdAt: Date(), insertInto: context)
@@ -83,7 +84,7 @@ extension CoreDataProductStorage: ProductStorage {
   func saveProducts(with products: [Product]) -> AnyPublisher<[Product], any Error> {
     return self.coreDataStorage.performBackgroundTask { [weak self] context in
       let request = ProductEntity.fetchRequest()
-      try self?.deleteResponse(request: request, in: context)
+//      try self?.deleteResponse(request: request, in: context)
       
       products.forEach { product in
         _ = ProductEntity(product: product, createdAt: Date(), insertInto: context)

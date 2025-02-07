@@ -93,7 +93,8 @@ final class DefaultPinViewModel: PinViewModel {
     let updatedPinState = product.isPinned ? false : true
     let updatingProduct = self.makeUpdatingProduct(product: product, updatedPinState: updatedPinState)
     
-    self.updateProductUseCase.execute(product: updatingProduct, newImageData: nil)
+    self.updateProductUseCase.execute(
+      product: updatingProduct, newImageData: nil)
       .receive(on: DispatchQueue.main)
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }

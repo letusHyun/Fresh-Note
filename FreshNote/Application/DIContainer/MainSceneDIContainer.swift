@@ -10,6 +10,7 @@ import UIKit
 final class MainSceneDIContainer {
   struct Dependencies {
     let apiDataTransferService: any DataTransferService
+    let firebaseNetworkService: any FirebaseNetworkService
   }
   
   // MARK: - Properties
@@ -117,14 +118,45 @@ private extension MainSceneDIContainer {
   func makeSignOutAlertViewModel(
     actions: SignOutAlertViewModelActions
   ) -> any SignOutAlertViewModel {
-    return DefaultSignOutAlertViewModel(actions: actions)
+    return DefaultSignOutAlertViewModel(actions: actions, deleteCacheUseCase: self.makeDeleteCacheUseCase())
   }
   
+  
   func makeAccountDeletionViewModel(actions: AccountDeletionViewModelActions) -> any AccountDeletionViewModel {
-    return DefaultAccountDeletionViewModel(actions: actions)
+    return DefaultAccountDeletionViewModel(
+      actions: actions,
+      deleteAccountUseCase: self.makeDeleteAccountUseCase(),
+      signInUseCase: self.makeSignInUseCase()
+    )
   }
   
   // MARK: - Domain Layer
+  func makeSignInUseCase() -> any SignInUseCase {
+    return DefaultSignInUseCase(
+      firebaseAuthRepository: self.makeFirebaseAuthRepository(),
+      refreshTokenRepository: self.makeRefreshTokenRepository()
+    )
+  }
+  
+  func makeDeleteAccountUseCase() -> any DeleteAccountUseCase {
+    DefaultDeleteAccountUseCase(
+      firebaseAuthRepository: self.makeFirebaseAuthRepository(),
+      firebaseDeletionRepository: self.makeFirebaseDeletionRepository(),
+      refreshTokenRepository: self.makeRefreshTokenRepository(),
+      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository(),
+      deleteCacheRepository: self.makeDeleteCacheRepository()
+    )
+  }
+  
+  func makeDeleteCacheUseCase() -> any DeleteCacheUseCase {
+    DefaultDeleteCacheUseCase(
+      productRepository: self.makeProductRepository(),
+      dateTimeRepository: self.makeDateTimeRepository(),
+      productQueryRepository: self.makeProductQueriesRepository(),
+      pushNotificationRepository: self.makePushNotificationRepository()
+    )
+  }
+  
   func makeUpdateDateTimeUseCase() -> any UpdateDateTimeUseCase {
     DefaultUpdateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
   }
@@ -138,15 +170,8 @@ private extension MainSceneDIContainer {
   func makeRestorePushNotificationsUseCase() -> any RestorePushNotificationsUseCase {
     return DefaultRestorePushNotificationsUseCase(
       fetchDateTimeUseCase: self.makeFetchDateTimeUseCase(),
-      checkRestorePushNotificationsUseCase: self.makeCheckRestorePushNotificationsUseCase(),
-      pushNotificationRepository: self.makePushNotificationRepository()
-    )
-  }
-  
-  func makeCheckRestorePushNotificationsUseCase() -> any CheckRestorePushNotificationsUseCase {
-    return DefaultCheckRestorePushNotificationsUseCase(
-      productRepository: self.makeProductRepository(),
-      pushNotificationRepository: self.makePushNotificationRepository()
+      pushNotificationRepository: self.makePushNotificationRepository(),
+      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
     )
   }
   
@@ -209,6 +234,36 @@ private extension MainSceneDIContainer {
   }
   
   // MARK: - Data Layer
+  func makeDeleteCacheRepository() -> any DeleteCacheRepository {
+    DefaultDeleteCacheRepository(
+      productStorage: self.makeProductStorage(),
+      dateTimeStorage: self.makeDateTimeStorage(),
+      productQueryStorage: self.makeProductQueryStorage()
+    )
+  }
+  
+  func makeRefreshTokenRepository() -> any RefreshTokenRepository {
+    DefaultRefreshTokenRepository(
+      dataTransferService: self.dependencies.apiDataTransferService,
+      cache: self.makeRefreshTokenStorage()
+    )
+  }
+  
+  func makeFirebaseDeletionRepository() -> any FirebaseDeletionRepository {
+    DefaultFirebaseDeletionRepository(firebaseNetworkService: self.dependencies.firebaseNetworkService)
+  }
+  
+  func makeFirebaseAuthRepository() -> any FirebaseAuthRepository {
+    return DefaultFirebaseAuthRepository(
+      dateTimeCache: self.makeDateTimeStorage(),
+      firebaseNetworkService: self.dependencies.firebaseNetworkService
+    )
+  }
+  
+  func makePushNotiRestorationStateRepository() -> any PushNotiRestorationStateRepository {
+    return DefaultPushNotiRestorationStateRepository(restoreStateStorage: self.makePushNotiRestorationStateStorage())
+  }
+  
   func makeProductNotificationRepository() -> any ProductNotificationRepository {
     return DefaultProductNotificationRepository(
       productNotificationStorage: self.makeProductNotificationStorage()
@@ -223,7 +278,7 @@ private extension MainSceneDIContainer {
   
   func makeDateTimeRepository() -> DateTimeRepository {
     return DefaultDateTimeRepository(
-      firebaseNetworkService: self.makeFirebaseNetworkService(),
+      firebaseNetworkService: self.dependencies.firebaseNetworkService,
       dateTimeStorage: self.makeDateTimeStorage()
     )
   }
@@ -234,7 +289,7 @@ private extension MainSceneDIContainer {
   
   func makeProductRepository() -> any ProductRepository {
     return DefaultProductRepository(
-      firebaseNetworkService: self.makeFirebaseNetworkService(),
+      firebaseNetworkService: self.dependencies.firebaseNetworkService,
       productStorage: self.makeProductStorage()
     )
   }
@@ -244,15 +299,21 @@ private extension MainSceneDIContainer {
   }
   
   func makeImageRepository() -> any ImageRepository {
-    return DefaultImageRepository(firebaseNetworkService: self.makeFirebaseNetworkService())
-  }
-  
-  func makeFirebaseNetworkService() -> any FirebaseNetworkService {
-    return DefaultFirebaseNetworkService()
+    return DefaultImageRepository(
+      firebaseNetworkService: self.dependencies.firebaseNetworkService
+    )
   }
   
   // MARK: - Persistent Storage
-  func makeProductNotificationStorage() -> ProductNotificationStorage {
+  func makeRefreshTokenStorage() -> any RefreshTokenStorage {
+    KeychainRefreshTokenStorage()
+  }
+  
+  func makePushNotiRestorationStateStorage() -> any PushNotiRestorationStateStorage {
+    return UserDefaultsPushNotiRestorationStateStorage()
+  }
+  
+  func makeProductNotificationStorage() -> any ProductNotificationStorage {
     return CoreDataProductNotificationStorage(coreDataStorage: self.makeCoreDataStorage())
   }
   

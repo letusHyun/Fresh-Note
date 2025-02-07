@@ -14,36 +14,32 @@ enum RestorePushNotificationsUseCaseError: Error {
 
 /// 앱을 제거했다가 다시 설치하는 경우, 푸시 알림을 재등록합니다.
 protocol RestorePushNotificationsUseCase {
-  /// localDB에 products를 저장한 후에 호출해야 합니다.
+  /// restore 여부를 판별하고 restore해야하는 경우 restore를 수행합니다.
   func execute(products: [Product]) -> AnyPublisher<Void, any Error>
 }
 
 final class DefaultRestorePushNotificationsUseCase: RestorePushNotificationsUseCase {
   private let fetchDateTimeUseCase: any FetchDateTimeUseCase
-  private let checkRestorePushNotificationsUseCase: any CheckRestorePushNotificationsUseCase
   private let pushNotificationRepository: any PushNotificationRepository
+  private let pushNotiRestorationStateRepository: any PushNotiRestorationStateRepository
   
   init(
     fetchDateTimeUseCase: any FetchDateTimeUseCase,
-    checkRestorePushNotificationsUseCase: any CheckRestorePushNotificationsUseCase,
-    pushNotificationRepository: any PushNotificationRepository
+    pushNotificationRepository: any PushNotificationRepository,
+    pushNotiRestorationStateRepository: any PushNotiRestorationStateRepository
   ) {
     self.fetchDateTimeUseCase = fetchDateTimeUseCase
-    self.checkRestorePushNotificationsUseCase = checkRestorePushNotificationsUseCase
     self.pushNotificationRepository = pushNotificationRepository
+    self.pushNotiRestorationStateRepository = pushNotiRestorationStateRepository
   }
   
   func execute(products: [Product]) -> AnyPublisher<Void, any Error> {
-    guard !products.isEmpty else {
-      return self.makeEmptyPublisher()
-    }
-    
-    /// 알림 재등록 여부를 확인합니다.
-    return self.checkRestorePushNotificationsUseCase
-      .execute()
+    // restore 여부 체크
+    return self.shouldRestorePushNotification()
       .flatMap { [weak self] shouldRestore -> AnyPublisher<Void, any Error> in
+        // restore
         return self?.handleRestore(shouldRestore: shouldRestore, products: products) ??
-        Fail(error: RestorePushNotificationsUseCaseError.referenceError).eraseToAnyPublisher()
+        Fail(error: CommonError.referenceError).eraseToAnyPublisher()
       }
       .eraseToAnyPublisher()
   }
@@ -72,7 +68,9 @@ final class DefaultRestorePushNotificationsUseCase: RestorePushNotificationsUseC
   
   private func handleRestore(shouldRestore: Bool, products: [Product]) -> AnyPublisher<Void, any Error> {
     guard shouldRestore else {
-      return self.makeEmptyPublisher()
+      return Just(())
+        .setFailureType(to: Error.self)
+        .eraseToAnyPublisher()
     }
     
     // 로컴 알림 재등록이 필요한 경우
@@ -87,10 +85,20 @@ final class DefaultRestorePushNotificationsUseCase: RestorePushNotificationsUseC
       }
       .flatMap { [weak self] tuple -> AnyPublisher<Void, any Error> in
         guard let self else {
-          return Fail(error: RestorePushNotificationsUseCaseError.referenceError).eraseToAnyPublisher()
+          return Fail(error: RestorePushNotificationsUseCaseError.referenceError)
+            .eraseToAnyPublisher()
+        }
+        // 로컬 알림 재등록
+        return self.scheduleNotifications(dateTime: tuple.0, notifications: tuple.1)
+      }
+      .flatMap { [weak self] _ -> AnyPublisher<Void, any Error> in
+        guard let self else {
+          return Fail(error: RestorePushNotificationsUseCaseError.referenceError)
+            .eraseToAnyPublisher()
         }
         
-        return self.scheduleNotifications(dateTime: tuple.0, notifications: tuple.1)
+        return self.pushNotiRestorationStateRepository
+          .saveRestoreState(restorationState: .init(shouldRestore: false))
       }
       .eraseToAnyPublisher()
   }
@@ -119,12 +127,6 @@ final class DefaultRestorePushNotificationsUseCase: RestorePushNotificationsUseC
       .eraseToAnyPublisher()
   }
   
-  private func makeEmptyPublisher() -> AnyPublisher<Void, any Error> {
-    return Just(())
-      .setFailureType(to: Error.self)
-      .eraseToAnyPublisher()
-  }
-  
   // 검증 실패한 알림 날짜를 제외하고 notificationDate을 생성합니다.
   private func makeNotificationsExceptForInvalidDate(
     products: [Product],
@@ -139,5 +141,12 @@ final class DefaultRestorePushNotificationsUseCase: RestorePushNotificationsUseC
       // 알림시간이 현재보다 과거인지 검증
       return notificationDate > Date() ? (notificationDate, $0) : nil
     }
+  }
+  
+  private func shouldRestorePushNotification() -> AnyPublisher<Bool, any Error> {
+    return self.pushNotiRestorationStateRepository
+      .fetchRestoreState()
+      .map { $0.shouldRestore }
+      .eraseToAnyPublisher()
   }
 }

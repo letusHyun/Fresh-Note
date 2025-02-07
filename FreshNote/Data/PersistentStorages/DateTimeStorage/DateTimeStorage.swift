@@ -12,5 +12,6 @@ protocol DateTimeStorage {
   func saveDateTime(dateTime: DateTime) -> AnyPublisher<DateTime, any Error>
   func updateDateTime(dateTime: DateTime) -> AnyPublisher<DateTime, any Error>
   func fetchDateTime() -> AnyPublisher<DateTime, any Error>
-  func hasDateTime() -> AnyPublisher<Bool, any Error>
+  func deleteDateTime() -> AnyPublisher<Void, any Error>
+  func deleteAll() -> AnyPublisher<Void, any Error>
 }

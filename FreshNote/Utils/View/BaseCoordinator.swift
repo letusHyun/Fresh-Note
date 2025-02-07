@@ -27,3 +27,14 @@ class BaseCoordinator: NSObject {
     self.finishDelegate?.coordinatorDidFinish(self)
   }
 }
+
+extension BaseCoordinator {
+  func finishAllChildren() {
+    self.childCoordinators.values.forEach { child in
+      child.finishAllChildren()
+      child.finish()
+    }
+    
+    self.childCoordinators.removeAll()
+  }
+}

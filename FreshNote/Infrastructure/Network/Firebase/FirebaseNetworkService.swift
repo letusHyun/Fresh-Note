@@ -77,8 +77,11 @@ final class DefaultFirebaseNetworkService: FirebaseNetworkService {
   
   func getDocuments<T: Decodable>(collectionPath: String) -> AnyPublisher<[T], any Error> {
     return Future { [weak self] promise in
-      self?.firestore.collection(collectionPath).getDocuments { (snapshot, error) in
-        if let error = error { return promise(.failure(error)) }
+      guard let self else { return promise(.failure(CommonError.referenceError)) }
+      self.firestore.collection(collectionPath).getDocuments { (snapshot, error) in
+        if let error = error {
+          return promise(.failure(error))
+        }
         
         do {
           let decodedDatas: [T] = try snapshot?.documents.compactMap { snapshot in

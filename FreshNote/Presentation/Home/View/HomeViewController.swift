@@ -11,7 +11,10 @@ import Combine
 import SnapKit
 
 final class HomeViewController: BaseViewController {
+  
   // MARK: - Properties
+  private let activityIndicatorView = ActivityIndicatorView()
+  
   private let viewModel: any HomeViewModel
   
   private let tableView: UITableView = {
@@ -68,18 +71,29 @@ final class HomeViewController: BaseViewController {
   
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
-    ActivityIndicatorView.shared.startIndicating()
+    self.activityIndicatorView.startIndicating()
     self.viewModel.viewWillAppear()
   }
   
   override func setupLayout() {
     self.view.addSubview(self.tableView)
+    self.view.addSubview(self.activityIndicatorView)
     
     self.tableView.snp.makeConstraints {
       $0.leading.trailing.equalToSuperview()
       $0.top.equalTo(self.view.safeAreaLayoutGuide)
       $0.bottom.equalTo(self.view.safeAreaLayoutGuide)
     }
+    
+    self.activityIndicatorView.snp.makeConstraints {
+      $0.leading.trailing.equalTo(self.view.safeAreaLayoutGuide)
+      $0.top.bottom.equalToSuperview()
+    }
+  }
+  
+  override func viewWillDisappear(_ animated: Bool) {
+    super.viewWillDisappear(animated)
+    self.activityIndicatorView.stopIndicating()
   }
 }
 
@@ -104,7 +118,7 @@ extension HomeViewController {
       .sink { error in
         guard let error = error else { return }
         // TODO: - 에러 UI 처리하기
-        ActivityIndicatorView.shared.stopIndicating()
+        self.activityIndicatorView.stopIndicating()
         print("error발생: \(error.localizedDescription)")
       }
       .store(in: &self.subscriptions)
@@ -112,15 +126,16 @@ extension HomeViewController {
     viewModel.reloadDataPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
-        ActivityIndicatorView.shared.stopIndicating()
-        self?.tableView.reloadData()
+        guard let self else { return }
+        self.activityIndicatorView.stopIndicating()
+        self.tableView.reloadData()
       }
       .store(in: &self.subscriptions)
     
     viewModel.deleteRowsPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] indexPaths, swipeCompletion in
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
         self?.tableView.deleteRows(at: indexPaths, with: .fade)
         swipeCompletion(true)
       }.store(in: &self.subscriptions)
@@ -128,7 +143,7 @@ extension HomeViewController {
     viewModel.reloadRowsPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] indexPaths in
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
         self?.tableView.reloadRows(at: indexPaths, with: .automatic)
       }
       .store(in: &self.subscriptions)
@@ -136,7 +151,7 @@ extension HomeViewController {
     viewModel.updatePinPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] indexPath, updatedPinState in
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
         guard
           let self,
           let cell = self.tableView.cellForRow(at: indexPath) as? ProductCell
@@ -178,7 +193,7 @@ extension HomeViewController: UITableViewDelegate {
       style: .destructive,
       title: "삭제"
     ) { [weak self] (action, view, completionHandler) in
-      ActivityIndicatorView.shared.startIndicating()
+      self?.activityIndicatorView.startIndicating()
       self?.viewModel.trailingSwipeActionsConfigurationForRowAt(
         indexPath: indexPath,
         handler: completionHandler
@@ -229,7 +244,7 @@ extension HomeViewController: ProductCellDelegate {
   func didTapPin(in cell: UITableViewCell) {
     guard let indexPath = self.tableView.indexPath(for: cell) else { return }
     
-    ActivityIndicatorView.shared.startIndicating()
+    self.activityIndicatorView.startIndicating()
     self.viewModel.didTapPin(at: indexPath)
   }
 }

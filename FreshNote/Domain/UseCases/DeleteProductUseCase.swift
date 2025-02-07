@@ -15,6 +15,7 @@ protocol DeleteProductUseCase {
 final class DefaultDeleteProductUseCase: DeleteProductUseCase {
   private let imageRepository: any ImageRepository
   private let productRepository: any ProductRepository
+  /// product delete시, 로컬 푸시 알림이 반드시 삭제해야하므로, 종속시킴
   private let deletePushNotificationUseCase: any DeletePushNotificationUseCase
   
   init(

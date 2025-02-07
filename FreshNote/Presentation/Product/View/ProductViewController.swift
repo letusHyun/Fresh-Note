@@ -16,6 +16,8 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   }
   
   // MARK: - Properties
+  private let activityIndicatorView = ActivityIndicatorView()
+  
   private let viewModel: any ProductViewModel
   
   private let backButton = NavigationBackButton()
@@ -154,7 +156,7 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   
   override func viewWillDisappear(_ animated: Bool) {
     super.viewWillDisappear(animated)
-    ActivityIndicatorView.shared.stopIndicating()
+    self.activityIndicatorView.stopIndicating()
     self.tabBarController?.tabBar.isHidden = false
   }
   
@@ -164,6 +166,14 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   
   // MARK: - SetupUI
   override func setupLayout() {
+    defer {
+      self.view.addSubview(self.activityIndicatorView)
+      self.activityIndicatorView.snp.makeConstraints {
+        $0.leading.trailing.bottom.equalToSuperview()
+        $0.top.equalTo(self.view.safeAreaLayoutGuide)
+      }
+    }
+    
     _=[self.titleTextField,
        self.imageView,
        self.expirationLabel,
@@ -233,9 +243,9 @@ private extension ProductViewController {
   private func bind() {
     self.viewModel.errorPublisher
       .receive(on: DispatchQueue.main)
-      .sink { error in
+      .sink { [weak self] error in
         guard let error = error else { return }
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
       }
       .store(in: &self.subscriptions)
     
@@ -341,7 +351,7 @@ private extension ProductViewController {
     
     self.saveButton.tapThrottlePublisher
       .sink { [weak self] _ in
-        ActivityIndicatorView.shared.startIndicating()
+        self?.activityIndicatorView.startIndicating()
         
         guard let self = self,
               let name = self.titleTextField.text,
@@ -350,10 +360,7 @@ private extension ProductViewController {
               let memo = self.descriptionTextView.text
         else { return }
         
-        let imageData = self.viewModel.isCustomImage
-        ? self.imageView.image?.jpegData(compressionQuality: 0.8)
-        : nil
-        
+        let imageData = self.makeImageData()
         self.viewModel.didTapSaveButton(
           name: name,
           expiration: expiration,
@@ -382,6 +389,18 @@ private extension ProductViewController {
 
 // MARK: - Private Helpers
 extension ProductViewController {
+  private func makeImageData() -> Data? {
+    if self.viewModel.isDefaultImage { // defaultImage인 경우
+      return nil
+    } else { // defaultImage가 아닌 경우
+      if self.viewModel.isChangedImageIfNotDefaultImage { // 이미지가 변경된 경우
+        return self.imageView.image?.jpegData(compressionQuality: 0.8)
+      } else { // 이미지가 변경되지 않은 경우
+        return nil
+      }
+    }
+  }
+  
   private func setupNavigationBar() {
     self.navigationItem.rightBarButtonItem = UIBarButtonItem(customView: self.saveButton)
     // UIBarButtonItem에 넣은 후에 isEnabled를 지정해야 정상 작동함..

@@ -48,7 +48,9 @@ final class DefaultSaveProductUseCase: SaveProductUseCase {
       
       return self.productRepository.saveProduct(product: product)
         .flatMap { [weak self] in
-          guard let self else { return Empty<Product, any Error>().eraseToAnyPublisher() }
+          guard let self else {
+            return Fail<Product, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+          }
           
           return self.savePushNotificationUseCase
             .saveNotification(product: product)
@@ -63,7 +65,9 @@ final class DefaultSaveProductUseCase: SaveProductUseCase {
     return self.imageRepository
       .saveImage(with: imageData, fileName: fileName)
       .flatMap { [weak self] url in
-        guard let self = self else { return Empty<Product, any Error>().eraseToAnyPublisher() }
+        guard let self = self else {
+          return Fail<Product, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
         let product = self.makeProduct(from: requestValue, url: url)
         
         return self.productRepository

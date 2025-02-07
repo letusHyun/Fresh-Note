@@ -25,6 +25,8 @@ final class CategoryDetailViewController: BaseViewController {
   
   private var subscriptions: Set<AnyCancellable> = []
   
+  private let activityIndicatorView = ActivityIndicatorView()
+  
   // MARK: - LifeCycle
   init(viewModel: any CategoryDetailViewModel) {
     self.viewModel = viewModel
@@ -54,8 +56,14 @@ final class CategoryDetailViewController: BaseViewController {
   // MARK: - SetupUI
   override func setupLayout() {
     self.view.addSubview(self.tableView)
+    self.view.addSubview(self.activityIndicatorView)
     
     self.tableView.snp.makeConstraints {
+      $0.top.bottom.equalTo(self.view.safeAreaLayoutGuide)
+      $0.leading.trailing.equalToSuperview()
+    }
+    
+    self.activityIndicatorView.snp.makeConstraints {
       $0.top.bottom.equalTo(self.view.safeAreaLayoutGuide)
       $0.leading.trailing.equalToSuperview()
     }
@@ -66,7 +74,7 @@ final class CategoryDetailViewController: BaseViewController {
     viewModel.reloadDataPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
         
         self?.tableView.reloadData()
       }
@@ -76,7 +84,7 @@ final class CategoryDetailViewController: BaseViewController {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] error in
         guard let error = error else { return }
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
         // TODO: - Error handling
       }
       .store(in: &self.subscriptions)
@@ -91,7 +99,7 @@ final class CategoryDetailViewController: BaseViewController {
     viewModel.updatePinPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] indexPath, updatedPinState in
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
         guard
           let self,
           let cell = self.tableView.cellForRow(at: indexPath) as? ProductCell
@@ -143,7 +151,7 @@ extension CategoryDetailViewController: ProductCellDelegate {
   func didTapPin(in cell: UITableViewCell) {
     guard let indexPath = self.tableView.indexPath(for: cell) else { return }
     
-    ActivityIndicatorView.shared.startIndicating()
+    self.activityIndicatorView.startIndicating()
     self.viewModel.didTapPin(at: indexPath)
   }
 }

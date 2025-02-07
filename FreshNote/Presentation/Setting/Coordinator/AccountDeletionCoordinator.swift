@@ -7,6 +7,11 @@
 
 import UIKit
 
+/// 계정 탈퇴 시 finish를 호출하는 델리게이트입니다.
+protocol AccountDeletionCoordinatorFinishDelegate: AnyObject {
+  func accountDeletionCoordinatorDidFinish(_ childCoordinator: AccountDeletionCoordinator)
+}
+
 protocol AccountDeletionCoordinatorDependencies: AnyObject {
   func makeAccountDeletionViewController(
     actions: AccountDeletionViewModelActions
@@ -16,6 +21,7 @@ protocol AccountDeletionCoordinatorDependencies: AnyObject {
 final class AccountDeletionCoordinator: BaseCoordinator {
   // MARK: - Properties
   private let dependencies: any AccountDeletionCoordinatorDependencies
+  weak var accountDeletionFinishDelegate: (any AccountDeletionCoordinatorFinishDelegate)?
   
   // MARK: - LifeCycle
   init(
@@ -28,16 +34,21 @@ final class AccountDeletionCoordinator: BaseCoordinator {
   
   // MARK: - Start
   func start() {
-    let actions = AccountDeletionViewModelActions(pop: { [weak self] in
-      self?.pop()
+    let actions = AccountDeletionViewModelActions(deletionPop: { [weak self] in
+      self?.deletionPop()
     })
     let viewController = self.dependencies.makeAccountDeletionViewController(actions: actions)
     self.navigationController?.pushViewController(viewController, animated: true)
   }
   
   // MARK: - Private
-  private func pop() {
+  private func deletionPop() {
     self.navigationController?.popViewController(animated: true)
     self.finish()
+  }
+  
+  // MARK: - Finish
+  override func finish() {
+    self.accountDeletionFinishDelegate?.accountDeletionCoordinatorDidFinish(self)
   }
 }

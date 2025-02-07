@@ -23,6 +23,20 @@ final class CoreDataProductQueryStorage {
 
 // MARK: - ProductQueryStorage
 extension CoreDataProductQueryStorage: ProductQueryStorage {
+  func deleteAll() -> AnyPublisher<Void, any Error> {
+    return self.coreDataStorage.performBackgroundTask { context in
+      let request = ProductQueryEntity.fetchRequest()
+      
+      do {
+        let entities = try context.fetch(request)
+        entities.forEach { context.delete($0) }
+        try context.save()
+      } catch {
+        throw CoreDataStorageError.deleteError(error)
+      }
+    }
+  }
+  
   func saveQuery(productQuery: ProductQuery) -> AnyPublisher<ProductQuery, any Error> {
     return self.coreDataStorage
       .performBackgroundTask { context -> ProductQuery in
@@ -85,14 +99,13 @@ extension CoreDataProductQueryStorage: ProductQueryStorage {
   func deleteQueries() -> AnyPublisher<Void, any Error> {
     self.coreDataStorage
       .performBackgroundTask { context -> Void in
-        let request: NSFetchRequest<ProductQueryEntity> = ProductQueryEntity.fetchRequest()
-        let entities = try context.fetch(request)
-        
-        entities.forEach { entity in
-          context.delete(entity)
-        }
-        
         do {
+          let request: NSFetchRequest<ProductQueryEntity> = ProductQueryEntity.fetchRequest()
+          let entities = try context.fetch(request)
+          
+          entities.forEach { entity in
+            context.delete(entity)
+          }
           try context.save()
         } catch {
           throw CoreDataStorageError.saveError(error)

@@ -10,6 +10,7 @@ import UIKit
 final class OnboardingSceneDIContainer {
   struct Dependencies {
     let apiDataTransferService: any DataTransferService
+    let firebaseNetworkService: any FirebaseNetworkService
   }
   
   // MARK: - Properties
@@ -26,15 +27,14 @@ final class OnboardingSceneDIContainer {
     return DefaultSaveDateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
   }
   
-  func makeSignInStateUseCase() -> any SignInStateUseCase {
-    return DefaultSignInStateUseCase(signInStateRepository: self.makeSignInStateRepository())
-  }
+//  func makeSignInStateUseCase() -> any firebaseAuthRepository {
+//    return DefaultSignInStateUseCase(signInStateRepository: self.makeSignInStateRepository())
+//  }
   
   func makeSignInUseCase() -> any SignInUseCase {
     return DefaultSignInUseCase(
-      appleSignInRepository: self.makeAppleSignInRepository(),
-      getRefreshTokenRepository: self.makeGetRefreshTokenRepository(),
-      refreshTokenCacheRepository: self.makeRefreshTokenCacheRepository()
+      firebaseAuthRepository: self.makeFirebaseAuthRepository(),
+      refreshTokenRepository: self.makeRefreshTokenRepository()
     )
   }
   
@@ -45,9 +45,18 @@ final class OnboardingSceneDIContainer {
     )
   }
   
-  func makeCheckDateTimeStateUseCase() -> any CheckDateTimeStateUseCase {
-    return DefaultCheckDateTimeStateUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  func makeCheckInitialStateUseCase() -> any CheckInitialStateUseCase {
+    return DefaultCheckInitialStateUseCase(
+      refreshTokenRepository: self.makeRefreshTokenRepository(),
+      authRepository: self.makeFirebaseAuthRepository(),
+      dateTimeRepository: self.makeDateTimeRepository(),
+      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
+    )
   }
+  
+//  func makeCheckDateTimeStateUseCase() -> any CheckDateTimeStateUseCase {
+//    return DefaultCheckDateTimeStateUseCase(dateTimeRepository: self.makeDateTimeRepository())
+//  }
   
   func makeFetchDateTimeUseCase() -> any FetchDateTimeUseCase {
     return DefaultFetchDateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
@@ -58,12 +67,22 @@ final class OnboardingSceneDIContainer {
   }
   
   // MARK: - Data Layer
-  func makeGetRefreshTokenRepository() -> any GetRefreshTokenRepository {
-    return DefaultGetRefreshTokenRepository(dataTransferService: self.dependencies.apiDataTransferService)
+  func makePushNotiRestorationStateStorage() -> any PushNotiRestorationStateStorage {
+    UserDefaultsPushNotiRestorationStateStorage()
+  }
+  func makePushNotiRestorationStateRepository() -> any PushNotiRestorationStateRepository {
+    DefaultPushNotiRestorationStateRepository(restoreStateStorage: self.makePushNotiRestorationStateStorage())
+  }
+  
+  func makeFirebaseAuthRepository() -> any FirebaseAuthRepository {
+    return DefaultFirebaseAuthRepository(
+      dateTimeCache: self.makeDateTimeStorage(),
+      firebaseNetworkService: self.dependencies.firebaseNetworkService
+    )
   }
   
   func makeImageRepository() -> any ImageRepository {
-    return DefaultImageRepository(firebaseNetworkService: self.makeFirebaseNetworkService())
+    return DefaultImageRepository(firebaseNetworkService: self.dependencies.firebaseNetworkService)
   }
   
   func makeCoreDataStorage() -> any CoreDataStorage {
@@ -77,29 +96,21 @@ final class OnboardingSceneDIContainer {
   func makeUserProfileRepository() -> any UserProfileRepository {
     return DefaultUserProfileRepository(
       userProfileStorage: self.makeUserProfileStorage(),
-      firebaseNetworkService: self.makeFirebaseNetworkService()
+      firebaseNetworkService: self.dependencies.firebaseNetworkService
     )
   }
   
-  func makeAppleSignInRepository() -> any AppleSignInRepository {
-    return DefaultAppleSignInRepository()
-  }
-  
-  func makeSignInStateStorage() -> any SignInStateStorage {
-    return UserDefaultsSignInStateStorage()
-  }
-  
-  func makeSignInStateRepository() -> any SignInStateRepository {
-    return DefaultSignInStateRepository(signInStateStorage: self.makeSignInStateStorage())
-  }
-  
-  func makeFirebaseNetworkService() -> any FirebaseNetworkService {
-    return DefaultFirebaseNetworkService()
-  }
+//  func makeSignInStateStorage() -> any SignInStateStorage {
+//    return UserDefaultsSignInStateStorage()
+//  }
+//  
+//  func makeSignInStateRepository() -> any SignInStateRepository {
+//    return DefaultSignInStateRepository(signInStateStorage: self.makeSignInStateStorage())
+//  }
   
   func makeDateTimeRepository() -> any DateTimeRepository {
     return DefaultDateTimeRepository(
-      firebaseNetworkService: self.makeFirebaseNetworkService(),
+      firebaseNetworkService: self.dependencies.firebaseNetworkService,
       dateTimeStorage: self.makeDateTimeStorage()
     )
   }
@@ -108,8 +119,11 @@ final class OnboardingSceneDIContainer {
     return CoreDataDateTimeStorage(coreDataStorage: self.makeCoreDataStorage())
   }
   
-  func makeRefreshTokenCacheRepository() -> any RefreshTokenCacheRepository {
-    return DefaultRefreshTokenCacheRepository(refreshTokenStorage: self.makeRefreshTokenStorage())
+  func makeRefreshTokenRepository() -> any RefreshTokenRepository {
+    return DefaultRefreshTokenRepository(
+      dataTransferService: self.dependencies.apiDataTransferService,
+      cache: self.makeRefreshTokenStorage()
+    )
   }
   
   func makeRefreshTokenStorage() -> any RefreshTokenStorage {
@@ -123,8 +137,7 @@ final class OnboardingSceneDIContainer {
     return DefaultOnboardingViewModel(
       actions: actions,
       signInUseCase: self.makeSignInUseCase(),
-      signInStateUseCase: self.makeSignInStateUseCase(),
-      checkDateTimeStateUseCase: self.makeCheckDateTimeStateUseCase(),
+      checkInitialStateUseCase: self.makeCheckInitialStateUseCase(),
       saveUserProfileUseCase: self.makeSaveUserProfileUseCase()
     )
   }

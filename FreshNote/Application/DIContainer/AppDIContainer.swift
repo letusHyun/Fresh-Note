@@ -12,24 +12,19 @@ final class AppDIContainer {
   private func makeMainSceneDIContainer() -> MainSceneDIContainer {
     return MainSceneDIContainer(
       dependencies: MainSceneDIContainer.Dependencies(
-        apiDataTransferService: self.makeAPIDataTranferService()
+        apiDataTransferService: self.makeAPIDataTranferService(),
+        firebaseNetworkService: self.makeFirebasNetworkService()
       )
     )
   }
   
   private func makeOnboardingSceneDIContainer() -> OnboardingSceneDIContainer {
-    let dependencies = OnboardingSceneDIContainer
-      .Dependencies(apiDataTransferService: self.makeAPIDataTranferService())
+    let dependencies = OnboardingSceneDIContainer.Dependencies(
+      apiDataTransferService: self.makeAPIDataTranferService(),
+      firebaseNetworkService: self.makeFirebasNetworkService()
+    )
     
     return OnboardingSceneDIContainer(dependencies: dependencies)
-  }
-  
-  private func makeSignInStateRepository() -> any SignInStateRepository {
-    return DefaultSignInStateRepository(signInStateStorage: self.makeSignInStateStorage())
-  }
-  
-  private func makeSignInStateStorage() -> any SignInStateStorage {
-    return UserDefaultsSignInStateStorage()
   }
   
   private func makeDateTimeRepository() -> any DateTimeRepository {
@@ -60,6 +55,25 @@ final class AppDIContainer {
     let apiDataNetwork = DefaultNetworkService(config: config)
     return DefaultDataTransferService(networkService: apiDataNetwork)
   }
+  
+  private func makeRefreshTokenRepository() -> any RefreshTokenRepository {
+    return DefaultRefreshTokenRepository(
+      dataTransferService: self.makeAPIDataTranferService(),
+      cache: self.makeRefreshTokenStorage()
+    )
+  }
+  
+  private func makeRefreshTokenStorage() -> any RefreshTokenStorage {
+    return KeychainRefreshTokenStorage()
+  }
+  
+  private func makePushNotiRestorationStateRepository() -> any PushNotiRestorationStateRepository {
+    return DefaultPushNotiRestorationStateRepository(restoreStateStorage: self.makePushNotiRestorationStateStorage())
+  }
+  
+  private func makePushNotiRestorationStateStorage() -> any PushNotiRestorationStateStorage {
+    return UserDefaultsPushNotiRestorationStateStorage()
+  }
 }
 
 // MARK: - AppCoordinatorDependencies
@@ -73,12 +87,20 @@ extension AppDIContainer: AppCoordinatorDependencies {
     )
   }
   
-  func makeCheckDateTimeStateUseCase() -> any CheckDateTimeStateUseCase {
-    return DefaultCheckDateTimeStateUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  func makeCheckInitialStateUseCase() -> any CheckInitialStateUseCase {
+    return DefaultCheckInitialStateUseCase(
+      refreshTokenRepository: self.makeRefreshTokenRepository(),
+      authRepository: self.makeFirebaseAuthRepository(),
+      dateTimeRepository: self.makeDateTimeRepository(),
+      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
+    )
   }
   
-   func makeSignInStateUseCase() -> any SignInStateUseCase {
-    return DefaultSignInStateUseCase(signInStateRepository: self.makeSignInStateRepository())
+  func makeFirebaseAuthRepository() -> any FirebaseAuthRepository {
+    return DefaultFirebaseAuthRepository(
+      dateTimeCache: self.makeDateTimeStorage(),
+      firebaseNetworkService: self.makeFirebasNetworkService()
+    )
   }
   
   func makeOnboardingCoordinator(navigationController: UINavigationController) -> OnboardingCoordinator {

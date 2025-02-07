@@ -26,7 +26,7 @@ final class DefaultUserProfileRepository: UserProfileRepository {
   func fetchUserProfile() -> AnyPublisher<UserProfile, any Error> {
     self.userProfileStorage.hasUserProfile()
       .flatMap { [weak self] hasUserProfile -> AnyPublisher<UserProfile, any Error> in
-        guard let self else { return Empty().eraseToAnyPublisher() }
+        guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
         
         // 최초 로그인이 아니면
         if hasUserProfile {
@@ -72,7 +72,9 @@ final class DefaultUserProfileRepository: UserProfileRepository {
       .setDocument(documentPath: fullPath, requestDTO: requestDTO, merge: true)
       .receive(on: self.backgroundQueue)
       .flatMap { [weak self] in
-        guard let self else { return Empty<UserProfile, any Error>().eraseToAnyPublisher() }
+        guard let self else {
+          return Fail<UserProfile, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
         
         return self.userProfileStorage
           .saveUserProfile(userProfile: userProfile)
@@ -94,7 +96,9 @@ final class DefaultUserProfileRepository: UserProfileRepository {
     return self.firebaseNetworkService
       .setDocument(documentPath: fullPath, requestDTO: requestDTO, merge: true)
       .flatMap { [weak self] in
-        guard let self else { return Empty<UserProfile, any Error>().eraseToAnyPublisher() }
+        guard let self else {
+          return Fail<UserProfile, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
         
         return self.userProfileStorage.updateProfile(updatedUserProfile: requestDTO)
       }

@@ -14,8 +14,9 @@ protocol ProductRepository {
   func fetchProduct(productID: DocumentID) -> AnyPublisher<Product, any Error>
   func deleteProduct(didString: String) -> AnyPublisher<Void, any Error>
   func updateProduct(product: Product) -> AnyPublisher<Product, any Error>
+  func updateProductWithImageDeletion(product: Product) -> AnyPublisher<Product, any Error>
   func fetchPinnedProducts() -> AnyPublisher<[Product], any Error>
   func fetchProduct(category: String) -> AnyPublisher<[Product], any Error>
   func fetchProduct(keyword: String) -> AnyPublisher<[Product], any Error>
-  func isSavedProductInLocal() -> AnyPublisher<Bool, any Error>
+  func deleteCachedProducts() -> AnyPublisher<[DocumentID], any Error>
 }

@@ -48,7 +48,9 @@ final class DefaultUpdateUserProfileUseCase: UpdateUserProfileUseCase {
       return self.imageRepository
         .saveImage(with: newImageData, fileName: newFileName)
         .flatMap { [weak self] url in
-          guard let self else { return Empty<UserProfile, any Error>().eraseToAnyPublisher() }
+          guard let self else {
+            return Fail<UserProfile, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+          }
           
           let updatedUserProfile = UserProfile(name: userProfile.name, imageURL: url)
           
@@ -62,7 +64,9 @@ final class DefaultUpdateUserProfileUseCase: UpdateUserProfileUseCase {
         // 기존 이미지 삭제 -> 새 이미지 저장 -> userProfile 업데이트
     return self.imageRepository.deleteImage(with: originalImageURL)
       .flatMap { [weak self] in
-        guard let self else { return Empty<UserProfile, any Error>().eraseToAnyPublisher() }
+        guard let self else {
+          return Fail<UserProfile, any Error>(error: CommonError.referenceError).eraseToAnyPublisher()
+        }
         
         return self.imageRepository
           .saveImage(with: newImageData, fileName: newFileName)

@@ -12,7 +12,10 @@ import UIKit
 import SnapKit
 
 final class CalendarViewController: BaseViewController {
+  
   // MARK: - Properties
+  private let activityIndicatorView = ActivityIndicatorView()
+  
   private let viewModel: any CalendarViewModel
   
   private lazy var calendarView: UICalendarView = {
@@ -98,6 +101,12 @@ final class CalendarViewController: BaseViewController {
   
   // MARK: - UI
   override func setupLayout() {
+    defer {
+      self.collectionView.addSubview(self.activityIndicatorView)
+      self.activityIndicatorView.snp.makeConstraints {
+        $0.edges.equalToSuperview()
+      }
+    }
     self.view.addSubview(self.calendarView)
     self.view.addSubview(self.collectionView)
     

@@ -14,6 +14,8 @@ final class SearchResultView: UIView {
   typealias SearchResultViewModel = SearchResultViewModelInput & SearchResultViewModelOutput
   
   // MARK: - Properties
+  private let activityIndicatorView = ActivityIndicatorView()
+  
   private lazy var tableView: UITableView = {
     let tv = UITableView()
     tv.separatorStyle = .none
@@ -45,7 +47,7 @@ final class SearchResultView: UIView {
     viewModel.resultReloadDataPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
         self?.tableView.reloadData()
       }
       .store(in: &self.subscriptions)
@@ -54,14 +56,14 @@ final class SearchResultView: UIView {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] error in
         guard let error = error else { return }
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
       }
       .store(in: &self.subscriptions)
     
     viewModel.updatePinPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] indexPath, updatedPinState in
-        ActivityIndicatorView.shared.stopIndicating()
+        self?.activityIndicatorView.stopIndicating()
         guard
           let self,
           let cell = self.tableView.cellForRow(at: indexPath) as? ProductCell
@@ -126,7 +128,7 @@ extension SearchResultView: ProductCellDelegate {
   func didTapPin(in cell: UITableViewCell) {
     guard let indexPath = self.tableView.indexPath(for: cell) else { return }
     
-    ActivityIndicatorView.shared.startIndicating()
+    self.activityIndicatorView.startIndicating()
     self.viewModel.didTapPin(at: indexPath)
   }
 }

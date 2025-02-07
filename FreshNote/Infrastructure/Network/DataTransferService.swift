@@ -13,7 +13,7 @@ enum DataTransferError: Error {
   case parsing(Error)
   case referenceError
   case networkFailure(NetworkError)
-  case noContent
+  case statusError
 }
 
 protocol DataTransferErrorLogger {
@@ -24,7 +24,7 @@ protocol DataTransferService {
   func request<T: Decodable, E: ResponseRequestable>(
     with endpoint: E,
     on queue: DispatchQueue
-  ) -> AnyPublisher<T, DataTransferError> where E.Response == T
+  ) -> AnyPublisher<T?, DataTransferError> where E.Response == T
 }
 
 protocol ResponseDecoder {
@@ -49,7 +49,7 @@ extension DefaultDataTransferService: DataTransferService {
   func request<T: Decodable, E: ResponseRequestable>(
     with endpoint: E,
     on queue: DispatchQueue
-  ) -> AnyPublisher<T, DataTransferError> where E.Response == T {
+  ) -> AnyPublisher<T?, DataTransferError> where E.Response == T {
     return self.networkService
       .request(endpoint: endpoint)
       .receive(on: queue)
@@ -58,7 +58,9 @@ extension DefaultDataTransferService: DataTransferService {
         return DataTransferError.networkFailure(error)
       }
       .flatMap { [weak self] data in
-        guard let self else { return Empty<T, DataTransferError>().eraseToAnyPublisher() }
+        guard let self else {
+          return Fail<T?, DataTransferError>(error: .referenceError).eraseToAnyPublisher()
+        }
         
         return self.decode(data: data, decoder: endpoint.responseDecoder)
       }
@@ -66,14 +68,13 @@ extension DefaultDataTransferService: DataTransferService {
   }
   
   // MARK: - Private
-  private func decode<T: Decodable>(data: Data, decoder: ResponseDecoder) -> AnyPublisher<T, DataTransferError> {
+  private func decode<T: Decodable>(data: Data, decoder: ResponseDecoder) -> AnyPublisher<T?, DataTransferError> {
     return Result {
       let commonResponseDTO = try decoder.decode(CommonResponseDTO<T>.self, from: data)
-      guard let responseDTO = commonResponseDTO.responseDTO,
-            commonResponseDTO.status else {
-        throw DataTransferError.noContent
+      guard commonResponseDTO.status else {
+        throw DataTransferError.statusError
       }
-      return responseDTO
+      return commonResponseDTO.responseDTO
     }
     .mapError { error in
       self.errorLogger.log(error: error)

@@ -9,11 +9,20 @@ import Foundation
 
 struct APIEndpoints {
   static func getRefreshToken(
-    with refreshTokenRequestDTO: RefreshTokenRequestDTO
+    with requestDTO: RefreshTokenRequestDTO
   ) -> Endpoint<RefreshTokenResponseDTO> {
     .init(
       path: "getRefreshToken",
-      queryParametersEncodable: refreshTokenRequestDTO
+      queryParametersEncodable: requestDTO
+    )
+  }
+  
+  static func revokeRefreshToken(
+    with requestDTO: RefreshTokenRevokeRequestDTO
+  ) -> Endpoint<RefreshTokenRevokeResponseDTO> {
+    .init(
+      path: "revokeToken",
+      queryParametersEncodable: requestDTO
     )
   }
 }
