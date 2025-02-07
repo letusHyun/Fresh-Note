@@ -65,7 +65,7 @@ final class SignOutAlertViewController: UIViewController {
     let btn = UIButton()
     btn.setTitle("로그아웃", for: .normal)
     btn.setTitleColor(UIColor(hex: "#FF3B30"), for: .normal)
-    btn.titleLabel?.font = UIFont.pretendard(size: 18, weight: ._400)
+    btn.titleLabel?.font = UIFont.pretendard(size: 18, weight: ._600)
     btn.backgroundColor = UIColor(hex: "#F9F9F9")
     return btn
   }()

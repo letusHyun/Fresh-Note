@@ -40,8 +40,6 @@ final class CategoryDetailViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    self.navigationController?.interactivePopGestureRecognizer?.delegate = nil
-    
     defer { self.viewModel.viewDidLoad() }
     
     self.bind(to: self.viewModel)
@@ -49,8 +47,12 @@ final class CategoryDetailViewController: BaseViewController {
   
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
-    
+    self.navigationController?.interactivePopGestureRecognizer?.delegate = nil
     self.viewModel.viewWillAppear()
+  }
+  
+  deinit {
+    print("DEBUG: \(Self.self) deinit")
   }
   
   // MARK: - SetupUI

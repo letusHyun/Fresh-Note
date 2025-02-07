@@ -96,6 +96,7 @@ final class DefaultHomeViewModel: HomeViewModel {
           .map { products }
           .eraseToAnyPublisher()
       }
+      .receive(on: DispatchQueue.main)
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }
         self?.error = error

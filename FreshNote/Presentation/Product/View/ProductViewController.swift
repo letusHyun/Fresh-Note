@@ -8,6 +8,7 @@
 import Combine
 import UIKit
 
+import Kingfisher
 import SnapKit
 
 final class ProductViewController: BaseViewController, KeyboardEventable {
@@ -418,14 +419,8 @@ extension ProductViewController {
   
   private func setupEditUI(with product: Product) {
     if let url = product.imageURL {
-      URLSession.shared.dataTaskPublisher(for: url)
-        .map { UIImage(data: $0.data) }
-        .replaceError(with: nil)
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] image in
-          self?.imageView.image = image
-        }
-        .store(in: &self.subscriptions)
+      self.imageView.kf.indicatorType = .activity
+      self.imageView.kf.setImage(with: url)
     }
     self.titleTextField.text = product.name
     self.categoryTextField.text = product.category

@@ -12,6 +12,7 @@
 		1311ED822CE3782D005CF272 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1311ED812CE3782D005CF272 /* FirebaseAuth */; };
 		1311ED842CE3782D005CF272 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1311ED832CE3782D005CF272 /* FirebaseFirestore */; };
 		1311ED882CE3DD97005CF272 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 1311ED872CE3DD97005CF272 /* FirebaseMessaging */; };
+		1323403D2D560C4E0085BAE3 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 1323403C2D560C4E0085BAE3 /* Kingfisher */; };
 		13C730CE2CE67D31009024A0 /* .gitignore in Resources */ = {isa = PBXBuildFile; fileRef = 13C730CD2CE67D31009024A0 /* .gitignore */; };
 		13E049AA2CEE2E9E0026FC68 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 13E049A92CEE2E9E0026FC68 /* SnapKit */; };
 		13E04F6F2CF8C1400026FC68 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 13E04F6E2CF8C1400026FC68 /* FirebaseStorage */; };
@@ -99,6 +100,7 @@
 				1311ED842CE3782D005CF272 /* FirebaseFirestore in Frameworks */,
 				1311ED882CE3DD97005CF272 /* FirebaseMessaging in Frameworks */,
 				13E049AA2CEE2E9E0026FC68 /* SnapKit in Frameworks */,
+				1323403D2D560C4E0085BAE3 /* Kingfisher in Frameworks */,
 				13E04F6F2CF8C1400026FC68 /* FirebaseStorage in Frameworks */,
 				1311ED822CE3782D005CF272 /* FirebaseAuth in Frameworks */,
 				1311ED7D2CE377E8005CF272 /* Lottie in Frameworks */,
@@ -170,6 +172,7 @@
 				1311ED872CE3DD97005CF272 /* FirebaseMessaging */,
 				13E049A92CEE2E9E0026FC68 /* SnapKit */,
 				13E04F6E2CF8C1400026FC68 /* FirebaseStorage */,
+				1323403C2D560C4E0085BAE3 /* Kingfisher */,
 			);
 			productName = FreshNote;
 			productReference = 1383D20E2CC3923800F822A9 /* FreshNote.app */;
@@ -255,6 +258,7 @@
 				1311ED7B2CE377E8005CF272 /* XCRemoteSwiftPackageReference "lottie-spm" */,
 				1311ED7E2CE3782D005CF272 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				13E049A82CEE2E9E0026FC68 /* XCRemoteSwiftPackageReference "SnapKit" */,
+				13233E1F2D560BB30085BAE3 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1383D20F2CC3923800F822A9 /* Products */;
@@ -657,6 +661,14 @@
 				minimumVersion = 11.4.0;
 			};
 		};
+		13233E1F2D560BB30085BAE3 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.2.0;
+			};
+		};
 		13E049A82CEE2E9E0026FC68 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
@@ -692,6 +704,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1311ED7E2CE3782D005CF272 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseMessaging;
+		};
+		1323403C2D560C4E0085BAE3 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 13233E1F2D560BB30085BAE3 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
 		};
 		13E049A92CEE2E9E0026FC68 /* SnapKit */ = {
 			isa = XCSwiftPackageProductDependency;

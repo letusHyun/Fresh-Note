@@ -8,6 +8,7 @@
 import Combine
 import UIKit
 
+import Kingfisher
 import SnapKit
 
 protocol ProductCellDelegate: AnyObject {
@@ -121,15 +122,8 @@ extension ProductCell {
   
   private func configureProductImage(with imageURL: URL?) {
     if let imageURL = imageURL {
-      URLSession.shared.dataTaskPublisher(for: imageURL)
-        .map { UIImage(data: $0.data) }
-        .replaceError(with: nil)
-        .receive(on: DispatchQueue.main)
-        .sink { [weak self] image in
-          self?.thumbnailImageView.image = image
-        }
-        .store(in: &self.subscriptions)
-      
+      self.thumbnailImageView.kf.indicatorType = .activity
+      self.thumbnailImageView.kf.setImage(with: imageURL)
     } else {
       self.thumbnailImageView.image = UIImage(named: "defaultProductImage")?
         .withInsets(UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5))
