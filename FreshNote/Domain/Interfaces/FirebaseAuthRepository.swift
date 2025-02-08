@@ -23,7 +23,9 @@ protocol FirebaseAuthRepository {
   
   func deleteAccount() -> AnyPublisher<Void, any Error>
   
-  // 재로그인(재인증)을 수행합니다.
+  /// 재인증을 수행합니다.
+  ///
+  /// 회원탈퇴 시 재인증을 해야합니다.
   func reauthenticate(
     idToken: String,
     nonce: String,

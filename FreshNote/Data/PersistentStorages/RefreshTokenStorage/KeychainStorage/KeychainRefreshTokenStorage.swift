@@ -58,7 +58,6 @@ final class KeychainRefreshTokenStorage: RefreshTokenStorage {
     }
     .subscribe(on: self.backgroundQueue)
     .eraseToAnyPublisher()
-    
   }
   
   func fetchRefreshToken() -> AnyPublisher<String, any Error> {

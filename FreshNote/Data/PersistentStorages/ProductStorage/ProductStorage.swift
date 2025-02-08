@@ -19,5 +19,5 @@ protocol ProductStorage {
   func fetchPinnedProducts() -> AnyPublisher<[Product], any Error>
   func fetchProduct(category: String) -> AnyPublisher<[Product], any Error>
   func fetchProduct(keyword: String) -> AnyPublisher<[Product], any Error>
-  func deleteAll() -> AnyPublisher<Void, any Error>
+  func deleteAll() -> AnyPublisher<[String], any Error>
 }

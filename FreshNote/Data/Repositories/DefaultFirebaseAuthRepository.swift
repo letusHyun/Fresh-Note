@@ -68,14 +68,13 @@ final class DefaultFirebaseAuthRepository: FirebaseAuthRepository {
       return Fail(error: FirebaseAuthRepositoryError.noCurrentUser)
         .eraseToAnyPublisher()
     }
-    
     return Future { promise in
       user.delete { error in
         if let error = error {
           let authError = error as NSError
           let isRequireRecentLogin =
-          authError.domain == AuthErrorDomain &&
-          authError.code == AuthErrorCode.requiresRecentLogin.rawValue
+          (authError.domain == AuthErrors.domain) &&
+          (authError.code == AuthErrorCode.requiresRecentLogin.rawValue)
           
           if isRequireRecentLogin {
             return promise(.failure(FirebaseAuthRepositoryError.requireRecentLogin))
@@ -89,8 +88,11 @@ final class DefaultFirebaseAuthRepository: FirebaseAuthRepository {
     .eraseToAnyPublisher()
   }
   
-  // FIXME: - 여기서 매개변수를 firebase값을 사용하는게 아니라, domain의 entity를 사용해야 함. 그리고 함수 내부에서 변경해주어야 함 고쳐!!!!!!!!!!!!!!!!!!!!!!!!!1
-  func reauthenticate(idToken: String, nonce: String, fullName:  PersonNameComponents?) -> AnyPublisher<Void, any Error> {
+  func reauthenticate(
+    idToken: String,
+    nonce: String,
+    fullName:  PersonNameComponents?
+  ) -> AnyPublisher<Void, any Error> {
     guard let user = Auth.auth().currentUser else {
       return Fail(error: FirebaseAuthRepositoryError.noCurrentUser)
         .eraseToAnyPublisher()

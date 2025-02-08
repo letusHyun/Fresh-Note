@@ -16,20 +16,6 @@ final class CoreDataDateTimeStorage: DateTimeStorage {
     self.coreDataStorage = coreDataStorage
   }
   
-  func deleteAll() -> AnyPublisher<Void, any Error> {
-    return self.coreDataStorage.performBackgroundTask { context in
-      let request = DateTimeEntity.fetchRequest()
-      
-      do {
-        let entities = try context.fetch(request)
-        entities.forEach { context.delete($0) }
-        try context.save()
-      } catch {
-        throw CoreDataStorageError.deleteError(error)
-      }
-    }
-  }
-  
   func saveDateTime(dateTime: DateTime) -> AnyPublisher<DateTime, any Error> {
     return self.coreDataStorage.performBackgroundTask { context in
       _ = DateTimeEntity(dateTime: dateTime, insertInto: context)

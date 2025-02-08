@@ -38,6 +38,7 @@ protocol OnboardingViewModelInput {
 
 protocol OnboardingViewModelOutput {
   var errorPublisher: AnyPublisher<(any Error)?, Never> { get }
+  var activityIndicatePublisher: AnyPublisher<Bool, Never> { get }
 }
 
 enum OnboardingNextPage {
@@ -47,6 +48,10 @@ enum OnboardingNextPage {
 
 final class DefaultOnboardingViewModel: NSObject {
   // MARK: - Properties
+  private let actions: OnboardingViewModelActions
+  private let signInUseCase: any SignInUseCase
+  private let checkInitialStateUseCase: any CheckInitialStateUseCase
+  
   fileprivate var currentNonce: String?
   
   private var subscriptions = Set<AnyCancellable>()
@@ -64,30 +69,24 @@ final class DefaultOnboardingViewModel: NSObject {
     ]
   }()
   
-  private let actions: OnboardingViewModelActions
-  private let saveUserProfileUseCase: any SaveUserProfileUseCase
-  private let signInUseCase: any SignInUseCase
-  private let checkInitialStateUseCase: any CheckInitialStateUseCase
   private var authController: ASAuthorizationController?
   
   // MARK: - Output
-  var errorPublisher: AnyPublisher<(any Error)?, Never> {
-    self.$error.eraseToAnyPublisher()
-  }
+  var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
+  var activityIndicatePublisher: AnyPublisher<Bool, Never> { self.activityIndicateSubject.eraseToAnyPublisher() }
   
   @Published private var error: Error?
+  private let activityIndicateSubject: PassthroughSubject<Bool, Never> = .init()
   
   // MARK: - LifeCycle
   init(
     actions: OnboardingViewModelActions,
     signInUseCase: any SignInUseCase,
-    checkInitialStateUseCase: any CheckInitialStateUseCase,
-    saveUserProfileUseCase: any SaveUserProfileUseCase
+    checkInitialStateUseCase: any CheckInitialStateUseCase
   ) {
     self.actions = actions
     self.signInUseCase = signInUseCase
     self.checkInitialStateUseCase = checkInitialStateUseCase
-    self.saveUserProfileUseCase = saveUserProfileUseCase
   }
 }
 
@@ -201,6 +200,8 @@ extension DefaultOnboardingViewModel: ASAuthorizationControllerDelegate {
     switch self.makeAppleAuthProvider(from: authorization) {
 
     case let .success(appleAuthProvider):
+      self.activityIndicateSubject.send(true)
+      
       return self.signInUseCase
         .signIn(authProvider: appleAuthProvider)
         .retry(3)
@@ -214,9 +215,11 @@ extension DefaultOnboardingViewModel: ASAuthorizationControllerDelegate {
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
           guard case let .failure(error) = completion else { return }
+          self?.activityIndicateSubject.send(false)
           self?.error = error
         } receiveValue: { [weak self] isSavedDateTime in
           guard let self else { return }
+          self.activityIndicateSubject.send(false)
           isSavedDateTime ? self.actions.showMain() : self.actions.showDateTimeSetting()
         }
         .store(in: &self.subscriptions)

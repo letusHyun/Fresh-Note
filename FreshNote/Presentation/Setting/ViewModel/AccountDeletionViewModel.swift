@@ -16,6 +16,7 @@ struct AccountDeletionViewModelActions {
 
 protocol AccountDeletionViewModelOutput {
   var errorPublisher: AnyPublisher<(any Error)?, Never> { get }
+  var activityIndicatePublisher: AnyPublisher<Bool, Never> { get }
 }
 
 protocol AccountDeletionViewModelInput {
@@ -39,8 +40,11 @@ final class DefaultAccountDeletionViewModel: NSObject, AccountDeletionViewModel 
   private var authPromise: ((Result<Void, any Error>) -> Void)?
   
   // MARK: - Output
-  @Published private var error: (any Error)?
   var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
+  var activityIndicatePublisher: AnyPublisher<Bool, Never> { self.activityIndicateSubject.eraseToAnyPublisher() }
+  
+  @Published private var error: (any Error)?
+  private let activityIndicateSubject: PassthroughSubject<Bool, Never> = .init()
   
   // MARK: - LifeCycle
   init(
@@ -55,36 +59,31 @@ final class DefaultAccountDeletionViewModel: NSObject, AccountDeletionViewModel 
   
   // MARK: - Input
   func didTapDeleteAccountButton(authController: ASAuthorizationController) {
-    self.deleteAccountUseCase
-      .deleteAccount()
-      .receive(on: DispatchQueue.main)
-      .catch { [weak self] error -> AnyPublisher<Void, any Error> in
-        guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
-        
-        // 재로그인이 필요한 경우
-        if error.isRecentLoginRequiringError {
-          return Future<Void, any Error> { promise in
-            authController.delegate = self
-            self.authPromise = promise // trigger 저장
-            authController.performRequests()
-          }
-          .flatMap { _ in
-            // re-delete 수행
-            self.deleteAccountUseCase.redeleteAccount()
-          }
-          .eraseToAnyPublisher()
-        }
-        return Fail(error: error).eraseToAnyPublisher()
-      }
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] completion in
-        guard case .failure(let error) = completion else { return }
-        self?.error = error
-      } receiveValue: { [weak self] _ in
-        // TODO: - onboarding으로 이동해야 한다.
-        self?.actions.deletionPop()
-      }
-      .store(in: &self.subscriptions)
+    return Future<Void, any Error> { promise in
+      authController.delegate = self
+      self.authPromise = promise // trigger 저장
+      // 1. 재인증을 먼저 수행
+      authController.performRequests()
+    }
+    .receive(on: DispatchQueue.main)
+    .flatMap { [weak self] _ -> AnyPublisher<Void, any Error> in
+      guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
+      self.activityIndicateSubject.send(true)
+      
+      // 2. 재인증이 완료되면 계정탈퇴 수행
+      return self.deleteAccountUseCase
+        .execute()
+    }
+    .receive(on: DispatchQueue.main)
+    .sink { [weak self] completion in
+      guard case .failure(let error) = completion else { return }
+      self?.error = error
+    } receiveValue: { [weak self] _ in
+      guard let self else { return }
+      self.activityIndicateSubject.send(false)
+      self.actions.deletionPop()
+    }
+    .store(in: &self.subscriptions)
   }
   
   func makeASAuthorizationController() -> ASAuthorizationController {

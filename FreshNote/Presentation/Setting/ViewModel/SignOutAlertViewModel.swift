@@ -9,7 +9,7 @@ import Combine
 import Foundation
 
 struct SignOutAlertViewModelActions {
-  let pop: () -> Void
+  let dismiss: () -> Void
 }
 
 protocol SignOutAlertViewModel: SignOutAlertViewModelInput, SignOutAlertViewModelOutput { }
@@ -28,6 +28,7 @@ final class DefaultSignOutAlertViewModel: SignOutAlertViewModel {
   private var subscriptions: Set<AnyCancellable> = []
   private let actions: SignOutAlertViewModelActions
   private let deleteCacheUseCase: any DeleteCacheUseCase
+  private let signOutUseCase: any SignOutUseCase
   
   // MARK: - Output
   var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
@@ -36,32 +37,39 @@ final class DefaultSignOutAlertViewModel: SignOutAlertViewModel {
   // MARK: - LifeCycle
   init(
     actions: SignOutAlertViewModelActions,
-    deleteCacheUseCase: any DeleteCacheUseCase
+    deleteCacheUseCase: any DeleteCacheUseCase,
+    signOutUseCase: any SignOutUseCase
   ) {
     self.actions = actions
     self.deleteCacheUseCase = deleteCacheUseCase
+    self.signOutUseCase = signOutUseCase
   }
   
   // MARK: - Input
   func didTapCancelButton() {
-    print("cancelButton tapped!")
-    self.actions.pop()
+    self.actions.dismiss()
   }
   
   func didTapSignOutButton() {
-    self.deleteCacheUseCase
-      .execute()
+    self.signOutUseCase
+      .signOut()
+      .flatMap { [weak self] _ -> AnyPublisher<Void, any Error> in
+        guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
+        
+        return self.signOutUseCase.saveRestorationState()
+      }
+      .flatMap { [weak self] _ -> AnyPublisher<Void, any Error> in
+        guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
+        
+        return self.deleteCacheUseCase.execute()
+      }
+      .receive(on: DispatchQueue.main)
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }
         self?.error = error
       } receiveValue: { [weak self] _ in
-        
-        // 1. firebase signOut
-        // 2. 알림 삭제, coredata 삭제, useDefaults
-        self?.actions.pop()
+        self?.actions.dismiss()
       }
       .store(in: &self.subscriptions)
-
-    
   }
 }

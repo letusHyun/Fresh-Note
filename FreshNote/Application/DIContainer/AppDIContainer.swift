@@ -74,21 +74,18 @@ final class AppDIContainer {
   private func makePushNotiRestorationStateStorage() -> any PushNotiRestorationStateStorage {
     return UserDefaultsPushNotiRestorationStateStorage()
   }
-}
-
-// MARK: - AppCoordinatorDependencies
-extension AppDIContainer: AppCoordinatorDependencies {
-  func makeDateTimeSettingCoordinator(
-    navigationController: UINavigationController
-  ) -> DateTimeSettingCoordinator {
-    return DateTimeSettingCoordinator(
-      dependencies: self.makeOnboardingSceneDIContainer(),
-      navigationController: navigationController
-    )
+  
+  func makeFirstLaunchRepository() -> any FirstLaunchRepository {
+    return DefaultFirstLaunchRepository(firstLaunchStorage: self.makeFirstLaunchStorage())
+  }
+  
+  func makeFirstLaunchStorage() -> any FirstLaunchStorage {
+    return UserDefaultsFirstLaunchStorage()
   }
   
   func makeCheckInitialStateUseCase() -> any CheckInitialStateUseCase {
     return DefaultCheckInitialStateUseCase(
+      firstLaunchRepository: self.makeFirstLaunchRepository(),
       refreshTokenRepository: self.makeRefreshTokenRepository(),
       authRepository: self.makeFirebaseAuthRepository(),
       dateTimeRepository: self.makeDateTimeRepository(),
@@ -100,6 +97,18 @@ extension AppDIContainer: AppCoordinatorDependencies {
     return DefaultFirebaseAuthRepository(
       dateTimeCache: self.makeDateTimeStorage(),
       firebaseNetworkService: self.makeFirebasNetworkService()
+    )
+  }
+}
+
+// MARK: - AppCoordinatorDependencies
+extension AppDIContainer: AppCoordinatorDependencies {
+  func makeDateTimeSettingCoordinator(
+    navigationController: UINavigationController
+  ) -> DateTimeSettingCoordinator {
+    return DateTimeSettingCoordinator(
+      dependencies: self.makeOnboardingSceneDIContainer(),
+      navigationController: navigationController
     )
   }
   

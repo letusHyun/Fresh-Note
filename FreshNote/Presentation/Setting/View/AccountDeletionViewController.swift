@@ -42,6 +42,8 @@ final class AccountDeletionViewController: BaseViewController {
   
   @Published private var isAgreeButtonTapped: Bool = false
   
+  private let activityIndicatorView = ActivityIndicatorView()
+  
   // MARK: - LifeCycle
   init(viewModel: any AccountDeletionViewModel) {
     self.viewModel = viewModel
@@ -55,6 +57,7 @@ final class AccountDeletionViewController: BaseViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     self.bindActions()
+    self.bind()
     self.setupNavigationBar()
   }
   
@@ -70,6 +73,14 @@ final class AccountDeletionViewController: BaseViewController {
   
   // MARK: - SetupUI
   override func setupLayout() {
+    defer {
+      self.view.addSubview(self.activityIndicatorView)
+      self.activityIndicatorView.snp.makeConstraints {
+        $0.top.bottom.equalTo(self.view.safeAreaLayoutGuide)
+        $0.leading.trailing.equalToSuperview()
+      }
+    }
+    
     self.view.addSubview(self.alertLabel)
     self.view.addSubview(self.descriptionView)
     self.view.addSubview(self.agreeButton)
@@ -99,6 +110,17 @@ final class AccountDeletionViewController: BaseViewController {
   }
   
   // MARK: - Bind
+  private func bind() {
+    self.viewModel.activityIndicatePublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] shouldIndicate in
+        shouldIndicate ?
+        self?.activityIndicatorView.startIndicating() :
+        self?.activityIndicatorView.stopIndicating()
+      }
+      .store(in: &self.subscriptions)
+  }
+  
   private func bindActions() {
     self.agreeButton
       .tapPublisher

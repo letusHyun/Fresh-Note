@@ -7,6 +7,7 @@
 
 import Combine
 import UIKit
+import UserNotifications
 
 import Firebase
 
@@ -19,7 +20,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     FirebaseApp.configure()
    
     let center = UNUserNotificationCenter.current()
-
+    center.delegate = self
+    
     let options = UNAuthorizationOptions(arrayLiteral: [.badge, .sound])
     center.requestAuthorization(options: options) { success, error in
       if let error = error {
@@ -28,5 +30,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     return true
+  }
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+extension AppDelegate: UNUserNotificationCenterDelegate {
+  // foreground 상태일 때 알림 뜰 때 호출되는 메소드
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    completionHandler([.badge, .sound])
   }
 }

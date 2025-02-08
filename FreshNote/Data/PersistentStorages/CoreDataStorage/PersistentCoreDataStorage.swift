@@ -30,12 +30,14 @@ final class PersistentCoreDataStorage: CoreDataStorage {
     _ block: @escaping (NSManagedObjectContext) throws -> T
   ) -> AnyPublisher<T, any Error> {
     return Future { [weak self] promise in
-      self?.persistentContainer.performBackgroundTask { context in
+      guard let self else { return promise(.failure(CommonError.referenceError)) }
+      
+      self.persistentContainer.performBackgroundTask { context in
         do {
           let result = try block(context)
-          promise(.success(result))
+          return promise(.success(result))
         } catch {
-          promise(.failure(error))
+          return promise(.failure(error))
         }
       }
     }

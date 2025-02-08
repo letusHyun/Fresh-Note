@@ -13,5 +13,4 @@ protocol DateTimeStorage {
   func updateDateTime(dateTime: DateTime) -> AnyPublisher<DateTime, any Error>
   func fetchDateTime() -> AnyPublisher<DateTime, any Error>
   func deleteDateTime() -> AnyPublisher<Void, any Error>
-  func deleteAll() -> AnyPublisher<Void, any Error>
 }

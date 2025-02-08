@@ -66,7 +66,7 @@ final class DefaultSignInUseCase: SignInUseCase {
     authProvider: AuthenticationProvider
   ) -> AnyPublisher<Void, any Error> {
     switch authProvider {
-    case let .apple(idToken, nonce, fullName, authorizationCode):
+    case let .apple(idToken, nonce, fullName, _):
       return self.firebaseAuthRepository
         .reauthenticate(idToken: idToken, nonce: nonce, fullName: fullName)
     }

@@ -38,14 +38,19 @@ final class AppCoordinator {
   }
   
   func start() {
-    // refresh token 존재 여부 확인
+    // restorationsState 저장
     self.checkInitialStateUseCase
-      .checkRefreshTokenState()
+      .saveInitRestorationState()
+      .flatMap { [weak self] _ -> AnyPublisher<Bool, any Error> in
+        guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
+        // refresh token 존재 여부 확인
+        return self.checkInitialStateUseCase
+          .checkRefreshTokenState()
+      }
       .receive(on: DispatchQueue.main)
       .flatMap { [weak self] hasRefreshToken -> AnyPublisher<Bool, any Error> in
         guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
         
-//        // FIXME: - if !hasResreshToken으로 바꾸어야 함
         if !hasRefreshToken { // refresh token 존재하지 않으면
           self.startOnboardingFlow() // 로그인 화면 이동
           return Empty().eraseToAnyPublisher()

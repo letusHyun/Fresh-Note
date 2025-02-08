@@ -16,6 +16,7 @@ protocol UpdatePushNotificationUseCase {
   func updateNotification(product: Product) -> AnyPublisher<Void, any Error>
   
   /// 전 제품 알림 업데이트(d-day 변경되면 반드시 호출되는 메소드)
+  ///
   /// dateTime이 변경될 때 호출되는 메소드
   /// 이 메소드 내에서 검증 실패 시, 알림을 삭제할 수도 있음
   func updateNotifications() -> AnyPublisher<Void, any Error>

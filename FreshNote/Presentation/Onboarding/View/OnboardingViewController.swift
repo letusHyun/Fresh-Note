@@ -5,9 +5,11 @@
 //  Created by SeokHyun on 10/19/24.
 //
 
-import UIKit
 import AuthenticationServices
 import Combine
+import UIKit
+
+import SnapKit
 
 final class OnboardingViewController: BaseViewController {
   // MARK: - Properties
@@ -52,6 +54,8 @@ final class OnboardingViewController: BaseViewController {
   
   private let viewModel: any OnboardingViewModel
   
+  private let activityIndicatorView = ActivityIndicatorView()
+  
   // MARK: - LifeCycle
   init(viewModel: any OnboardingViewModel) {
     self.viewModel = viewModel
@@ -72,8 +76,19 @@ final class OnboardingViewController: BaseViewController {
     self.bind(to: self.viewModel)
   }
   
+  deinit {
+    print("DEBUG: \(Self.self) deinit")
+  }
+  
   // MARK: - SetupUI
   override func setupLayout() {
+    defer {
+      self.view.addSubview(self.activityIndicatorView)
+      self.activityIndicatorView.snp.makeConstraints {
+        $0.edges.equalToSuperview()
+      }
+    }
+    
     view.addSubview(freshNoteTitle)
     view.addSubview(collectionView)
     view.addSubview(pageControl)
@@ -108,10 +123,19 @@ final class OnboardingViewController: BaseViewController {
   func bind(to viewModel: any OnboardingViewModel) {
     viewModel
       .errorPublisher
+      .receive(on: DispatchQueue.main)
       .sink { [weak self] error in
         guard let error = error else { return }
         
         print("error 발생: \(error)")
+      }
+      .store(in: &self.subscriptions)
+    
+    viewModel
+      .activityIndicatePublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] shouldIndicate in
+        shouldIndicate ? self?.activityIndicatorView.startIndicating() : self?.activityIndicatorView.stopIndicating()
       }
       .store(in: &self.subscriptions)
   }

@@ -24,7 +24,10 @@ final class OnboardingSceneDIContainer {
   
   // MARK: - Domain Layer
   func makeSaveDateTimeUseCase() -> any SaveDateTimeUseCase {
-    return DefaultSaveDateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
+    return DefaultSaveDateTimeUseCase(
+      dateTimeRepository: self.makeDateTimeRepository(),
+      restorationStateRepository: self.makePushNotiRestorationStateRepository()
+    )
   }
   
 //  func makeSignInStateUseCase() -> any firebaseAuthRepository {
@@ -47,13 +50,13 @@ final class OnboardingSceneDIContainer {
   
   func makeCheckInitialStateUseCase() -> any CheckInitialStateUseCase {
     return DefaultCheckInitialStateUseCase(
+      firstLaunchRepository: self.makeFirstLaunchRepository(),
       refreshTokenRepository: self.makeRefreshTokenRepository(),
       authRepository: self.makeFirebaseAuthRepository(),
       dateTimeRepository: self.makeDateTimeRepository(),
       pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
     )
   }
-  
 //  func makeCheckDateTimeStateUseCase() -> any CheckDateTimeStateUseCase {
 //    return DefaultCheckDateTimeStateUseCase(dateTimeRepository: self.makeDateTimeRepository())
 //  }
@@ -67,6 +70,14 @@ final class OnboardingSceneDIContainer {
   }
   
   // MARK: - Data Layer
+  func makeFirstLaunchRepository() -> any FirstLaunchRepository {
+    DefaultFirstLaunchRepository(firstLaunchStorage: self.makeFirstLaunchStorage())
+  }
+  
+  func makeFirstLaunchStorage() -> any FirstLaunchStorage {
+    UserDefaultsFirstLaunchStorage()
+  }
+  
   func makePushNotiRestorationStateStorage() -> any PushNotiRestorationStateStorage {
     UserDefaultsPushNotiRestorationStateStorage()
   }
@@ -137,8 +148,7 @@ final class OnboardingSceneDIContainer {
     return DefaultOnboardingViewModel(
       actions: actions,
       signInUseCase: self.makeSignInUseCase(),
-      checkInitialStateUseCase: self.makeCheckInitialStateUseCase(),
-      saveUserProfileUseCase: self.makeSaveUserProfileUseCase()
+      checkInitialStateUseCase: self.makeCheckInitialStateUseCase()
     )
   }
   

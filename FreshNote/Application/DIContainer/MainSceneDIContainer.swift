@@ -118,7 +118,11 @@ private extension MainSceneDIContainer {
   func makeSignOutAlertViewModel(
     actions: SignOutAlertViewModelActions
   ) -> any SignOutAlertViewModel {
-    return DefaultSignOutAlertViewModel(actions: actions, deleteCacheUseCase: self.makeDeleteCacheUseCase())
+    return DefaultSignOutAlertViewModel(
+      actions: actions,
+      deleteCacheUseCase: self.makeDeleteCacheUseCase(),
+      signOutUseCase: self.makeSignOutUseCase()
+    )
   }
   
   
@@ -131,6 +135,13 @@ private extension MainSceneDIContainer {
   }
   
   // MARK: - Domain Layer
+  func makeSignOutUseCase() -> any SignOutUseCase {
+    DefaultSignOutUseCase(
+      firebaseAuthRepository: self.makeFirebaseAuthRepository(),
+      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
+    )
+  }
+  
   func makeSignInUseCase() -> any SignInUseCase {
     return DefaultSignInUseCase(
       firebaseAuthRepository: self.makeFirebaseAuthRepository(),
@@ -144,6 +155,7 @@ private extension MainSceneDIContainer {
       firebaseDeletionRepository: self.makeFirebaseDeletionRepository(),
       refreshTokenRepository: self.makeRefreshTokenRepository(),
       pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository(),
+      pushNotificationRepository: self.makePushNotificationRepository(),
       deleteCacheRepository: self.makeDeleteCacheRepository()
     )
   }

@@ -35,14 +35,18 @@ final class CoreDataProductStorage {
 
 // MARK: - ProductStorage
 extension CoreDataProductStorage: ProductStorage {
-  func deleteAll() -> AnyPublisher<Void, any Error> {
+  func deleteAll() -> AnyPublisher<[String], any Error> {
     return self.coreDataStorage.performBackgroundTask { context in
       let request = ProductEntity.fetchRequest()
       
       do {
         let entities = try context.fetch(request)
+        let productIDs = entities.map(\.didString)
+        
         entities.forEach { context.delete($0) }
         try context.save()
+        
+        return productIDs
       } catch {
         throw CoreDataStorageError.deleteError(error)
       }
@@ -82,10 +86,7 @@ extension CoreDataProductStorage: ProductStorage {
   }
   
   func saveProducts(with products: [Product]) -> AnyPublisher<[Product], any Error> {
-    return self.coreDataStorage.performBackgroundTask { [weak self] context in
-      let request = ProductEntity.fetchRequest()
-//      try self?.deleteResponse(request: request, in: context)
-      
+    return self.coreDataStorage.performBackgroundTask { context in
       products.forEach { product in
         _ = ProductEntity(product: product, createdAt: Date(), insertInto: context)
       }

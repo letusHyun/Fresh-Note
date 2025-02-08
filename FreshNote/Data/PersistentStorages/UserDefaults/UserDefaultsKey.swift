@@ -9,4 +9,5 @@ import Foundation
 
 enum UserDefaultsKey: String {
   case pushNotiRestorationState
+  case firstLaunchState
 }
