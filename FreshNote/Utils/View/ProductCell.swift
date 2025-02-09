@@ -21,13 +21,12 @@ final class ProductCell: UITableViewCell {
     return String(describing: Self.self)
   }
   
-  private let thumbnailImageView: UIImageView = {
+  private lazy var thumbnailImageView: UIImageView = {
     let iv = UIImageView()
     iv.contentMode = .scaleAspectFill
     iv.layer.cornerRadius = 7
     iv.clipsToBounds = true
     iv.layer.borderWidth = 2
-    iv.layer.borderColor = UIColor(fnColor: .orange1).cgColor
     return iv
   }()
   
@@ -68,6 +67,21 @@ final class ProductCell: UITableViewCell {
   
   weak var delegate: (any ProductCellDelegate)?
   
+  private var expiredColor: CGColor {
+    UIColor(fnColor: .gray1).cgColor
+  }
+  
+  private var freshColor: CGColor {
+    UIColor(fnColor: .orange1).cgColor
+  }
+  
+  private let textContainerView: UIView = {
+    let view = UIView()
+    view.layer.cornerRadius = 3
+    view.layer.borderWidth = 1.5
+    return view
+  }()
+  
   // MARK: - LifeCycle
   override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -96,7 +110,9 @@ extension ProductCell {
   func configure(product: Product) {
     self.configureProductImage(with: product.imageURL)
     self.configurePin(isPinned: product.isPinned)
+    self.configureBorderColor(at: product.expirationDate)
     self.expirationDateLabel.text = self.dateFormatter.string(from: product.expirationDate)
+    print("product의 유통기한 Date: \(product.expirationDate)")
     self.nameLabel.text = product.name
     self.categoryLabel.text = product.category
     self.memoLabel.text = product.memo
@@ -109,8 +125,9 @@ extension ProductCell {
   }
 }
 
-// MARK: - Private Helpers
+
 extension ProductCell {
+  // MARK: - Bind
   private func bind() {
     self.pinImageView.gesture()
       .sink { [weak self] _ in
@@ -118,6 +135,24 @@ extension ProductCell {
         self.delegate?.didTapPin(in: self)
       }
       .store(in: &self.subscriptions)
+  }
+
+  // MARK: - Private Helpers
+  private func configureBorderColor(at expirationDate: Date) {
+    let calendar = Calendar.current
+    let productStartOfDay = calendar.startOfDay(for: expirationDate)
+    let todayStartOfDay = calendar.startOfDay(for: Date())
+    
+    if productStartOfDay < todayStartOfDay { // 유통기한 지남
+      self.setupBorderColor(with: self.expiredColor)
+    } else { // fresh
+      self.setupBorderColor(with: self.freshColor)
+    }
+  }
+  
+  func setupBorderColor(with borderColor: CGColor) {
+    self.textContainerView.layer.borderColor = borderColor
+    self.thumbnailImageView.layer.borderColor = borderColor
   }
   
   private func configureProductImage(with imageURL: URL?) {
@@ -128,14 +163,6 @@ extension ProductCell {
       self.thumbnailImageView.image = UIImage(named: "defaultProductImage")?
         .withInsets(UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5))
     }
-  }
-  
-  private func makeTextContainerView() -> UIView {
-    let view = UIView()
-    view.layer.cornerRadius = 3
-    view.layer.borderWidth = 1.5
-    view.layer.borderColor = UIColor(fnColor: .orange1).cgColor
-    return view
   }
   
   private func setupLabelsStyle(labels: [UILabel]) {
@@ -158,16 +185,15 @@ extension ProductCell {
   
   // MARK: - SetupUI
   private func setupLayout() {
-    let textContainerView = self.makeTextContainerView()
     let tagLabels = self.makeAndSetupStyleTagLabels(texts: ["상품명: ", "유통기한: ", "카테고리: ", "메모: "])
     let mainLabels = [self.nameLabel, self.expirationDateLabel, self.categoryLabel, self.memoLabel].map {
       return $0
     }
     _=(tagLabels + mainLabels)
-      .map { textContainerView.addSubview($0) }
-    textContainerView.addSubview(self.pinImageView)
+      .map { self.textContainerView.addSubview($0) }
+    self.textContainerView.addSubview(self.pinImageView)
     self.contentView.addSubview(self.thumbnailImageView)
-    self.contentView.addSubview(textContainerView)
+    self.contentView.addSubview(self.textContainerView)
     
     let nameTagLabel = tagLabels[0]
     let expirationTagLabel = tagLabels[1]
@@ -224,13 +250,13 @@ extension ProductCell {
     
     // outer
     self.thumbnailImageView.snp.makeConstraints {
-      $0.top.equalTo(textContainerView).offset(5)
-      $0.bottom.equalTo(textContainerView).offset(-5)
+      $0.top.equalTo(self.textContainerView).offset(5)
+      $0.bottom.equalTo(self.textContainerView).offset(-5)
       $0.width.equalTo(80)
       $0.centerY.equalToSuperview()
       $0.leading.equalToSuperview().inset(10)
     }
-    textContainerView.snp.makeConstraints {
+    self.textContainerView.snp.makeConstraints {
       $0.leading.equalTo(self.thumbnailImageView.snp.trailing).offset(10)
       $0.top.equalToSuperview().inset(5)
       $0.trailing.equalToSuperview().inset(10)
