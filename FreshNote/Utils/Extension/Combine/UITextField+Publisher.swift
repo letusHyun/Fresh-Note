@@ -9,7 +9,7 @@ import Combine
 import UIKit
 
 extension UITextField {
-  var textPublisher: AnyPublisher<String, Never> {
+  var textEditingChangedPublisher: AnyPublisher<String, Never> {
     self.publisher(for: .editingChanged)
       .receive(on: DispatchQueue.main)
       .compactMap { $0 as? UITextField }
@@ -18,7 +18,7 @@ extension UITextField {
   }
   
   var textDebouncePublisher: AnyPublisher<String, Never> {
-    self.textPublisher
+    self.textEditingChangedPublisher
       .debounce(for: 0.1, scheduler: DispatchQueue.main)
       .removeDuplicates()
       .eraseToAnyPublisher()

@@ -20,10 +20,10 @@ extension UITextField {
     )
   }
   
-  var textDidChangedPublisher: AnyPublisher<String, Never> {
-    NotificationCenter.default.publisher(for: UITextField.textDidChangeNotification, object: self)
-      .compactMap { ($0.object as? UITextField)?.text }
-      .receive(on: DispatchQueue.main)
-      .eraseToAnyPublisher()
-  }
+//  var textDidChangedPublisher: AnyPublisher<String, Never> {
+//    NotificationCenter.default.publisher(for: UITextField.textDidChangeNotification, object: self)
+//      .compactMap { ($0.object as? UITextField)?.text }
+//      .receive(on: DispatchQueue.main)
+//      .eraseToAnyPublisher()
+//  }
 }

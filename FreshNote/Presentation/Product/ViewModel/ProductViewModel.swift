@@ -139,14 +139,17 @@ final class DefaultProductViewModel: ProductViewModel {
     case .edit(let productID):
       self.fetchProductUseCase
         .fetchProduct(productID: productID)
+        .retry(3)
         .receive(on: DispatchQueue.main)
         .sink { [weak self] completion in
           guard case .failure(let error) = completion else { return }
           self?.error = error
         } receiveValue: { [weak self] product in
-          self?.fetchedProduct = product
-          self?.isDefaultImage = product.imageURL == nil
-          self?.setupProductSubejct.send(product)
+          guard let self else { return }
+          self.fetchedProduct = product
+          self.isDefaultImage = product.imageURL == nil
+          self.setupProductSubejct.send(product)
+          self.expirationSubject.send(.completeDate)
         }
         .store(in: &self.subscriptions)
     }

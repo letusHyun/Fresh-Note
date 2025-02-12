@@ -20,6 +20,7 @@ protocol CategoryDetailViewModelInput {
   func didSelectRow(at indexPath: IndexPath)
   func viewWillAppear()
   func didTapPin(at indexPath: IndexPath)
+  func isDataSourceEmpty() -> Bool
 }
 
 protocol CategoryDetailViewModelOutput {
@@ -66,6 +67,10 @@ final class DefaultCategoryDetailViewModel: CategoryDetailViewModel {
   
   
   // MARK: - Input
+  func isDataSourceEmpty() -> Bool {
+    self.dataSource.isEmpty
+  }
+  
   func viewDidLoad() {
     self.configureTitleSubject.send(self.category.rawValue)
   }

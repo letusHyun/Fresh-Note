@@ -28,7 +28,7 @@ final class CalendarViewController: BaseViewController {
     
     let selection = UICalendarSelectionMultiDate(delegate: self)
     calendarView.selectionBehavior = selection
-    calendarView.tintColor = UIColor(fnColor: .orange2)
+    calendarView.tintColor = UIColor(fnColor: .green2)
     return calendarView
   }()
   
@@ -233,7 +233,7 @@ extension CalendarViewController: UICalendarViewDelegate {
     guard let targetDate = Calendar.current.date(from: dateComponents) else { return nil }
     
     return self.viewModel.hasEvent(decorationFor: targetDate)
-    ? .default(color: UIColor.init(fnColor: .orange2))
+    ? .default(color: UIColor.init(fnColor: .green2))
     : nil
   }
 }

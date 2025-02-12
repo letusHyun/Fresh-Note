@@ -11,6 +11,7 @@ import UIKit
 import SnapKit
 
 final class CalendarProductCell: UICollectionViewCell {
+  // MARK: - Properties
   static var id: String {
     String(describing: Self.self)
   }
@@ -62,6 +63,7 @@ final class CalendarProductCell: UICollectionViewCell {
   
   private let formatterManager: DateFormatManager = DateFormatManager()
   
+  // MARK: - LifeCycle
   override init(frame: CGRect) {
     super.init(frame: frame)
     self.setupLayouts()
@@ -71,6 +73,7 @@ final class CalendarProductCell: UICollectionViewCell {
     fatalError("init(coder:) has not been implemented")
   }
   
+  // MARK: - SetupUI
   private func setupLayouts() {
     self.contentView.addSubview(self.titleTagLabel)
     self.contentView.addSubview(self.titleLabel)
@@ -116,6 +119,7 @@ final class CalendarProductCell: UICollectionViewCell {
     }
   }
   
+  // MARK: - Configure
   func configure(with product: Product) {
     self.titleLabel.text = product.name
     self.categoryLabel.text = product.category

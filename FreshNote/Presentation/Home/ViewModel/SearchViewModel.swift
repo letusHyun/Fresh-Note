@@ -21,6 +21,7 @@ protocol SearchHistoryViewModelInput {
   func didTapKeywordDeleteButton(at indexPath: IndexPath)
   func historyNumberOfRowsInSection() -> Int
   func historyDidSelectRow(at indexPath: IndexPath)
+  func isDataSourceEmpty() -> Bool
 }
 
 protocol SearchHistoryViewModelOutput {
@@ -129,6 +130,10 @@ final class DefaultSearchViewModel: SearchViewModel {
   }
   
   // MARK: - Input
+  func isDataSourceEmpty() -> Bool {
+    self.productQueries.isEmpty
+  }
+  
   func viewDidLoad() {
     self.recentProductQueriesUseCase.fetchQueries()
       .receive(on: DispatchQueue.main)

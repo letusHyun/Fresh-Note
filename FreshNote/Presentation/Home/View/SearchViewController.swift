@@ -14,7 +14,7 @@ final class SearchViewController: BaseViewController {
   // MARK: - Properties
   private lazy var textField: PaddingTextField = {
     let tf = PaddingTextField()
-    tf.layer.borderColor = UIColor(fnColor: .orange2).cgColor
+    tf.layer.borderColor = UIColor(fnColor: .green2).cgColor
     tf.layer.borderWidth = 1.5
     tf.layer.cornerRadius = 3
     let placeholderAttr = NSAttributedString(
@@ -160,7 +160,7 @@ final class SearchViewController: BaseViewController {
       .store(in: &self.subscriptions)
   }
   
-  // MARK: - Private
+  // MARK: - Private  
   private func appearHistoryView() {
     self.searchHistoryView.isHidden = false
     self.resultView.isHidden = true

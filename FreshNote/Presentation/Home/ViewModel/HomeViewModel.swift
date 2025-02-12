@@ -25,6 +25,7 @@ protocol HomeViewModelInput {
   func didTapAddProductButton()
   func didSelectRow(at indexPath: IndexPath)
   func didTapPin(at indexPath: IndexPath)
+  func isDataSourceEmpty() -> Bool
 }
 
 protocol HomeViewModelOutput {
@@ -42,7 +43,6 @@ final class DefaultHomeViewModel: HomeViewModel {
   
   // MARK: - Properties
   private let actions: HomeViewModelActions
-  private var items = [Product]()
   private var dataSource: [Product] = []
   private var subscriptions = Set<AnyCancellable>()
   
@@ -85,6 +85,10 @@ final class DefaultHomeViewModel: HomeViewModel {
   }
   
   // MARK: - Input
+  func isDataSourceEmpty() -> Bool {
+    self.dataSource.isEmpty
+  }
+  
   func viewDidLoad() {
     self.fetchProductUseCase
       .fetchProducts()

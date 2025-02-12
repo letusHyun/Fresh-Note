@@ -71,9 +71,10 @@ final class SettingCoordinator: BaseCoordinator {
   
   private func presentSignOutAlert() {
     let actions = SignOutAlertViewModelActions(
-      dismiss: { [weak self] in
-        print("로그아웃 알람 화면 pop!")
+      dismissSignOutAlert: { [weak self] in
         self?.dismissSignOutAlert()
+      }, dismiss: {[weak self] in
+        self?.dismiss()
       }
     )
     let alertViewController = self.dependencies.makeSignOutAlertViewController(actions: actions)
@@ -96,6 +97,12 @@ final class SettingCoordinator: BaseCoordinator {
     childCoordinator.accountDeletionFinishDelegate = self
     self.childCoordinators[childCoordinator.identifier] = childCoordinator
     childCoordinator.start()
+  }
+  
+  private func dismiss() {
+    if self.navigationController?.presentedViewController != nil {
+      self.navigationController?.dismiss(animated: true)
+    }
   }
 }
 

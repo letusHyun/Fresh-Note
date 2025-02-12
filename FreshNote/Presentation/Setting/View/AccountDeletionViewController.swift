@@ -180,8 +180,8 @@ final class AccountDeletionViewController: BaseViewController {
     let AgreeButtonColor: UIColor
     if isAgreeButtonTapped {
       image = UIImage(systemName: ImageName.checkmarkTap.rawValue)?
-        .withTintColor(UIColor(fnColor: .orange2), renderingMode: .alwaysOriginal)
-      AgreeButtonColor = UIColor(fnColor: .orange2).withAlphaComponent(0.2)
+        .withTintColor(UIColor(fnColor: .green2), renderingMode: .alwaysOriginal)
+      AgreeButtonColor = UIColor(fnColor: .green2).withAlphaComponent(0.2)
       
       
     } else {
@@ -197,7 +197,7 @@ final class AccountDeletionViewController: BaseViewController {
   private func configureDeleteAccountButtonState(_ isAgreeButtonTapped: Bool) {
     if isAgreeButtonTapped {
       self.deleteAccountButton.isEnabled = true
-      self.deleteAccountButton.configuration?.baseBackgroundColor = UIColor(fnColor: .orange2)
+      self.deleteAccountButton.configuration?.baseBackgroundColor = UIColor(fnColor: .green2)
       self.deleteAccountButton.configuration?.baseForegroundColor = UIColor(fnColor: .realBack)
     } else {
       self.deleteAccountButton.isEnabled = false

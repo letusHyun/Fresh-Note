@@ -30,13 +30,35 @@ final class MainCoordinator: BaseCoordinator {
     // tabBarController는 SceneDelegate에서 생성해서 여기로 주입해주어야 할듯.
     // 이유는 window객체가 SceneDelegate에 있기 때문
     self.tabBarController = tabBarController
-    
     super.init(navigationController: nil)
+    
+    self.configureTabBarAppearance()
   }
   
   // MARK: - Helpers
   func start() {
-    // TODO: - 나머지 탭들도 구성해야합니다.
+    self.configureTabBarControllerChildren()
+  }
+  
+  // MARK: - Private
+  private func configureTabBarAppearance() {
+    let appearance = UITabBarAppearance()
+    appearance.configureWithOpaqueBackground()
+    appearance.backgroundColor = UIColor(fnColor: .realBack)
+    appearance.shadowColor = nil
+    self.tabBarController?.tabBar.standardAppearance = appearance
+    self.tabBarController?.tabBar.scrollEdgeAppearance = appearance 
+    
+    if let tabBarLayer = self.tabBarController?.tabBar.layer {
+      tabBarLayer.shadowColor = UIColor.gray.withAlphaComponent(0.3).cgColor
+      
+      tabBarLayer.shadowOffset = CGSize(width: 0, height: 0)
+      tabBarLayer.shadowOpacity = 1.0
+      tabBarLayer.shadowRadius = 12 / 2.0
+    }
+  }
+  
+  private func configureTabBarControllerChildren() {
     // tabBarController에 들어갈 window에서 알 필요가 없기 때문에 내비컨들은 여기서 만들어주는것이 적합함
     let homeNavigationController = self.makeHomeNavigationController(
       title: "홈",
@@ -110,7 +132,6 @@ final class MainCoordinator: BaseCoordinator {
     settingCoordinator.start()
   }
   
-  // MARK: - Private
   private func makeHomeNavigationController(
     title: String,
     tabBarImage: UIImage?,

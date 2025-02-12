@@ -8,10 +8,12 @@
 import Combine
 import UIKit
 
+import SnapKit
+
 final class DateTimeSettingViewController: BaseViewController {
   struct Constants {
     static var dateSize: CGFloat { 50 }
-    static var completionButtonBottomConstraint: CGFloat { 0 }
+    static var completionButtonBottomConstraint: CGFloat { 50 }
   }
   
   // MARK: - Properties
@@ -68,7 +70,7 @@ final class DateTimeSettingViewController: BaseViewController {
   }()
   
   private var completionButtonDisabledColor: UIColor {
-    UIColor(fnColor: .orange2).withAlphaComponent(0.3)
+    UIColor(fnColor: .green2).withAlphaComponent(0.3)
   }
   
   private var subscriptions: Set<AnyCancellable> = []
@@ -78,6 +80,19 @@ final class DateTimeSettingViewController: BaseViewController {
   private var completionButtonBottomConstraint: NSLayoutConstraint?
   
   private let mode: DateTimeSettingViewModelMode
+  
+  private let endDateInformationLabel: UILabel = {
+    let lb = UILabel()
+    lb.font = UIFont.pretendard(size: 14, weight: ._400)
+    lb.text = """
+    * 유통기한 마감일에 알림이 울리길 원하신다면,
+    D-0으로 등록해주세요.
+    """
+    lb.textColor = UIColor(fnColor: .gray1)
+    lb.numberOfLines = .zero
+    lb.textAlignment = .center
+    return lb
+  }()
   
   // MARK: - LifeCycle
   init(viewModel: any DateTimeSettingViewModel, mode: DateTimeSettingViewModelMode) {
@@ -110,7 +125,6 @@ final class DateTimeSettingViewController: BaseViewController {
   override func viewWillDisappear(_ animated: Bool) {
     super.viewWillDisappear(animated)
     self.tabBarController?.tabBar.isHidden = false
-    self.viewModel.viewWillDisappear()
   }
   
   deinit {
@@ -119,11 +133,12 @@ final class DateTimeSettingViewController: BaseViewController {
   
   // MARK: - SetupUI
   override func setupLayout() {
-    view.addSubview(self.descriptionLabel)
-    view.addSubview(self.dateStackView)
+    self.view.addSubview(self.descriptionLabel)
+    self.view.addSubview(self.dateStackView)
     _=[self.dMinusLabel, self.dateTextField].map { self.dateStackView.addArrangedSubview($0) }
-    view.addSubview(self.datePicker)
-    view.addSubview(self.completionButton)
+    self.view.addSubview(self.datePicker)
+    self.view.addSubview(self.completionButton)
+    self.view.addSubview(self.endDateInformationLabel)
     
     self.descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
     self.dateStackView.translatesAutoresizingMaskIntoConstraints = false
@@ -132,18 +147,18 @@ final class DateTimeSettingViewController: BaseViewController {
     
     let safeArea = view.safeAreaLayoutGuide
     NSLayoutConstraint.activate([
-      self.descriptionLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 200),
-      self.descriptionLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      self.descriptionLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 150),
+      self.descriptionLabel.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
     ] + [
       self.dateStackView.topAnchor.constraint(equalTo: self.descriptionLabel.bottomAnchor, constant: 40),
-      self.dateStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+      self.dateStackView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
     ] + [
       self.datePicker.centerXAnchor.constraint(equalTo: self.dateStackView.centerXAnchor),
       self.datePicker.topAnchor.constraint(equalTo: self.dateStackView.bottomAnchor, constant: 40)
     ] + [
       self.completionButton.heightAnchor.constraint(equalToConstant: 54),
-      self.completionButton.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      self.completionButton.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+      self.completionButton.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
+      self.completionButton.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
     ])
     self.completionButtonBottomConstraint = self.completionButton.bottomAnchor.constraint(
       equalTo: safeArea.bottomAnchor,
@@ -153,6 +168,11 @@ final class DateTimeSettingViewController: BaseViewController {
     
     self.dMinusLabel.widthAnchor.constraint(equalTo: self.dateStackView.widthAnchor, multiplier: 3/5).isActive = true
     self.dateTextField.widthAnchor.constraint(equalTo: self.dateStackView.widthAnchor, multiplier: 2/5).isActive = true
+    
+    self.endDateInformationLabel.snp.makeConstraints {
+      $0.top.equalTo(self.datePicker.snp.bottom).offset(30)
+      $0.centerX.equalToSuperview()
+    }
   }
   
   // MARK: - Bind
@@ -184,7 +204,7 @@ final class DateTimeSettingViewController: BaseViewController {
       .store(in: &self.subscriptions)
     
     self.dateTextField
-      .textPublisher
+      .textEditingChangedPublisher
       .map { !$0.isEmpty }
       .sink { [weak self] isEnabled in
         self?.configureCompletionButton(isEnabled: isEnabled)
@@ -232,7 +252,7 @@ final class DateTimeSettingViewController: BaseViewController {
   private func configureCompletionButton(isEnabled: Bool) {
     self.completionButton.isEnabled = isEnabled
     self.completionButton.backgroundColor = isEnabled ?
-    UIColor(fnColor: .orange2) :
+    UIColor(fnColor: .green2) :
     self.completionButtonDisabledColor
   }
   

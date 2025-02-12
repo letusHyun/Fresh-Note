@@ -13,10 +13,10 @@ enum FNColor: String {
   case red = "#FF2828"
   /// #FFFFFF
   case realBack = "#FFFFFF"
-  /// #FFA03A
-  case orange1 = "#FFA03A"
-  /// #FF8A41
-  case orange2 = "#FF8A41"
+  /// #93CA3B
+  case green1 = "#93CA3B"
+  /// #78BE3E
+  case green2 = "#78BE3E"
   /// #E7E7E7
   case gray0 = "#E7E7E7"
   /// #929090

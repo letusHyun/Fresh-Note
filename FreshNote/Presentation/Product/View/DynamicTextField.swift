@@ -95,7 +95,7 @@ final class DynamicTextField: UITextField {
   }
   
   private func bind() {
-    self.textDidChangedPublisher
+    self.textEditingChangedPublisher
       .compactMap { [weak self] text in
         guard let self = self else { return nil }
         

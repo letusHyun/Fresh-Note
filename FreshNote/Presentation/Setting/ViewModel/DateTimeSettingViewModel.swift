@@ -18,7 +18,6 @@ struct DateTimeSettingViewModelActions {
 protocol DateTimeSettingViewModelInput {
   func viewDidLoad()
   func didTapCompletionButton(dateInt: Int, hourMinuteDate: Date)
-  func viewWillDisappear()
 }
 
 protocol DateTimeSettingViewModelOutput {
@@ -152,12 +151,6 @@ final class DefaultDateTimeSettingViewModel: DateTimeSettingViewModel {
           self?.actions.showHome()
         }
         .store(in: &subscriptions)
-    }
-  }
-  
-  func viewWillDisappear() {
-    if case .edit = self.mode {
-      self.actions.pop()
     }
   }
 }

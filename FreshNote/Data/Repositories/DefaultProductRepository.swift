@@ -16,7 +16,8 @@ final class DefaultProductRepository: ProductRepository {
   init(
     firebaseNetworkService: any FirebaseNetworkService,
     productStorage: any ProductStorage,
-    backgroundQueue: DispatchQueue = DispatchQueue.global(qos: .userInitiated)
+//    backgroundQueue: DispatchQueue = DispatchQueue.global(qos: .userInitiated)
+    backgroundQueue: DispatchQueue = DispatchQueue(label: "시리얼큐")
   ) {
     self.firebaseNetworkService = firebaseNetworkService
     self.productStorage = productStorage
@@ -194,15 +195,11 @@ final class DefaultProductRepository: ProductRepository {
   func fetchProduct(productID: DocumentID) -> AnyPublisher<Product, any Error> {
     return self.productStorage
       .fetchProduct(didString: productID.didString)
-      .receive(on: self.backgroundQueue)
-      .eraseToAnyPublisher()
   }
   
   func fetchPinnedProducts() -> AnyPublisher<[Product], any Error> {
     return self.productStorage
       .fetchPinnedProducts()
-      .receive(on: self.backgroundQueue)
-      .eraseToAnyPublisher()
   }
   
   func fetchProduct(category: String) -> AnyPublisher<[Product], any Error> {

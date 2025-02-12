@@ -19,6 +19,7 @@ protocol PinViewModelInput {
   func cellForRow(at indexPath: IndexPath) -> Product
   func didSelectRow(at indexPath: IndexPath)
   func didTapPin(at indexPath: IndexPath)
+  func isDataSourceEmpty() -> Bool
 }
 
 protocol PinViewModelOutput {
@@ -104,6 +105,10 @@ final class DefaultPinViewModel: PinViewModel {
         self?.deleteRowsSubject.send(indexPath)
       }
       .store(in: &self.subscriptions)
+  }
+  
+  func isDataSourceEmpty() -> Bool {
+    self.dataSource.isEmpty
   }
   
   // MARK: - Private

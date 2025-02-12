@@ -27,6 +27,18 @@ final class CategoryDetailViewController: BaseViewController {
   
   private let activityIndicatorView = ActivityIndicatorView()
   
+  
+  private lazy var emptyIndicatorView: EmptyIndicatorView = {
+    let categoryName: String = self.navigationItem.title ?? ""
+    let title: String = "\(categoryName)에 제품이 없어요."
+    let emptyIndicatorView = EmptyIndicatorView(
+      title: title,
+      description: "제품 등록 시 카테고리를 설정해보세요.",
+      imageName: .system("list.dash")
+    )
+    return emptyIndicatorView
+  }()
+  
   // MARK: - LifeCycle
   init(viewModel: any CategoryDetailViewModel) {
     self.viewModel = viewModel
@@ -77,15 +89,15 @@ final class CategoryDetailViewController: BaseViewController {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
         self?.activityIndicatorView.stopIndicating()
-        
         self?.tableView.reloadData()
+        self?.updateEmptyViewVisibility()
       }
       .store(in: &self.subscriptions)
     
     viewModel.errorPublisher
       .receive(on: DispatchQueue.main)
+      .compactMap { $0 }
       .sink { [weak self] error in
-        guard let error = error else { return }
         self?.activityIndicatorView.stopIndicating()
         // TODO: - Error handling
       }
@@ -102,14 +114,18 @@ final class CategoryDetailViewController: BaseViewController {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] indexPath, updatedPinState in
         self?.activityIndicatorView.stopIndicating()
-        guard
-          let self,
-          let cell = self.tableView.cellForRow(at: indexPath) as? ProductCell
-        else { return }
+        guard let cell = self?.tableView.cellForRow(at: indexPath) as? ProductCell else { return }
         
         cell.configurePin(isPinned: updatedPinState)
       }
       .store(in: &self.subscriptions)
+  }
+  
+  private func updateEmptyViewVisibility() {
+    self.emptyIndicatorView.updateVisibility(
+      shouldHidden: !self.viewModel.isDataSourceEmpty(),
+      from: self.tableView
+    )
   }
 }
 

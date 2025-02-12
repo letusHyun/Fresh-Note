@@ -27,17 +27,19 @@ final class PersistentCoreDataStorage: CoreDataStorage {
   private init() { }
   
   func performBackgroundTask<T>(
-    _ block: @escaping (NSManagedObjectContext) throws -> T
+    _ getResult: @escaping (NSManagedObjectContext) throws -> T
   ) -> AnyPublisher<T, any Error> {
-    return Future { [weak self] promise in
-      guard let self else { return promise(.failure(CommonError.referenceError)) }
-      
-      self.persistentContainer.performBackgroundTask { context in
-        do {
-          let result = try block(context)
-          return promise(.success(result))
-        } catch {
-          return promise(.failure(error))
+    Deferred {
+      return Future { [weak self] promise in
+        guard let self else { return promise(.failure(CommonError.referenceError)) }
+        
+        self.persistentContainer.performBackgroundTask { context in
+          do {
+            let result = try getResult(context)
+            return promise(.success(result))
+          } catch {
+            return promise(.failure(error))
+          }
         }
       }
     }

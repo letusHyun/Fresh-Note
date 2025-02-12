@@ -8,16 +8,19 @@
 import Combine
 import UIKit
 
+import SnapKit
+
 final class PlaceholderTextView: UITextView {
   // MARK: - Constants
-  var leftPadding: CGFloat { 25 }
-  
-  var topPadding: CGFloat { 8 }
+//  var leftPadding: CGFloat { 25 }
+//  
+//  var topPadding: CGFloat { 8 }
   
   // MARK: - Properties
-  private let placeholderLabel: UILabel = {
+  private lazy var placeholderLabel: UILabel = {
     let label = UILabel()
     label.textColor = UIColor(fnColor: .gray1)
+    label.font = self.font
     return label
   }()
   
@@ -30,7 +33,7 @@ final class PlaceholderTextView: UITextView {
   
   private var subscriptions = Set<AnyCancellable>()
   
-  /// ux를 위해 외부에서 delegate를 사용하도록 정의하고 내부에서는 externalDelegate로 바꿔서 사용
+  /// 외부에서 delegate를 사용하도록 정의하고 내부에서는 externalDelegate로 바꿔서 사용
   /// PlaceholderTextView에서 UITextViewDelegate 메소드를 구현할 때, externalDelegate를 호출시켜주어야 합니다.
   private weak var externalDelegate: (any UITextViewDelegate)?
   
@@ -51,11 +54,12 @@ final class PlaceholderTextView: UITextView {
   }
   
   // MARK: - LifeCycle
-  convenience init() {
+  /// 해당 init을 통해 inset을 지정해야합니다.
+  convenience init(textContainerInset: UIEdgeInsets) {
     self.init(frame: .zero, textContainer: nil)
-    self.setupLayout()
+    self.setupLayout(with: textContainerInset)
     self.addObserver()
-    self.setupStyle()
+    self.setupStyle(with: textContainerInset)
     self.bind()
     self.setupToolbar()
   }
@@ -91,28 +95,22 @@ final class PlaceholderTextView: UITextView {
       .store(in: &self.subscriptions)
   }
   
-  private func setupLayout() {
-    addSubview(self.placeholderLabel)
+  private func setupLayout(with textContainerInset: UIEdgeInsets) {
+    self.addSubview(self.placeholderLabel)
     
-    self.placeholderLabel.translatesAutoresizingMaskIntoConstraints = false
-    
-    NSLayoutConstraint.activate([
-      self.placeholderLabel.topAnchor.constraint(equalTo: self.topAnchor, constant: self.topPadding),
-      self.placeholderLabel.leadingAnchor.constraint(equalTo: self.leadingAnchor, constant: self.leftPadding)
-    ])
+    self.placeholderLabel.snp.makeConstraints {
+      $0.top.equalToSuperview().inset(textContainerInset.top)
+      $0.leading.equalToSuperview().inset(textContainerInset.left + 4)
+    }
   }
   
   func updatePlaceholderVisibility() {
     self.placeholderLabel.isHidden = !text.isEmpty
   }
   
-  private func setupStyle() {
-    self.textContainerInset = UIEdgeInsets(
-      top: self.topPadding,
-      left: self.leftPadding - 3,
-      bottom: .zero,
-      right: self.leftPadding
-    )
+  private func setupStyle(with textContainerInset: UIEdgeInsets) {
+    self.textContainerInset = textContainerInset
+    self.textColor = .black
   }
 }
 

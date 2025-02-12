@@ -87,7 +87,7 @@ extension RecentSearchKeywordCell {
   }
   
   private func setupStyle() {
-    
+    self.contentView.backgroundColor = UIColor(hex: "#93CA3B", alpha: 0.2)
   }
 }
 

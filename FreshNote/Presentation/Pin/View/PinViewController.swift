@@ -27,6 +27,12 @@ final class PinViewController: BaseViewController {
   
   private var subscriptions: Set<AnyCancellable> = []
   
+  private let pinEmptyView = EmptyIndicatorView(
+    title: "고정된 상품이 없어요.",
+    description: "내가 등록한 중요한 상품을 고정해주세요.",
+    imageName: .system("pin")
+  )
+  
   // MARK: - LifeCycle
   init(viewModel: any PinViewModel) {
     self.viewModel = viewModel
@@ -91,6 +97,7 @@ final class PinViewController: BaseViewController {
       .sink { [weak self] _ in
         self?.activityIndicatorView.stopIndicating()
         self?.tableView.reloadData()
+        self?.updateEmptyViewVisibility()
       }
       .store(in: &self.subscriptions)
     
@@ -100,12 +107,20 @@ final class PinViewController: BaseViewController {
       .sink { [weak self]indexPath in
         self?.activityIndicatorView.stopIndicating()
         self?.tableView.deleteRows(at: [indexPath], with: .fade)
+        self?.updateEmptyViewVisibility()
       }
       .store(in: &self.subscriptions)
   }
   
   private func setupNavigationBar() {
     self.navigationItem.title = "핀"
+  }
+  
+  private func updateEmptyViewVisibility() {
+    self.pinEmptyView.updateVisibility(
+      shouldHidden: !self.viewModel.isDataSourceEmpty(),
+      from: self.tableView
+    )
   }
 }
 

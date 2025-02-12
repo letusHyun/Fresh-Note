@@ -40,7 +40,7 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
     iv.clipsToBounds = true
     iv.layer.cornerRadius = 8
     iv.layer.borderWidth = 2
-    iv.layer.borderColor = UIColor(fnColor: .orange1).cgColor
+    iv.layer.borderColor = UIColor(fnColor: .green1).cgColor
     iv.image = UIImage(systemName: "camera")?.withInsets(.init(top: 28, left: 28, bottom: 28, right: 28))
     iv.isUserInteractionEnabled = true
     return iv
@@ -108,13 +108,12 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   private var isCategoryToggleImageViewRotated: Bool = false
   
   private let descriptionTextView: PlaceholderTextView = {
-    let tv = PlaceholderTextView()
-    tv.textColor = UIColor(fnColor: .gray1)
+    let tv = PlaceholderTextView(textContainerInset: .init(top: 20, left: 20, bottom: 20, right: 20))
     tv.font = UIFont.pretendard(size: 16, weight: ._500)
     tv.placeholder = "메모를 입력하세요."
     tv.layer.cornerRadius = 20
     tv.layer.borderWidth = 2
-    tv.layer.borderColor = UIColor(fnColor: .orange2).cgColor
+    tv.layer.borderColor = UIColor(fnColor: .green2).cgColor
     return tv
   }()
   
@@ -129,6 +128,11 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   var transformView: UIView { self.view }
   
   private var expirationPreviousText = ""
+  
+  /// title의 키보드 input && programmatic value 주입에 대한 publisher입니다.
+  private let titleTextFieldTextSubject: CurrentValueSubject<String, Never> = .init("")
+  /// category의 키보드 input && programmatic value 주입에 대한 publisher입니다.
+  private let categoryTextFieldTextSubject: CurrentValueSubject<String, Never> = .init("")
   
   // MARK: - LifeCycle
   init(viewModel: any ProductViewModel) {
@@ -261,6 +265,7 @@ private extension ProductViewController {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
         self?.categoryTextField.text = $0
+        self?.categoryTextFieldTextSubject.send($0)
       }
       .store(in: &self.subscriptions)
     
@@ -280,17 +285,18 @@ private extension ProductViewController {
     self.viewModel.expirationPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] state in
+        guard let self else { return }
         switch state {
         case .inCompleteDate(let text):
-          self?.expirationWarningLabel.text = text
-          self?.expirationWarningLabel.isHidden = false
+          self.expirationWarningLabel.text = text
+          self.expirationWarningLabel.isHidden = false
         case .invalidDate(let text):
-          self?.expirationWarningLabel.text = text
-          self?.expirationWarningLabel.isHidden = false
+          self.expirationWarningLabel.text = text
+          self.expirationWarningLabel.isHidden = false
         case .completeDate:
-          self?.expirationWarningLabel.isHidden = true
+          self.expirationWarningLabel.isHidden = true
         case .writing:
-          self?.expirationWarningLabel.isHidden = true
+          self.expirationWarningLabel.isHidden = true
         }
       }
       .store(in: &self.subscriptions)
@@ -313,7 +319,7 @@ private extension ProductViewController {
   // MARK: - Actions
   private func bindAction() {
     // 유통기한 hidden && 유통기한 text가 존재하는 경우(유통기한 text는 didchange를 통해)
-    let expirationPublisher = self.viewModel.expirationPublisher
+    let expirationCompletionPublisher = self.viewModel.expirationPublisher
       .map { state in
         guard case .completeDate = state else { return false }
         return true
@@ -321,15 +327,13 @@ private extension ProductViewController {
       .eraseToAnyPublisher()
     
     Publishers.CombineLatest3(
-      self.titleTextField.textDidChangedPublisher,
-      expirationPublisher,
-      // 카테고리TextField는 키보드를 사용하지 않고 programatically로 text값 변경
-      self.categoryTextField.publisher(for: \.text).eraseToAnyPublisher()
+      self.titleTextFieldTextSubject,
+      expirationCompletionPublisher,
+      self.categoryTextFieldTextSubject
     )
     .receive(on: DispatchQueue.main)
-    .compactMap { titleText, isValidExpirationFormat, categoryText -> Bool? in
-      guard let text = categoryText else { return nil }
-      return !titleText.isEmpty && isValidExpirationFormat && !text.isEmpty
+    .map { titleText, isValidExpirationFormat, categoryText -> Bool in
+      return !titleText.isEmpty && isValidExpirationFormat && !categoryText.isEmpty
     }
     .sink { [weak self] isValid in
       guard let self = self else { return }
@@ -337,7 +341,7 @@ private extension ProductViewController {
     }
     .store(in: &self.subscriptions)
     
-    self.expirationTextField.textDidChangedPublisher
+    self.expirationTextField.textEditingChangedPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] text in
         self?.viewModel.didChangeExpirationTextField(text)
@@ -385,6 +389,13 @@ private extension ProductViewController {
         self?.viewModel.didTapCategoryTextField()
       }
       .store(in: &self.subscriptions)
+    
+    self.titleTextField.textEditingChangedPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] text in
+        self?.titleTextFieldTextSubject.send(text)
+      }
+      .store(in: &self.subscriptions)
   }
 }
 
@@ -423,7 +434,10 @@ extension ProductViewController {
       self.imageView.kf.setImage(with: url)
     }
     self.titleTextField.text = product.name
+    self.titleTextFieldTextSubject.send(self.titleTextField.text ?? "")
+    
     self.categoryTextField.text = product.category
+    self.categoryTextFieldTextSubject.send(self.categoryTextField.text ?? "")
     
     let dateFormatManager = DateFormatManager()
     self.expirationTextField.text = dateFormatManager.string(from: product.expirationDate)

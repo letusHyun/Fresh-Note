@@ -72,7 +72,7 @@ final class ProductCell: UITableViewCell {
   }
   
   private var freshColor: CGColor {
-    UIColor(fnColor: .orange1).cgColor
+    UIColor(fnColor: .green1).cgColor
   }
   
   private let textContainerView: UIView = {
@@ -102,6 +102,8 @@ final class ProductCell: UITableViewCell {
     self.expirationDateLabel.text = nil
     self.memoLabel.text = nil
     self.pinImageView.image = nil
+    self.textContainerView.layer.borderColor = nil
+    self.thumbnailImageView.layer.borderColor = nil
   }
 }
 
@@ -112,7 +114,6 @@ extension ProductCell {
     self.configurePin(isPinned: product.isPinned)
     self.configureBorderColor(at: product.expirationDate)
     self.expirationDateLabel.text = self.dateFormatter.string(from: product.expirationDate)
-    print("product의 유통기한 Date: \(product.expirationDate)")
     self.nameLabel.text = product.name
     self.categoryLabel.text = product.category
     self.memoLabel.text = product.memo
@@ -121,7 +122,7 @@ extension ProductCell {
   func configurePin(isPinned: Bool) {
     let imageName = isPinned ? "pin.fill" : "pin"
     self.pinImageView.image = UIImage(systemName: imageName)?
-      .withTintColor(.black, renderingMode: .alwaysOriginal)
+      .withTintColor(UIColor(fnColor: .gray2), renderingMode: .alwaysOriginal)
   }
 }
 
@@ -161,6 +162,7 @@ extension ProductCell {
       self.thumbnailImageView.kf.setImage(with: imageURL)
     } else {
       self.thumbnailImageView.image = UIImage(named: "defaultProductImage")?
+        .withTintColor(UIColor(fnColor: .gray0), renderingMode: .alwaysTemplate)
         .withInsets(UIEdgeInsets(top: 5, left: 5, bottom: 5, right: 5))
     }
   }

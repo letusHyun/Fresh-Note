@@ -50,6 +50,12 @@ final class HomeViewController: BaseViewController {
     return btn
   }()
   
+  private let homeEmptyIndicatorView = EmptyIndicatorView(
+    title: "등록된 상품이 없어요.",
+    description: "+에서 잊지 말아야 할 유통기한을 기록해보세요.",
+    imageName: .system("plus")
+  )
+  
   // MARK: - LifeCycle
   init(viewModel: any HomeViewModel) {
     self.viewModel = viewModel
@@ -111,6 +117,13 @@ extension HomeViewController {
     self.navigationItem.titleView = FreshNoteTitleView()
   }
   
+  private func updateEmptyViewVisibility() {
+    self.homeEmptyIndicatorView.updateVisibility(
+      shouldHidden: !self.viewModel.isDataSourceEmpty(),
+      from: self.tableView
+    )
+  }
+  
   // MARK: - Bind
   private func bind(to viewModel: any HomeViewModel) {
     viewModel.errorPublisher
@@ -126,9 +139,9 @@ extension HomeViewController {
     viewModel.reloadDataPublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
-        guard let self else { return }
-        self.activityIndicatorView.stopIndicating()
-        self.tableView.reloadData()
+        self?.activityIndicatorView.stopIndicating()
+        self?.tableView.reloadData()
+        self?.updateEmptyViewVisibility()
       }
       .store(in: &self.subscriptions)
     
@@ -138,6 +151,7 @@ extension HomeViewController {
         self?.activityIndicatorView.stopIndicating()
         self?.tableView.deleteRows(at: indexPaths, with: .fade)
         swipeCompletion(true)
+        self?.updateEmptyViewVisibility()
       }.store(in: &self.subscriptions)
     
     viewModel.reloadRowsPublisher
@@ -152,10 +166,7 @@ extension HomeViewController {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] indexPath, updatedPinState in
         self?.activityIndicatorView.stopIndicating()
-        guard
-          let self,
-          let cell = self.tableView.cellForRow(at: indexPath) as? ProductCell
-        else { return }
+        guard let cell = self?.tableView.cellForRow(at: indexPath) as? ProductCell else { return }
         
         cell.configurePin(isPinned: updatedPinState)
       }

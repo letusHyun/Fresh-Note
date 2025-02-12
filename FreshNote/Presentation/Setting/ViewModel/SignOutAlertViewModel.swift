@@ -9,6 +9,7 @@ import Combine
 import Foundation
 
 struct SignOutAlertViewModelActions {
+  let dismissSignOutAlert: () -> Void
   let dismiss: () -> Void
 }
 
@@ -68,7 +69,7 @@ final class DefaultSignOutAlertViewModel: SignOutAlertViewModel {
         guard case .failure(let error) = completion else { return }
         self?.error = error
       } receiveValue: { [weak self] _ in
-        self?.actions.dismiss()
+        self?.actions.dismissSignOutAlert()
       }
       .store(in: &self.subscriptions)
   }

@@ -38,7 +38,7 @@ final class SearchHistoryView: UIView {
     let tv = UITableView()
     tv.dataSource = self
     tv.delegate = self
-    tv.rowHeight = 60
+    tv.rowHeight = 50
     tv.register(
       RecentSearchKeywordCell.self,
       forCellReuseIdentifier: RecentSearchKeywordCell.id
@@ -52,6 +52,12 @@ final class SearchHistoryView: UIView {
   private var subscriptions: Set<AnyCancellable> = []
   
   weak var delegate: (any SearchHistoryViewDelegate)?
+  
+  private let emptyIndicatorView = EmptyIndicatorView(
+    title: "",
+    description: "최근 검색 내역이 없어요.",
+    imageName: .noImage
+  )
   
   // MARK: - LifeCycle
   init(viewModel: any SearchHistoryViewModel) {
@@ -107,8 +113,8 @@ final class SearchHistoryView: UIView {
   private func bind(to viewModel: any SearchHistoryViewModel) {
     viewModel.historyErrorPublisher
       .receive(on: DispatchQueue.main)
+      .compactMap { $0 }
       .sink { [weak self] error in
-        guard let error = error else { return }
         self?.activityIndicatorView.stopIndicating()
       }
       .store(in: &self.subscriptions)
@@ -118,6 +124,7 @@ final class SearchHistoryView: UIView {
       .sink { [weak self] in
         self?.activityIndicatorView.stopIndicating()
         self?.tableView.reloadData()
+        self?.updateEmptyViewVisibility()
       }
       .store(in: &self.subscriptions)
     
@@ -126,6 +133,7 @@ final class SearchHistoryView: UIView {
       .sink { [weak self] indexPath in
         self?.activityIndicatorView.stopIndicating()
         self?.tableView.deleteRows(at: [indexPath], with: .fade)
+        self?.updateEmptyViewVisibility()
       }
       .store(in: &self.subscriptions)
   }
@@ -136,8 +144,17 @@ final class SearchHistoryView: UIView {
       .sink { [weak self] in
         self?.activityIndicatorView.startIndicating()
         self?.viewModel.didTapAllDeletionButton()
+        self?.updateEmptyViewVisibility()
       }
       .store(in: &self.subscriptions)
+  }
+  
+  // MARK: - Private
+  private func updateEmptyViewVisibility() {
+    self.emptyIndicatorView.updateVisibility(
+      shouldHidden: !self.viewModel.isDataSourceEmpty(),
+      from: self.tableView
+    )
   }
 }
 
