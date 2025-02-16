@@ -378,7 +378,9 @@ private extension ProductViewController {
     
     self.imageView.gesture()
       .sink { [weak self] _ in
-        self?.viewModel.didTapImageView()
+        guard let self else { return }
+        
+        self.viewModel.didTapImageView(imageData: self.imageView.image?.jpegData(compressionQuality: 1.0))
       }
       .store(in: &self.subscriptions)
     

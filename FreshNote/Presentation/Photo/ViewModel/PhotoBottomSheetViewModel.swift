@@ -10,13 +10,15 @@ import Foundation
 struct PhotoBottomSheetViewModelActions {
   let presentPhotoLibrary: () -> Void
   let presentCamera: () -> Void
+  let presentPhotoDetail: () -> Void
   let deleteImageAndDisMissBottomSheet: () -> Void
 }
 
 typealias PhotoBottomSheetViewModel = PhotoBottomSheetViewModelInput & PhotoBottomSheetViewModelOutput
 
 protocol PhotoBottomSheetViewModelInput {
-  func didTapAlbumButton() 
+  func didTapPhotoDetailButton()
+  func didTapAlbumButton()
   func didTapCameraButton()
   func didTapDeleteButton()
 }
@@ -47,5 +49,9 @@ final class DefaultPhotoBottomSheetViewModel: PhotoBottomSheetViewModel {
   
   func didTapDeleteButton() {
     self.actions.deleteImageAndDisMissBottomSheet()
+  }
+  
+  func didTapPhotoDetailButton() {
+    self.actions.presentPhotoDetail()
   }
 }

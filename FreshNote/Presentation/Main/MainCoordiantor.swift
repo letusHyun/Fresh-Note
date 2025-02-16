@@ -161,7 +161,7 @@ final class MainCoordinator: BaseCoordinator {
     let appearance = UINavigationBarAppearance()
     appearance.configureWithTransparentBackground()
     appearance.titleTextAttributes = [
-      .font: UIFont.pretendard(size: 20, weight: ._700)
+      .font: UIFont.pretendard(size: 18, weight: ._700)
     ]
     navigationController.navigationBar.standardAppearance = appearance
     navigationController.navigationBar.scrollEdgeAppearance = appearance

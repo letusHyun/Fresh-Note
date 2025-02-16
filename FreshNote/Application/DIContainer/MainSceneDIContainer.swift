@@ -24,6 +24,10 @@ final class MainSceneDIContainer {
 
 private extension MainSceneDIContainer {
   // MARK: - Presentation Layer
+  func makePhotoDetailViewModel(imageData: Data) -> any PhotoDetailViewModel {
+    return DefaultPhotoDetailViewModel(imageData: imageData)
+  }
+  
   func makeHomeViewModel(actions: HomeViewModelActions) -> any HomeViewModel {
     return DefaultHomeViewModel(
       actions: actions,
@@ -497,6 +501,10 @@ extension MainSceneDIContainer: SearchCoordinatorDependencies {
 
 // MARK: - ProductCoordinatorDependencies
 extension MainSceneDIContainer: ProductCoordinatorDependencies {
+  func makePhotoDetailViewController(imageData: Data) -> UIViewController {
+    return PhotoDetailViewController(viewModel: self.makePhotoDetailViewModel(imageData: imageData))
+  }
+  
   func makeCategoryBottomSheetViewController(actions: CategoryBottomSheetViewModelActions) -> UIViewController {
     return CategoryBottomSheetViewController(viewModel: self.makeCategoryBottomSheetViewModel(actions: actions))
   }
@@ -507,8 +515,14 @@ extension MainSceneDIContainer: ProductCoordinatorDependencies {
     return BottomSheetViewController(detent: detent)
   }
   
-  func makePhotoBottomSheetViewController(actions: PhotoBottomSheetViewModelActions) -> UIViewController {
-    return PhotoBottomSheetViewController(viewModel: self.makePhotoBottomSheetViewModel(actions: actions))
+  func makePhotoBottomSheetViewController(
+    actions: PhotoBottomSheetViewModelActions,
+    shouldConfigurePhotoDetailButton: Bool
+  ) -> UIViewController {
+    return PhotoBottomSheetViewController(
+      viewModel: self.makePhotoBottomSheetViewModel(actions: actions),
+      shouldConfigurePhotoDetailButton: shouldConfigurePhotoDetailButton
+    )
   }
   
   func makeProductViewController(

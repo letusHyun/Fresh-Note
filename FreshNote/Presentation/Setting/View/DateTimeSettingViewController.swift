@@ -85,7 +85,7 @@ final class DateTimeSettingViewController: BaseViewController {
     let lb = UILabel()
     lb.font = UIFont.pretendard(size: 14, weight: ._400)
     lb.text = """
-    * 유통기한 마감일에 알림이 울리길 원하신다면,
+    * 유통기한 마감일에 알림 받기를 원하신다면,
     D-0으로 등록해주세요.
     """
     lb.textColor = UIColor(fnColor: .gray1)
@@ -157,8 +157,8 @@ final class DateTimeSettingViewController: BaseViewController {
       self.datePicker.topAnchor.constraint(equalTo: self.dateStackView.bottomAnchor, constant: 40)
     ] + [
       self.completionButton.heightAnchor.constraint(equalToConstant: 54),
-      self.completionButton.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
-      self.completionButton.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+      self.completionButton.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 26.5),
+      self.completionButton.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -26.5),
     ])
     self.completionButtonBottomConstraint = self.completionButton.bottomAnchor.constraint(
       equalTo: safeArea.bottomAnchor,
@@ -305,7 +305,9 @@ final class DateTimeSettingViewController: BaseViewController {
 extension DateTimeSettingViewController: UITextFieldDelegate {
   func textFieldDidEndEditing(_ textField: UITextField) {
     guard let text = textField.text else { return }
-    
+    if text.count == 1, text != "0" {
+      
+    }
     if let first = text.first, first == "0", text.count == 2 {
       textField.text = String(text.dropFirst())
     }

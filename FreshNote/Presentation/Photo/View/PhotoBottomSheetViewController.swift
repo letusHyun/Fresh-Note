@@ -42,11 +42,23 @@ final class PhotoBottomSheetViewController: UIViewController {
     return button
   }()
   
+  private lazy var photoDetailButton: PhotoBottomSheetButton = {
+    let button = PhotoBottomSheetButton(
+      title: "사진 전체 보기",
+      image: UIImage(systemName: "rectangle.center.inset.filled"),
+      color: .black
+    )
+    return button
+  }()
+  
   private var subscriptions = Set<AnyCancellable>()
+  private let shouldConfigurePhotoDetailButton: Bool
   
   // MARK: - LifeCycle
-  init(viewModel: any PhotoBottomSheetViewModel) {
+  init(viewModel: any PhotoBottomSheetViewModel, shouldConfigurePhotoDetailButton: Bool) {
     self.viewModel = viewModel
+    self.shouldConfigurePhotoDetailButton = shouldConfigurePhotoDetailButton
+    
     super.init(nibName: nil, bundle: nil)
   }
   
@@ -56,8 +68,8 @@ final class PhotoBottomSheetViewController: UIViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    setupLayout()
-    bind()
+    self.setupLayout()
+    self.bind()
   }
   
   deinit {
@@ -81,11 +93,29 @@ final class PhotoBottomSheetViewController: UIViewController {
     self.deleteButton.gesture()
       .sink { [weak self] _ in
         self?.viewModel.didTapDeleteButton()
-      }.store(in: &self.subscriptions)
+      }
+      .store(in: &self.subscriptions)
+    
+    self.photoDetailButton.gesture()
+      .sink { [weak self] _ in
+        self?.viewModel.didTapPhotoDetailButton()
+      }
+      .store(in: &self.subscriptions)
   }
   
   
   private func setupLayout() {
+    var arrangedSubviews: [UIView] = [
+      self.albumButton,
+      self.cameraButton,
+      self.deleteButton
+    ]
+    
+    // default image 여부에 따라서 사진 전체보기 버튼 보이기/안보이기
+    if self.shouldConfigurePhotoDetailButton {
+      arrangedSubviews.insert(self.photoDetailButton, at: .zero)
+    }
+    
     let stackView: UIStackView = {
       let sv = UIStackView()
       sv.axis = .vertical
@@ -94,11 +124,11 @@ final class PhotoBottomSheetViewController: UIViewController {
       return sv
     }()
     
-    _=[self.albumButton, self.cameraButton, self.deleteButton].map { stackView.addArrangedSubview($0) }
+    arrangedSubviews.forEach { stackView.addArrangedSubview($0) }
     
     let buttonHeight: CGFloat = 48
     
-    albumButton.snp.makeConstraints {
+    self.albumButton.snp.makeConstraints {
       $0.height.equalTo(buttonHeight)
     }
     

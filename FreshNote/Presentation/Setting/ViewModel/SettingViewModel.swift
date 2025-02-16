@@ -9,10 +9,9 @@ import Combine
 import Foundation
 
 struct SettingViewModelActions {
-  let showDateTime: () -> Void
   let showDateTimeSetting: () -> Void
-  let showAppGuide: () -> Void
-  let showInquire: () -> Void
+  let presentAppVersion: () -> Void
+  let presentInquire: () -> Void
   let presentSignOutAlert: () -> Void
   let showAccountDeletion: () -> Void
 }
@@ -135,9 +134,9 @@ final class DefaultSettingViewModel: SettingViewModel {
     let settingSection = SettingDataSource(section: .settings, items: [notification])
     
     // 이용안내
-    let appGuide = SettingMenuItem(title: "앱 가이드", action: { [weak self] in self?.actions.showAppGuide() })
-    let inquire = SettingMenuItem(title: "문의하기", action: { [weak self] in self?.actions.showInquire() })
-    let usageSection = SettingDataSource(section: .usage, items: [appGuide, inquire])
+    let appVersion = SettingMenuItem(title: "앱 버전 정보", action: { [weak self] in self?.actions.presentAppVersion() })
+    let inquire = SettingMenuItem(title: "문의하기", action: { [weak self] in self?.actions.presentInquire() })
+    let usageSection = SettingDataSource(section: .usage, items: [appVersion, inquire])
     
     return [accountSection, settingSection, usageSection]
   }

@@ -18,8 +18,16 @@ protocol ProductCoordinatorDependencies: AnyObject {
     detent: BottomSheetViewController.Detent
   ) -> BottomSheetViewController
   
-  func makePhotoBottomSheetViewController(actions: PhotoBottomSheetViewModelActions) -> UIViewController
-  func makeCategoryBottomSheetViewController(actions: CategoryBottomSheetViewModelActions) -> UIViewController
+  func makePhotoBottomSheetViewController(
+    actions: PhotoBottomSheetViewModelActions,
+    shouldConfigurePhotoDetailButton: Bool
+  ) -> UIViewController
+  
+  func makeCategoryBottomSheetViewController(
+    actions: CategoryBottomSheetViewModelActions
+  ) -> UIViewController
+  
+  func makePhotoDetailViewController(imageData: Data) -> UIViewController
 }
 
 final class ProductCoordinator: BaseCoordinator {
@@ -63,8 +71,8 @@ final class ProductCoordinator: BaseCoordinator {
       pop: { [weak self] updatedProduct in
         self?.popCompletion?(updatedProduct)
         self?.pop()
-      }, showPhotoBottomSheet: { [weak self] in
-        self?.showPhotoBottomSheet()
+      }, showPhotoBottomSheet: { [weak self] imageData in
+        self?.showPhotoBottomSheet(imageData: imageData)
       }, showCategoryBottomSheet: { [weak self] (animateCategoryHandler, passCategoryHandler) in
         self?.showCategoryBottomSheet(
           animateCategoryHandler: animateCategoryHandler,
@@ -86,7 +94,7 @@ extension ProductCoordinator {
     self.finish()
   }
   
-  private func showPhotoBottomSheet() {
+  private func showPhotoBottomSheet(imageData: Data?) {
     let bottomSheetViewController = self.dependencies.makeBottomSheetViewController(detent: .small)
     bottomSheetViewController.dismissHandler = { [weak self] in
       self?.dismissPhotoBottomSheet()
@@ -97,11 +105,18 @@ extension ProductCoordinator {
       self?.presentPhotoLibrary()
     }, presentCamera: { [weak self] in
       self?.presentCamera()
+    }, presentPhotoDetail: { [weak self] in
+      guard let imageData else { return }
+      
+      self?.presentPhotoDetail(imageData: imageData)
     }, deleteImageAndDisMissBottomSheet: { [weak self] in
       self?.deleteImageAndDisMissBottomSheet()
     })
     
-    let photoBottomSheetViewController = self.dependencies.makePhotoBottomSheetViewController(actions: actions)
+    let photoBottomSheetViewController = self.dependencies.makePhotoBottomSheetViewController(
+      actions: actions,
+      shouldConfigurePhotoDetailButton: imageData != nil
+    )
     self.photoBottomSheetViewController = photoBottomSheetViewController
     
     bottomSheetViewController.add(
@@ -116,6 +131,12 @@ extension ProductCoordinator {
   private func deleteImageAndDisMissBottomSheet() {
     self.deleteImageSubject.send()
     self.dismissPhotoBottomSheet()
+  }
+  
+  private func presentPhotoDetail(imageData: Data) {
+    let photoDetailViewController = self.dependencies.makePhotoDetailViewController(imageData: imageData)
+    self.dismissPhotoBottomSheet()
+    self.navigationController?.topViewController?.present(photoDetailViewController, animated: true)
   }
   
   private func showCategoryBottomSheet(

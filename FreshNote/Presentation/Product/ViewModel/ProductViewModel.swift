@@ -13,7 +13,7 @@ struct ProductViewModelActions {
   typealias PassCategoryHandler = (String) -> Void
   
   let pop: (Product?) -> Void
-  let showPhotoBottomSheet: () -> Void
+  let showPhotoBottomSheet: (Data?) -> Void
   let showCategoryBottomSheet: (@escaping AnimateCategoryHandler,
                                 @escaping PassCategoryHandler) -> Void
   /// 앨범에서 이미지를 가져오거나, 사진을 찍어서 이미지를 가져올 때 image의 Data를 방출하는 Publisher입니다.
@@ -27,7 +27,7 @@ protocol ProductViewModelInput {
   func viewDidLoad()
   func didTapBackButton()
   func didTapSaveButton(name: String, expiration: String, imageData: Data?, category: String, memo: String?)
-  func didTapImageView()
+  func didTapImageView(imageData: Data?)
   func didTapCategoryTextField()
   func expirationTextFieldShouldEndEditing(_ text: String?)
   func didChangeExpirationTextField(_ text: String)
@@ -99,7 +99,7 @@ final class DefaultProductViewModel: ProductViewModel {
   @Published private var error: (any Error)?
   
   /// 기본 이미지인지 사용자가 정의한 이미지인지 판별하는 변수입니다.
-  var isDefaultImage: Bool = false
+  var isDefaultImage: Bool = true
   
   /// 이미지가 변경되었는지 판별하는 변수입니다.
   ///
@@ -218,8 +218,12 @@ final class DefaultProductViewModel: ProductViewModel {
     }
   }
   
-  func didTapImageView() {
-    self.actions.showPhotoBottomSheet()
+  func didTapImageView(imageData: Data?) {
+    if !self.isDefaultImage {
+      self.actions.showPhotoBottomSheet(imageData)
+    } else {
+      self.actions.showPhotoBottomSheet(nil)
+    }
   }
   
   func didTapCategoryTextField() {
