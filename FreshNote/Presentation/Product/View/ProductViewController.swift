@@ -72,7 +72,6 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   
   private lazy var expirationTextField: PaddingTextField = {
     let tf = PaddingTextField(clearButtonMode: .never)
-    // TODO: - 현재 날자를 placeholder로 보여주는 알고리즘 작성하기
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "yyyy"
     let date = DateFormatManager().makeCurrentDate()
@@ -105,6 +104,16 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
     return iv
   }()
   
+  private lazy var deleteButton: UIButton = {
+    let button = UIButton()
+    button.setTitle("삭제하기", for: .normal)
+    button.setTitleColor(UIColor(fnColor: .realBack), for: .normal)
+    button.backgroundColor = UIColor.systemRed
+    button.layer.cornerRadius = 15
+    button.layer.masksToBounds = true
+    return button
+  }()
+  
   private var isCategoryToggleImageViewRotated: Bool = false
   
   private let descriptionTextView: PlaceholderTextView = {
@@ -134,9 +143,15 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   /// category의 키보드 input && programmatic value 주입에 대한 publisher입니다.
   private let categoryTextFieldTextSubject: CurrentValueSubject<String, Never> = .init("")
   
+  private let mode: ProductViewModelMode
+  
   // MARK: - LifeCycle
-  init(viewModel: any ProductViewModel) {
+  init(
+    viewModel: any ProductViewModel,
+    mode: ProductViewModelMode
+  ) {
     self.viewModel = viewModel
+    self.mode = mode
     
     super.init(nibName: nil, bundle: nil)
   }
@@ -178,67 +193,84 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
         $0.top.equalTo(self.view.safeAreaLayoutGuide)
       }
     }
+
+    [
+      self.titleTextField,
+      self.imageView,
+      self.expirationLabel,
+      self.expirationWarningLabel,
+      self.expirationTextField,
+      self.categoryLabel,
+      self.categoryTextField,
+      self.descriptionTextView
+    ].forEach {
+      view.addSubview($0)
+    }
+
+    self.titleTextField.snp.makeConstraints { make in
+      make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top).offset(10)
+      make.centerX.equalTo(self.view.snp.centerX)
+    }
+
+    self.imageView.snp.makeConstraints { make in
+      make.top.equalTo(self.titleTextField.snp.bottom).offset(23)
+      make.width.equalTo(100)
+      make.height.equalTo(self.imageView.snp.width)
+      make.centerX.equalTo(self.view.snp.centerX)
+    }
+
+    self.expirationLabel.snp.makeConstraints { make in
+      make.top.equalTo(self.imageView.snp.bottom).offset(45)
+      make.leading.equalTo(self.view.snp.leading).offset(18)
+    }
+
+    self.expirationWarningLabel.snp.makeConstraints { make in
+      make.centerY.equalTo(self.expirationLabel.snp.centerY)
+      make.leading.equalTo(self.expirationLabel.snp.trailing).offset(10)
+      make.trailing.lessThanOrEqualTo(self.view.snp.trailing).offset(-40)
+    }
+
+    self.expirationTextField.snp.makeConstraints { make in
+      make.top.equalTo(self.expirationLabel.snp.bottom).offset(10)
+      make.leading.equalTo(self.view.snp.leading).offset(16.5)
+      make.trailing.equalTo(self.view.snp.trailing).offset(-16.5)
+      make.height.equalTo(58)
+    }
+
+    self.categoryLabel.snp.makeConstraints { make in
+      make.top.equalTo(self.expirationTextField.snp.bottom).offset(10)
+      make.leading.equalTo(self.expirationLabel.snp.leading)
+    }
+
+    self.categoryTextField.snp.makeConstraints { make in
+      make.top.equalTo(self.categoryLabel.snp.bottom).offset(10)
+      make.leading.equalTo(self.expirationTextField.snp.leading)
+      make.trailing.equalTo(self.expirationTextField.snp.trailing)
+      make.height.equalTo(58)
+    }
     
-    _=[self.titleTextField,
-       self.imageView,
-       self.expirationLabel,
-       self.expirationWarningLabel,
-       self.expirationTextField,
-       self.categoryLabel,
-       self.categoryTextField,
-       self.descriptionTextView]
-      .map {
-        view.addSubview($0)
-        $0.translatesAutoresizingMaskIntoConstraints = false
+    switch self.mode {
+    case .create:
+      self.descriptionTextView.snp.makeConstraints { make in
+        make.top.equalTo(self.categoryTextField.snp.bottom).offset(25)
+        make.leading.equalTo(self.expirationTextField.snp.leading)
+        make.trailing.equalTo(self.expirationTextField.snp.trailing)
+        make.bottom.equalTo(self.view.safeAreaLayoutGuide).inset(46)
       }
-    
-    let safeArea = self.view.safeAreaLayoutGuide
-    NSLayoutConstraint.activate([
-      self.titleTextField.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 10),
-      self.titleTextField.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
+    case .edit(_):
+      self.descriptionTextView.snp.makeConstraints {
+        $0.top.equalTo(self.categoryTextField.snp.bottom).offset(25)
+        $0.leading.equalTo(self.expirationTextField.snp.leading)
+        $0.trailing.equalTo(self.expirationTextField.snp.trailing)
+      }
       
-      self.imageView.topAnchor.constraint(equalTo: self.titleTextField.bottomAnchor, constant: 23),
-      self.imageView.widthAnchor.constraint(equalToConstant: 100),
-      self.imageView.heightAnchor.constraint(equalTo: self.imageView.widthAnchor),
-      self.imageView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
-      
-      self.expirationLabel.topAnchor.constraint(equalTo: self.imageView.bottomAnchor, constant: 45),
-      self.expirationLabel.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 18),
-      
-      self.expirationWarningLabel.centerYAnchor.constraint(equalTo: self.expirationLabel.centerYAnchor),
-      self.expirationWarningLabel.leadingAnchor.constraint(
-        equalTo: self.expirationLabel.trailingAnchor,
-        constant: 10
-      ),
-      self.expirationWarningLabel.trailingAnchor.constraint(
-        lessThanOrEqualTo: self.view.trailingAnchor,
-        constant: -40
-      ),
-      
-      self.expirationTextField.topAnchor.constraint(equalTo: self.expirationLabel.bottomAnchor, constant: 10),
-      self.expirationTextField.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 16.5),
-      self.expirationTextField.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -16.5),
-      self.expirationTextField.heightAnchor.constraint(equalToConstant: 58),
-      
-      self.categoryLabel.topAnchor.constraint(equalTo: self.expirationTextField.bottomAnchor, constant: 10),
-      self.categoryLabel.leadingAnchor.constraint(equalTo: self.expirationLabel.leadingAnchor),
-      
-      self.categoryTextField.topAnchor.constraint(equalTo: self.categoryLabel.bottomAnchor, constant: 10),
-      self.categoryTextField.leadingAnchor.constraint(equalTo: self.expirationTextField.leadingAnchor),
-      self.categoryTextField.trailingAnchor.constraint(equalTo: self.expirationTextField.trailingAnchor),
-      self.categoryTextField.heightAnchor.constraint(equalToConstant: 58),
-      
-      self.descriptionTextView.topAnchor.constraint(equalTo: self.categoryTextField.bottomAnchor, constant: 25),
-      self.descriptionTextView.leadingAnchor.constraint(equalTo: self.expirationTextField.leadingAnchor),
-      self.descriptionTextView.trailingAnchor.constraint(equalTo: self.expirationTextField.trailingAnchor),
-      self.descriptionTextView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -46)
-    ])
-    
-    self.categoryTextField.addSubview(self.categoryToggleImageView)
-    self.categoryToggleImageView.snp.makeConstraints {
-      $0.trailing.equalToSuperview().inset(15.5)
-      $0.size.equalTo(24)
-      $0.centerY.equalToSuperview()
+      self.view.addSubview(self.deleteButton)
+      self.deleteButton.snp.makeConstraints {
+        $0.top.equalTo(self.descriptionTextView.snp.bottom).offset(30)
+        $0.leading.trailing.equalTo(self.descriptionTextView)
+        $0.height.equalTo(60)
+        $0.bottom.equalTo(self.view.safeAreaLayoutGuide).inset(46)
+      }
     }
   }
 }
@@ -402,6 +434,13 @@ private extension ProductViewController {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] text in
         self?.titleTextFieldTextSubject.send(text)
+      }
+      .store(in: &self.subscriptions)
+    
+    self.deleteButton.tapThrottlePublisher
+      .sink { [weak self] _ in
+        self?.activityIndicatorView.startIndicating()
+        self?.viewModel.didTapDeleteButton()
       }
       .store(in: &self.subscriptions)
   }

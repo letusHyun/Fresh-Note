@@ -63,6 +63,7 @@ private extension MainSceneDIContainer {
       saveProductUseCase: self.makeSaveProductUseCase(),
       updateProductUseCase: self.makeUpdateProductUseCase(),
       fetchProductUseCase: self.makefetchProductUseCase(),
+      deleteProductUseCase: self.makeDeleteProductUseCase(),
       actions: actions,
       mode: mode
     )
@@ -529,7 +530,10 @@ extension MainSceneDIContainer: ProductCoordinatorDependencies {
     actions: ProductViewModelActions,
     mode: ProductViewModelMode
   ) -> ProductViewController {
-    return ProductViewController(viewModel: self.makeProductViewModel(actions: actions, mode: mode))
+    return ProductViewController(
+      viewModel: self.makeProductViewModel(actions: actions, mode: mode),
+      mode: mode
+    )
   }
 }
 

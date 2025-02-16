@@ -101,7 +101,6 @@ final class DefaultDateTimeSettingViewModel: DateTimeSettingViewModel {
     return digit
   }
   
-  
   // MARK: - Input
   func viewDidLoad() {
     if case .edit = self.mode,

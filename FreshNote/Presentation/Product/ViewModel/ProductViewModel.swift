@@ -12,6 +12,7 @@ struct ProductViewModelActions {
   typealias AnimateCategoryHandler = () -> Void
   typealias PassCategoryHandler = (String) -> Void
   
+  /// 제품의 상태를 전달해야하는 경우는 product를, 전달하지 않는다면 nil을 인자로 넣어줍니다.
   let pop: (Product?) -> Void
   let showPhotoBottomSheet: (Data?) -> Void
   let showCategoryBottomSheet: (@escaping AnimateCategoryHandler,
@@ -25,6 +26,7 @@ protocol ProductViewModel: ProductViewModelInput & ProductViewModelOutput { }
 
 protocol ProductViewModelInput {
   func viewDidLoad()
+  func didTapDeleteButton()
   func didTapBackButton()
   func didTapSaveButton(name: String, expiration: String, imageData: Data?, category: String, memo: String?)
   func didTapImageView(imageData: Data?)
@@ -75,6 +77,7 @@ final class DefaultProductViewModel: ProductViewModel {
   private let saveProductUseCase: any SaveProductUseCase
   private let updateProductUseCase: any UpdateProductUseCase
   private let fetchProductUseCase: any FetchProductUseCase
+  private let deleteProductUseCase: any DeleteProductUseCase
   
   private var fetchedProduct: Product?
   
@@ -116,12 +119,14 @@ final class DefaultProductViewModel: ProductViewModel {
     saveProductUseCase: any SaveProductUseCase,
     updateProductUseCase: any UpdateProductUseCase,
     fetchProductUseCase: any FetchProductUseCase,
+    deleteProductUseCase: any DeleteProductUseCase,
     actions: ProductViewModelActions,
     mode: ProductViewModelMode
   ) {
     self.saveProductUseCase = saveProductUseCase
     self.updateProductUseCase = updateProductUseCase
     self.fetchProductUseCase = fetchProductUseCase
+    self.deleteProductUseCase = deleteProductUseCase
     self.actions = actions
     self.mode = mode
     
@@ -295,6 +300,21 @@ final class DefaultProductViewModel: ProductViewModel {
         self.validateDate(with: formatted)
       }
     }
+  }
+  
+  func didTapDeleteButton() {
+    guard let productID = self.fetchedProduct?.did else { return }
+    
+    self.deleteProductUseCase
+      .execute(did: productID, imageURL: self.fetchedProduct?.imageURL)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.error = error
+      } receiveValue: { [weak self] _ in
+        self?.actions.pop(nil)
+      }
+      .store(in: &self.subscriptions)
   }
   
   // MARK: - Bind
