@@ -46,7 +46,6 @@ final class DefaultDateTimeRepository: DateTimeRepository {
         let publisher: AnyPublisher<DateTimeResponseDTO, any Error> = self.firebaseNetworkService.getDocument(
           documentPath: FirestorePath.userID(userID: userID)
         )
-          .receive(on: self.backgroundQueue)
           .eraseToAnyPublisher()
         
         return publisher.map { $0.toDomain() }
@@ -93,7 +92,6 @@ final class DefaultDateTimeRepository: DateTimeRepository {
           .map { _ in }
           .eraseToAnyPublisher()
       }
-      .receive(on: self.backgroundQueue)
       .eraseToAnyPublisher()
   }
   
@@ -113,7 +111,6 @@ final class DefaultDateTimeRepository: DateTimeRepository {
           .map { _ in }
           .eraseToAnyPublisher()
       }
-      .receive(on: self.backgroundQueue)
       .eraseToAnyPublisher()
   }
   

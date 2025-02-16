@@ -60,11 +60,11 @@ final class DefaultOnboardingViewModel: NSObject {
     return [
       OnboardingCellInfo(
         description: "식품을 더 맛있게, 그리고 안전하게\n보관하기 위한 첫걸음",
-        lottieName: "secondOnboardingLottie"
+        lottieName: "firstOnboardingLottie"
       ),
       OnboardingCellInfo(
         description: "내가 입력한 유통 & 소비기한으로\n원하는 디데이 알림을 받아보세요.",
-        lottieName: "firstOnboardingLottie"
+        lottieName: "secondOnboardingLottie"
       )
     ]
   }()

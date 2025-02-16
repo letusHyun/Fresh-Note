@@ -31,7 +31,7 @@ protocol HomeViewModelInput {
 protocol HomeViewModelOutput {
   var reloadDataPublisher: AnyPublisher<Void, Never> { get }
   var deleteRowsPublisher: AnyPublisher<([IndexPath], (Bool) -> Void), Never> { get }
-  var errorPublisher: AnyPublisher<(any Error)?, Never> { get }
+  var errorPublisher: AnyPublisher<Error?, Never> { get }
   var reloadRowsPublisher: AnyPublisher<[IndexPath], Never> { get }
   var updatePinPublisher: AnyPublisher<(IndexPath, Bool), Never> { get }
 }
@@ -64,7 +64,7 @@ final class DefaultHomeViewModel: HomeViewModel {
   var reloadDataPublisher: AnyPublisher<Void, Never> { self.reloadDataSubject.eraseToAnyPublisher() }
   var deleteRowsPublisher: AnyPublisher<([IndexPath], SwipeCompletion), Never>
   { self.deleteRowsSubject.eraseToAnyPublisher() }
-  var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
+  var errorPublisher: AnyPublisher<Error?, Never> { self.$error.eraseToAnyPublisher() }
   var reloadRowsPublisher: AnyPublisher<[IndexPath], Never> { self.reloadRowsSubject.eraseToAnyPublisher() }
   
   @Published private var error: (any Error)?

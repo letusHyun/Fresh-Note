@@ -110,8 +110,10 @@ final class DefaultRestorePushNotificationsUseCase: RestorePushNotificationsUseC
     return Publishers.Sequence(sequence: notifications)
       .flatMap(maxPublishers: .max(3)) { [weak self] (date, product) -> AnyPublisher<Void, any Error> in
         guard let self else {
+        
           return Fail(error: RestorePushNotificationsUseCaseError.referenceError).eraseToAnyPublisher()
         }
+        
         let requestEntity = UNNotificationRequestEntity(
           noficationID: product.did,
           productName: product.name,

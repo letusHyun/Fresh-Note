@@ -36,11 +36,13 @@ final class DefaultFirebaseNetworkService: FirebaseNetworkService {
     merge: Bool
   ) -> AnyPublisher<Void, any Error> {
     return Future { [weak self] promise in
+      guard let self else { return promise(.failure(CommonError.referenceError)) }
+      
       guard let dictionary = try? requestDTO.toDictionary() else {
         return promise(.failure(FirebaseNetworkServiceError.encodingError))
       }
       
-      self?.firestore.document(documentPath)
+      self.firestore.document(documentPath)
         .setData(dictionary, merge: merge) { error in
           if let error = error {
             return promise(.failure(error))
@@ -53,7 +55,9 @@ final class DefaultFirebaseNetworkService: FirebaseNetworkService {
   
   func getDocument<T: Decodable>(documentPath: String) -> AnyPublisher<T, any Error> {
     return Future { [weak self] promise in
-      self?.firestore.document(documentPath).getDocument { (snapshot, error) in
+      guard let self else { return promise(.failure(CommonError.referenceError)) }
+      
+      self.firestore.document(documentPath).getDocument { (snapshot, error) in
         if let error = error {
           return promise(.failure(error))
         }
@@ -77,6 +81,7 @@ final class DefaultFirebaseNetworkService: FirebaseNetworkService {
   func getDocuments<T: Decodable>(collectionPath: String) -> AnyPublisher<[T], any Error> {
     return Future { [weak self] promise in
       guard let self else { return promise(.failure(CommonError.referenceError)) }
+      
       self.firestore.collection(collectionPath).getDocuments { (snapshot, error) in
         if let error = error {
           return promise(.failure(error))
@@ -101,7 +106,9 @@ final class DefaultFirebaseNetworkService: FirebaseNetworkService {
   
   func deleteDocument(documentPath: String) -> AnyPublisher<Void, any Error> {
     return Future { [weak self] promise in
-      self?.firestore.document(documentPath)
+      guard let self else { return promise(.failure(CommonError.referenceError)) }
+      
+      self.firestore.document(documentPath)
         .delete { completion in
           if let error = completion {
             return promise(.failure(error))
@@ -136,7 +143,9 @@ final class DefaultFirebaseNetworkService: FirebaseNetworkService {
   
   func deleteData(urlString: String) -> AnyPublisher<Void, any Error> {
     return Future { [weak self] promise in
-      self?.storage.reference(forURL: urlString).delete { error in
+      guard let self else { return promise(.failure(CommonError.referenceError)) }
+      
+      self.storage.reference(forURL: urlString).delete { error in
         if let error = error { return promise(.failure(error)) }
         return promise(.success(()))
       }

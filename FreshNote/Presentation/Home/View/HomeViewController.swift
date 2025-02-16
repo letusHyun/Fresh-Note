@@ -42,13 +42,13 @@ final class HomeViewController: BaseViewController {
     return btn
   }()
   
-  private let notificationButton: UIButton = {
-    let btn = UIButton()
-    let image = UIImage(systemName: "bell")?
-      .resized(to: CGSize(width: 27, height: 27))
-    btn.setImage(image, for: .normal)
-    return btn
-  }()
+//  private let notificationButton: UIButton = {
+//    let btn = UIButton()
+//    let image = UIImage(systemName: "bell")?
+//      .resized(to: CGSize(width: 27, height: 27))
+//    btn.setImage(image, for: .normal)
+//    return btn
+//  }()
   
   private let homeEmptyIndicatorView = EmptyIndicatorView(
     title: "등록된 상품이 없어요.",
@@ -111,7 +111,7 @@ extension HomeViewController {
   }
   
   private func setNavigationBar() {
-    self.navigationItem.leftBarButtonItem = UIBarButtonItem(customView: self.notificationButton)
+//    self.navigationItem.leftBarButtonItem = UIBarButtonItem(customView: self.notificationButton)
     let rightBarButtonItems = [self.addProductButton, self.searchButton].map { UIBarButtonItem(customView: $0) }
     self.navigationItem.rightBarButtonItems = rightBarButtonItems
     self.navigationItem.titleView = FreshNoteTitleView()
@@ -128,11 +128,15 @@ extension HomeViewController {
   private func bind(to viewModel: any HomeViewModel) {
     viewModel.errorPublisher
       .receive(on: DispatchQueue.main)
-      .sink { error in
-        guard let error = error else { return }
-        // TODO: - 에러 UI 처리하기
-        self.activityIndicatorView.stopIndicating()
-        print("error발생: \(error.localizedDescription)")
+      .compactMap { $0 }
+      .sink { [weak self] error in
+        self?.activityIndicatorView.stopIndicating()
+        switch (error as NSError).code {
+        case 17020:
+          AlertBuilder.presentNetworkErrorAlert(presentingViewController: self)
+        default:
+          AlertBuilder.presentDefaultError(presentingViewController: self, message: error.localizedDescription)
+        }
       }
       .store(in: &self.subscriptions)
     
@@ -230,11 +234,11 @@ extension HomeViewController: UITableViewDelegate {
 // MARK: - Actions
 private extension HomeViewController {
   func bindActions() {
-    self.notificationButton.tapThrottlePublisher
-      .sink { [weak self] _ in
-        self?.viewModel.didTapNotificationButton()
-      }
-      .store(in: &self.subscriptions)
+//    self.notificationButton.tapThrottlePublisher
+//      .sink { [weak self] _ in
+//        self?.viewModel.didTapNotificationButton()
+//      }
+//      .store(in: &self.subscriptions)
     
     self.searchButton.tapThrottlePublisher
       .sink { [weak self] _ in

@@ -17,7 +17,7 @@ struct DateTimeSettingViewModelActions {
 
 protocol DateTimeSettingViewModelInput {
   func viewDidLoad()
-  func didTapCompletionButton(dateInt: Int, hourMinuteDate: Date)
+  func didTapCompletionButton(dateString: String, hourMinuteDate: Date)
 }
 
 protocol DateTimeSettingViewModelOutput {
@@ -88,6 +88,19 @@ final class DefaultDateTimeSettingViewModel: DateTimeSettingViewModel {
   }
   
   // MARK: - Private
+  /// api에 전달할 day Int으로 변환합니다.
+  private func convertPaddedNumber(_ text: String) -> Int {
+    guard text.count == 2,
+          text.hasPrefix("0"),
+          let lastChar = text.last,
+          let digit = Int(String(lastChar)),
+          (1...9).contains(digit)
+    else {
+      return Int(text) ?? 0
+    }
+    return digit
+  }
+  
   
   // MARK: - Input
   func viewDidLoad() {
@@ -106,12 +119,13 @@ final class DefaultDateTimeSettingViewModel: DateTimeSettingViewModel {
     }
   }
   
-  func didTapCompletionButton(dateInt: Int, hourMinuteDate: Date) {
+  func didTapCompletionButton(dateString: String, hourMinuteDate: Date) {
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = "HH:mm"
     let selectedTime = hourMinuteDate
     let hourMinute = dateFormatter.string(from: selectedTime).components(separatedBy: ":").map { Int($0) ?? 0 }
     let hour = hourMinute.first ?? 0, minute = hourMinute.last ?? 0
+    let dateInt = self.convertPaddedNumber(dateString)
     
     switch self.mode {
     case .edit:

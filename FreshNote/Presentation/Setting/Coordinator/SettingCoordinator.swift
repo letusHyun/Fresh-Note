@@ -63,9 +63,7 @@ final class SettingCoordinator: BaseCoordinator {
     AlertBuilder(presentingViewController: self.navigationController?.topViewController)
       .setTitle("앱 버전 정보")
       .setMessage("ver. \(self.getCurrentVersion())")
-      .addActionConfirm("확인", action: { [weak self] in
-        self?.navigationController?.presentedViewController?.dismiss(animated: true)
-      })
+      .addActionConfirm("확인")
       .present()
   }
   

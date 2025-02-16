@@ -94,6 +94,8 @@ final class DateTimeSettingViewController: BaseViewController {
     return lb
   }()
   
+  private lazy var activityIndicatorView = ActivityIndicatorView()
+  
   // MARK: - LifeCycle
   init(viewModel: any DateTimeSettingViewModel, mode: DateTimeSettingViewModelMode) {
     self.viewModel = viewModel
@@ -107,7 +109,10 @@ final class DateTimeSettingViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    defer { self.viewModel.viewDidLoad() }
+    defer {
+      if case .edit = self.mode { self.activityIndicatorView.startIndicating() }
+      self.viewModel.viewDidLoad()
+    }
     
     self.bindActions()
     self.bind(to: self.viewModel)
@@ -181,13 +186,20 @@ final class DateTimeSettingViewController: BaseViewController {
       .receive(on: DispatchQueue.main)
       .compactMap { $0 }
       .sink { [weak self] error in
-        // TODO: - Error handling
+        self?.activityIndicatorView.stopIndicating()
+        switch (error as NSError).code {
+        case 17020:
+          AlertBuilder.presentNetworkErrorAlert(presentingViewController: self)
+        default:
+          AlertBuilder.presentDefaultError(presentingViewController: self, message: error.localizedDescription)
+        }
       }
       .store(in: &self.subscriptions)
     
     viewModel.dateTimePublisher
       .receive(on: DispatchQueue.main)
       .sink { [weak self] dateTime in
+        self?.activityIndicatorView.stopIndicating()
         self?.configureDateAndTime(with: dateTime)
       }
       .store(in: &self.subscriptions)
@@ -198,8 +210,8 @@ final class DateTimeSettingViewController: BaseViewController {
       .tapThrottlePublisher
       .sink { [weak self] in
         guard let self else { return }
-        let dateToInt = Int(self.dateTextField.text ?? "0") ?? 0
-        self.viewModel.didTapCompletionButton(dateInt: dateToInt, hourMinuteDate: self.datePicker.date)
+        let dateString = self.dateTextField.text ?? "0"
+        self.viewModel.didTapCompletionButton(dateString: dateString, hourMinuteDate: self.datePicker.date)
       }
       .store(in: &self.subscriptions)
     
@@ -290,7 +302,7 @@ final class DateTimeSettingViewController: BaseViewController {
   }
   
   private func configureDateAndTime(with dateTime: DateTime) {
-    self.dateTextField.text = "\(dateTime.date)"
+    self.dateTextField.text = self.convert(to: "\(dateTime.date)")
     
     var components = DateComponents()
     components.hour = dateTime.hour
@@ -299,18 +311,25 @@ final class DateTimeSettingViewController: BaseViewController {
     guard let date = Calendar.current.date(from: components) else { return }
     self.datePicker.date = date
   }
+  
+  /// d day를 UX에 적합하도록 변환합니다.
+  func convert(to dayText: String) -> String {
+    if dayText == "00" {
+      return "0"
+    }
+    if dayText.count == 1, let number = Int(dayText), number >= 1 && number <= 9 {
+      return String(format: "%02d", number)
+    }
+    return dayText
+  }
 }
 
 // MARK: - UITextFieldDelegate
 extension DateTimeSettingViewController: UITextFieldDelegate {
   func textFieldDidEndEditing(_ textField: UITextField) {
     guard let text = textField.text else { return }
-    if text.count == 1, text != "0" {
-      
-    }
-    if let first = text.first, first == "0", text.count == 2 {
-      textField.text = String(text.dropFirst())
-    }
+    
+    textField.text = self.convert(to: text)
   }
   
   func textField(

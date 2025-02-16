@@ -248,9 +248,15 @@ private extension ProductViewController {
   private func bind() {
     self.viewModel.errorPublisher
       .receive(on: DispatchQueue.main)
+      .compactMap { $0 }
       .sink { [weak self] error in
-        guard let error = error else { return }
         self?.activityIndicatorView.stopIndicating()
+        switch (error as NSError).code {
+        case 17020:
+          AlertBuilder.presentNetworkErrorAlert(presentingViewController: self)
+        default:
+          AlertBuilder.presentDefaultError(presentingViewController: self, message: error.localizedDescription)
+        }
       }
       .store(in: &self.subscriptions)
     

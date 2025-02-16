@@ -21,7 +21,7 @@ class FNAlertViewController: UIViewController {
   
   private let titleLabel: UILabel = {
     let lb = UILabel()
-    lb.font = UIFont.pretendard(size: 16, weight: ._500)
+    lb.font = UIFont.pretendard(size: 16, weight: ._700)
     lb.textAlignment = .center
     return lb
   }()
@@ -30,6 +30,7 @@ class FNAlertViewController: UIViewController {
     let lb = UILabel()
     lb.font = UIFont.pretendard(size: 15, weight: ._400)
     lb.textAlignment = .center
+    lb.numberOfLines = .zero
     return lb
   }()
   
@@ -57,6 +58,10 @@ class FNAlertViewController: UIViewController {
     super.viewDidLoad()
     self.setupUI()
     self.bindActions()
+  }
+  
+  deinit {
+    print("DEBUG: \(Self.self) deinit")
   }
   
   // MARK: - SetupUI
@@ -115,6 +120,7 @@ class FNAlertViewController: UIViewController {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] _ in
         self?.confirmAction?()
+        self?.dismiss(animated: true)
       }
       .store(in: &self.subscriptions)
   }
