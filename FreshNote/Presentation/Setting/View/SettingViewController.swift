@@ -23,6 +23,7 @@ final class SettingViewController: BaseViewController {
     tv.dataSource = self
     tv.delegate = self
     tv.separatorStyle = .none
+    tv.bounces = false
     return tv
   }()
   

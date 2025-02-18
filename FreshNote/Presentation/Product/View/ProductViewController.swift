@@ -107,9 +107,9 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
   private lazy var deleteButton: UIButton = {
     let button = UIButton()
     button.setTitle("삭제하기", for: .normal)
-    button.setTitleColor(UIColor(fnColor: .realBack), for: .normal)
-    button.backgroundColor = UIColor.systemRed
-    button.layer.cornerRadius = 15
+    button.setTitleColor(UIColor(fnColor: .littleWhite), for: .normal)
+    button.backgroundColor = UIColor(fnColor: .delte).withAlphaComponent(0.8)
+    button.layer.cornerRadius = 20
     button.layer.masksToBounds = true
     return button
   }()
@@ -204,7 +204,7 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
       self.categoryTextField,
       self.descriptionTextView
     ].forEach {
-      view.addSubview($0)
+      self.view.addSubview($0)
     }
 
     self.titleTextField.snp.makeConstraints { make in
@@ -350,6 +350,8 @@ private extension ProductViewController {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] product in
         self?.setupEditUI(with: product)
+        self?.isCategoryToggleImageViewRotated = true
+        self?.animateCategoryToggleImageView()
       }
       .store(in: &self.subscriptions)
   }

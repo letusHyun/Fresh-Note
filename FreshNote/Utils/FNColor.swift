@@ -31,4 +31,8 @@ enum FNColor: String {
   case base = "#F9F9F9"
   /// #EEEEEE
   case blank = "#EEEEEE"
+  /// #FF1414
+  case delte = "#FF1414"
+  /// #FFFEFD
+  case littleWhite = "#FFFEFD"
 }

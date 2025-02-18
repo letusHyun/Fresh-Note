@@ -13,13 +13,14 @@ import SnapKit
 final class DateTimeSettingViewController: BaseViewController {
   struct Constants {
     static var dateSize: CGFloat { 50 }
-    static var completionButtonBottomConstraint: CGFloat { 50 }
+    static var completionButtonBottomConstraint: CGFloat { 48 }
+    static var completionButtonKeyboardPadding: CGFloat { 16 }
   }
   
   // MARK: - Properties
   private let descriptionLabel: UILabel = {
     let label = UILabel()
-    label.text = "원하는 날짜와 알람 시간을 지정해주세요."
+    label.text = "유통기한 임박 알람을 받을 날짜, 시간을 지정해주세요."
     label.textAlignment = .center
     label.textColor = UIColor(fnColor: .gray3)
     label.font = .pretendard(size: 16, weight: ._400)
@@ -30,7 +31,7 @@ final class DateTimeSettingViewController: BaseViewController {
     let label = UILabel()
     label.text = "D - "
     label.textColor = UIColor(fnColor: .gray3)
-    label.font = .pretendard(size: Constants.dateSize, weight: ._400)
+    label.font = UIFont(name: "Avenir LT Std", size: 50)
     return label
   }()
   
@@ -38,7 +39,7 @@ final class DateTimeSettingViewController: BaseViewController {
     let textField = UITextField()
     textField.placeholder = "01"
     textField.textColor = .black
-    textField.font = .pretendard(size: Constants.dateSize, weight: ._400)
+    textField.font = UIFont(name: "Avenir LT Std", size: 50)
     textField.keyboardType = .numberPad
     textField.delegate = self
     textField.setPlaceholderColor(UIColor(fnColor: .gray2).withAlphaComponent(0.3))
@@ -85,8 +86,8 @@ final class DateTimeSettingViewController: BaseViewController {
     let lb = UILabel()
     lb.font = UIFont.pretendard(size: 14, weight: ._400)
     lb.text = """
-    * 유통기한 마감일에 알림 받기를 원하신다면,
-    D-0으로 등록해주세요.
+    * 유통기한이 끝나는 날로 알림 설정을 하고싶다면 
+    D-0 으로 등록해주세요.
     """
     lb.textColor = UIColor(fnColor: .gray1)
     lb.numberOfLines = .zero
@@ -152,7 +153,8 @@ final class DateTimeSettingViewController: BaseViewController {
     
     let safeArea = view.safeAreaLayoutGuide
     NSLayoutConstraint.activate([
-      self.descriptionLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 150),
+      self.descriptionLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 168),
+      self.descriptionLabel.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 28),
       self.descriptionLabel.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
     ] + [
       self.dateStackView.topAnchor.constraint(equalTo: self.descriptionLabel.bottomAnchor, constant: 40),
@@ -162,8 +164,8 @@ final class DateTimeSettingViewController: BaseViewController {
       self.datePicker.topAnchor.constraint(equalTo: self.dateStackView.bottomAnchor, constant: 40)
     ] + [
       self.completionButton.heightAnchor.constraint(equalToConstant: 54),
-      self.completionButton.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 26.5),
-      self.completionButton.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -26.5),
+      self.completionButton.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 16),
+      self.completionButton.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -16),
     ])
     self.completionButtonBottomConstraint = self.completionButton.bottomAnchor.constraint(
       equalTo: safeArea.bottomAnchor,
@@ -175,7 +177,7 @@ final class DateTimeSettingViewController: BaseViewController {
     self.dateTextField.widthAnchor.constraint(equalTo: self.dateStackView.widthAnchor, multiplier: 2/5).isActive = true
     
     self.endDateInformationLabel.snp.makeConstraints {
-      $0.top.equalTo(self.datePicker.snp.bottom).offset(30)
+      $0.top.equalTo(self.datePicker.snp.bottom).offset(48)
       $0.centerX.equalToSuperview()
     }
   }
@@ -276,7 +278,7 @@ final class DateTimeSettingViewController: BaseViewController {
         .userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else {
         return nil
       }
-      return keyboardFrame.height
+      return keyboardFrame.height + Constants.completionButtonKeyboardPadding
     } else {
       return Constants.completionButtonBottomConstraint
     }
