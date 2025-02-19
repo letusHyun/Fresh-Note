@@ -28,6 +28,21 @@ final class DefaultFetchProductUseCase: FetchProductUseCase {
   func fetchProducts() -> AnyPublisher<[Product], any Error> {
     return self.productRepository
       .fetchProducts()
+      .map { (products: [Product]) -> [Product] in
+        let now = Date()
+        
+        return products.sorted { (p1: Product, p2: Product) -> Bool in
+          let p1Expired = p1.expirationDate < now
+          let p2Expired = p2.expirationDate < now
+          
+          if p1Expired != p2Expired {
+            return !p1Expired
+          } else {
+            return p1.creationDate > p2.creationDate
+          }
+        }
+      }
+      .eraseToAnyPublisher()
   }
   
   func fetchProduct(productID: DocumentID) -> AnyPublisher<Product, any Error> {
