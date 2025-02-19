@@ -193,7 +193,14 @@ final class ProductViewController: BaseViewController, KeyboardEventable {
         $0.top.equalTo(self.view.safeAreaLayoutGuide)
       }
     }
-
+    
+    self.categoryTextField.addSubview(self.categoryToggleImageView)
+    self.categoryToggleImageView.snp.makeConstraints {
+      $0.trailing.equalToSuperview().inset(15.5)
+      $0.size.equalTo(24)
+      $0.centerY.equalToSuperview()
+    }
+    
     [
       self.titleTextField,
       self.imageView,
