@@ -109,13 +109,13 @@ final class OnboardingViewController: BaseViewController {
       collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       collectionView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -92)
     ] + [
-      pageControl.topAnchor.constraint(equalTo: collectionView.bottomAnchor),
-      pageControl.centerXAnchor.constraint(equalTo: safeArea.centerXAnchor),
+      self.pageControl.topAnchor.constraint(equalTo: collectionView.bottomAnchor),
+      self.pageControl.centerXAnchor.constraint(equalTo: safeArea.centerXAnchor),
     ] + [
-      appleLoginButton.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -20),
-      appleLoginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 26.5),
-      appleLoginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -26.5),
-      appleLoginButton.heightAnchor.constraint(equalToConstant: 60)
+      self.appleLoginButton.centerYAnchor.constraint(equalTo: self.pageControl.centerYAnchor),
+      self.appleLoginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 26.5),
+      self.appleLoginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -26.5),
+      self.appleLoginButton.heightAnchor.constraint(equalToConstant: 60)
     ])
   }
   

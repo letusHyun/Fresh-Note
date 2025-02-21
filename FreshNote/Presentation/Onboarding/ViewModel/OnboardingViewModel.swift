@@ -59,12 +59,14 @@ final class DefaultOnboardingViewModel: NSObject {
   private let dataSource: [OnboardingCellInfo] = {
     return [
       OnboardingCellInfo(
-        description: "식품을 더 맛있게, 그리고 안전하게\n보관하기 위한 첫걸음",
-        lottieName: "firstOnboardingLottie"
+        title: "직접 입력한 유통기한",
+        description: "원하는 날짜에 디데이 알림을 받아보세요",
+        lottieName: "bell"
       ),
       OnboardingCellInfo(
-        description: "내가 입력한 유통 & 소비기한으로\n원하는 디데이 알림을 받아보세요.",
-        lottieName: "secondOnboardingLottie"
+        title: "음식을 더 신선하고 안전하게!",
+        description: "올바른 보관 습관의 시작, 지금 함께해요.",
+        lottieName: "foodAndPhone"
       )
     ]
   }()
