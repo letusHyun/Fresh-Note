@@ -91,7 +91,7 @@ final class DefaultHomeViewModel: HomeViewModel {
   
   func viewDidLoad() {
     self.fetchProductUseCase
-      .fetchProducts()
+      .fetchProducts(sort: .default)
       .flatMap { [weak self] products -> AnyPublisher<[Product], any Error> in
         guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
         
@@ -115,7 +115,7 @@ final class DefaultHomeViewModel: HomeViewModel {
   func viewWillAppear() {
     guard !self.isInitialLoad else { return }
     
-    self.fetchProductUseCase.fetchProducts()
+    self.fetchProductUseCase.fetchProducts(sort: .default)
       .receive(on: DispatchQueue.main)
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }

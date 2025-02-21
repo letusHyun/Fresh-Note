@@ -8,8 +8,15 @@
 import Combine
 import Foundation
 
+enum FetchProductSort {
+  // 업로드 순 + 유통기한 지나면 후순
+  case `default`
+  // 유통기한 순서
+  case expiration
+}
+
 protocol FetchProductUseCase {
-  func fetchProducts() -> AnyPublisher<[Product], any Error>
+  func fetchProducts(sort: FetchProductSort) -> AnyPublisher<[Product], any Error>
   func fetchProduct(productID: DocumentID) -> AnyPublisher<Product, any Error>
   func fetchPinnedProducts() -> AnyPublisher<[Product], any Error>
   func fetchProduct(category: ProductCategory) -> AnyPublisher<[Product], any Error>
@@ -25,20 +32,28 @@ final class DefaultFetchProductUseCase: FetchProductUseCase {
     self.productRepository = productRepository
   }
   
-  func fetchProducts() -> AnyPublisher<[Product], any Error> {
+  func fetchProducts(sort: FetchProductSort) -> AnyPublisher<[Product], any Error> {
     return self.productRepository
       .fetchProducts()
+      
       .map { (products: [Product]) -> [Product] in
-        let now = Date()
-        
-        return products.sorted { (p1: Product, p2: Product) -> Bool in
-          let p1Expired = p1.expirationDate < now
-          let p2Expired = p2.expirationDate < now
+        switch sort {
+        case .default:
+          let now = Date()
           
-          if p1Expired != p2Expired {
-            return !p1Expired
-          } else {
-            return p1.creationDate > p2.creationDate
+          return products.sorted { (p1: Product, p2: Product) -> Bool in
+            let p1Expired = p1.expirationDate < now
+            let p2Expired = p2.expirationDate < now
+            
+            if p1Expired != p2Expired {
+              return !p1Expired
+            } else {
+              return p1.creationDate > p2.creationDate
+            }
+          }
+        case .expiration:
+          return products.sorted {
+            $0.expirationDate < $1.expirationDate
           }
         }
       }

@@ -89,10 +89,7 @@ final class CalendarViewController: BaseViewController {
   
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
-    
-    if self.isSelectedDay, let selectedDayComponents = self.selectedDayComponents {
-      self.viewModel.viewWillAppear(calendarDateComponents: .day(selectedDayComponents))
-    } else if let selectedMonthComponents = self.selectedMonthComponents {
+    if let selectedMonthComponents = self.selectedMonthComponents {
       self.viewModel.viewWillAppear(calendarDateComponents: .month(selectedMonthComponents))
     } else {
       self.viewModel.viewWillAppear(calendarDateComponents: .currentMonth)
@@ -232,8 +229,15 @@ extension CalendarViewController: UICalendarViewDelegate {
   ) -> UICalendarView.Decoration? {
     guard let targetDate = Calendar.current.date(from: dateComponents) else { return nil }
     
-    return self.viewModel.hasEvent(decorationFor: targetDate)
-    ? .default(color: UIColor.init(fnColor: .green2))
-    : nil
+    let currentDateComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+    guard let currentDate = Calendar.current.date(from: currentDateComponents) else { return nil }
+    
+    if self.viewModel.hasEvent(decorationFor: targetDate) {
+      if targetDate < currentDate {
+        return .default(color: UIColor(fnColor: .gray1))
+      }
+      return .default(color: UIColor(fnColor: .green2))
+    }
+    return nil
   }
 }

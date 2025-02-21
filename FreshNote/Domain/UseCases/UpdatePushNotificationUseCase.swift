@@ -63,7 +63,7 @@ final class DefaultUpdatePushNotificationUseCase: UpdatePushNotificationUseCase 
     }
     
     return fetchProductUseCase
-      .fetchProducts()
+      .fetchProducts(sort: .default)
       .flatMap { [weak self] products -> AnyPublisher<Void, any Error> in
         guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
         let productIDs = products.map { $0.did }

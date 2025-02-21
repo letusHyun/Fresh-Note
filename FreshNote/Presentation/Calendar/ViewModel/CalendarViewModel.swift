@@ -49,8 +49,7 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   private let monthFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.dateFormat = "yy.MM"
-    formatter.calendar = Calendar(identifier: .gregorian)
-    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.timeZone = TimeZone(abbreviation: "KST")
     formatter.locale = Locale(identifier: "ko_KR")
     return formatter
   }()
@@ -96,7 +95,7 @@ final class DefaultCalendarViewModel: CalendarViewModel {
   
   func viewWillAppear(calendarDateComponents: CalendarDateComponents) {
     self.fetchProductUseCase
-      .fetchProducts()
+      .fetchProducts(sort: .expiration)
       .receive(on: DispatchQueue.main)
       .sink { [weak self] completion in
         guard case .failure(let error) = completion else { return }
@@ -107,12 +106,11 @@ final class DefaultCalendarViewModel: CalendarViewModel {
         self.originDataSource = products
         
         switch calendarDateComponents {
-        case let .day(dateComponents):
-          self.filterToProductsBasedOnDay(dateComponents: dateComponents)
         case let .month(dateComponents):
           self.filterToProductsBasedOnMonth(dateComponents: dateComponents)
         case .currentMonth:
           self.filterToProductsBasedOnCurrentMonth(with: products)
+        case .day(_): break 
         }
         self.reloadDecorationsSubject.send(self.currentMonthDateComponents)
       }
