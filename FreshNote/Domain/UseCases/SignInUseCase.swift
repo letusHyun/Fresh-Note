@@ -22,13 +22,16 @@ protocol SignInUseCase {
 final class DefaultSignInUseCase: SignInUseCase {
   private let firebaseAuthRepository: any FirebaseAuthRepository
   private let refreshTokenRepository: any RefreshTokenRepository
+  private let pushNotiRestorationStateRepository: any PushNotiRestorationStateRepository
   
   init(
     firebaseAuthRepository: any FirebaseAuthRepository,
-    refreshTokenRepository: any RefreshTokenRepository
+    refreshTokenRepository: any RefreshTokenRepository,
+    pushNotiRestorationStateRepository: any PushNotiRestorationStateRepository
   ) {
     self.firebaseAuthRepository = firebaseAuthRepository
     self.refreshTokenRepository = refreshTokenRepository
+    self.pushNotiRestorationStateRepository = pushNotiRestorationStateRepository
   }
   
   func signIn(
@@ -40,23 +43,35 @@ final class DefaultSignInUseCase: SignInUseCase {
       // 애플 로그인
       return self.firebaseAuthRepository
         .signIn(idToken: idToken, nonce: nonce, fullName: fullName)
-        .flatMap { [weak self] () -> AnyPublisher<RefreshToken, any Error> in
+        .flatMap { [weak self] () -> AnyPublisher<Bool, any Error> in
           guard let self else {
             return Fail(error: CommonError.referenceError).eraseToAnyPublisher()
           }
           
-          // 파베 로그인 완료 후, network를 통해 refreshToken 가져옵니다.
           return self.refreshTokenRepository
-            .issuedFirstRefreshToken(with: authorizationCode)
+            .isSavedRefreshToken()
         }
-        .flatMap { [weak self] refreshToken -> AnyPublisher<Void, any Error> in
+        .flatMap { [weak self] isSavedRefreshToken -> AnyPublisher<Void, any Error> in
           guard let self else {
             return Fail(error: CommonError.referenceError).eraseToAnyPublisher()
           }
           
-          // refreshToken을 cache에 저장합니다.
-          return self.refreshTokenRepository
-            .saveRefreshToken(refreshToken: refreshToken)
+          if isSavedRefreshToken { // refresh token이 존재하면 (== 재로그인이라면)
+            return self.pushNotiRestorationStateRepository
+              .saveRestoreState(restorationState: .init(shouldRestore: true))
+          } else { // refresh token이 존재하지 않다면 (== 최초 로그인이라면)
+            return self.pushNotiRestorationStateRepository
+              .saveRestoreState(restorationState: .init(shouldRestore: false))
+              .flatMap {
+                self.refreshTokenRepository
+                  .issuedFirstRefreshToken(with: authorizationCode)
+              }
+              .flatMap {
+                self.refreshTokenRepository
+                  .saveRefreshToken(refreshToken: $0)
+              }
+              .eraseToAnyPublisher()
+          }
         }
         .eraseToAnyPublisher()
     }

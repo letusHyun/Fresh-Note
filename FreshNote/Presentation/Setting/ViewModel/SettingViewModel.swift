@@ -50,8 +50,6 @@ protocol SettingViewModelInput {
   func numberOfRows(in section: Int) -> Int
   func viewForHeader(in section: Int) -> String
   func heightForFooter(in section: Int) -> CGFloat
-  func didTapCancelButton()
-  func didTapSignOutButton()
 }
 
 protocol SettingViewModelOutput {
@@ -108,14 +106,6 @@ final class DefaultSettingViewModel: SettingViewModel {
     return 14
   }
   
-  func didTapCancelButton() {
-    
-  }
-  
-  func didTapSignOutButton() {
-    
-  }
-  
   // MARK: - Private
   private func makeDataSource() -> [SettingDataSource] {
     // 계정
@@ -128,7 +118,7 @@ final class DefaultSettingViewModel: SettingViewModel {
     
     // 설정
     let notification = SettingMenuItem(
-      title: "알림 설정",
+      title: "알림 날짜 재설정",
       action: { [weak self] in self?.actions.showDateTimeSetting() }
     )
     let settingSection = SettingDataSource(section: .settings, items: [notification])

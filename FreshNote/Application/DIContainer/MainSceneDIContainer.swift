@@ -150,7 +150,8 @@ private extension MainSceneDIContainer {
   func makeSignInUseCase() -> any SignInUseCase {
     return DefaultSignInUseCase(
       firebaseAuthRepository: self.makeFirebaseAuthRepository(),
-      refreshTokenRepository: self.makeRefreshTokenRepository()
+      refreshTokenRepository: self.makeRefreshTokenRepository(),
+      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
     )
   }
   

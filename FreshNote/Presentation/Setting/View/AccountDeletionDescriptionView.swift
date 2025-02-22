@@ -79,7 +79,7 @@ final class AccountDeletionDescriptionView: UIView {
   // MARK: - Private
   private func configureFirstLabel(with label: UILabel) {
     let firstParsing = "탈퇴 시 Fresh Note 계정이 삭제되며"
-    let secondParsing = "수집된 개인정보(알람, 제품 정보)를"
+    let secondParsing = "수집된 개인정보(알림, 제품 정보)를"
     let thirdParsing = "복구할 수 없습니다."
     
     let text = [self.bulletPoint, firstParsing, secondParsing, thirdParsing].joined(separator: " ")

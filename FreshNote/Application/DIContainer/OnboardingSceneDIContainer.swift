@@ -30,14 +30,11 @@ final class OnboardingSceneDIContainer {
     )
   }
   
-//  func makeSignInStateUseCase() -> any firebaseAuthRepository {
-//    return DefaultSignInStateUseCase(signInStateRepository: self.makeSignInStateRepository())
-//  }
-  
   func makeSignInUseCase() -> any SignInUseCase {
     return DefaultSignInUseCase(
       firebaseAuthRepository: self.makeFirebaseAuthRepository(),
-      refreshTokenRepository: self.makeRefreshTokenRepository()
+      refreshTokenRepository: self.makeRefreshTokenRepository(),
+      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
     )
   }
   
@@ -53,8 +50,7 @@ final class OnboardingSceneDIContainer {
       firstLaunchRepository: self.makeFirstLaunchRepository(),
       refreshTokenRepository: self.makeRefreshTokenRepository(),
       authRepository: self.makeFirebaseAuthRepository(),
-      dateTimeRepository: self.makeDateTimeRepository(),
-      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
+      dateTimeRepository: self.makeDateTimeRepository()
     )
   }
 //  func makeCheckDateTimeStateUseCase() -> any CheckDateTimeStateUseCase {

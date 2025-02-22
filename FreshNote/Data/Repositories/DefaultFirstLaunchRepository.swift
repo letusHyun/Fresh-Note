@@ -37,7 +37,7 @@ final class DefaultFirstLaunchRepository: FirstLaunchRepository {
       .eraseToAnyPublisher()
   }
   
-  /// 최초 실행 여부를 저장하고 true를 반환합니다.
+  /// 최초 실행 여부를 저장하고 결과값을 반환합니다.
   private func handleFirstLaunchState(isSavedState: Bool) -> AnyPublisher<Bool, any Error> {
     return self.firstLaunchStorage
       .saveFirstLaunchState()

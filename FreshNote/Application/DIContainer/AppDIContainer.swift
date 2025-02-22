@@ -88,8 +88,7 @@ final class AppDIContainer {
       firstLaunchRepository: self.makeFirstLaunchRepository(),
       refreshTokenRepository: self.makeRefreshTokenRepository(),
       authRepository: self.makeFirebaseAuthRepository(),
-      dateTimeRepository: self.makeDateTimeRepository(),
-      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
+      dateTimeRepository: self.makeDateTimeRepository()
     )
   }
   
@@ -97,6 +96,19 @@ final class AppDIContainer {
     return DefaultFirebaseAuthRepository(
       dateTimeCache: self.makeDateTimeStorage(),
       firebaseNetworkService: self.makeFirebasNetworkService()
+    )
+  }
+  
+  func makeSaveNotiRestorationStateUseCase() -> any SaveNotiRestorationStateUseCase {
+    return DefaultSaveNotiRestorationStateUseCase(
+      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
+    )
+  }
+  
+  func makeSignOutUseCase() -> any SignOutUseCase {
+    DefaultSignOutUseCase(
+      firebaseAuthRepository: self.makeFirebaseAuthRepository(),
+      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
     )
   }
 }

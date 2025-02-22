@@ -20,7 +20,7 @@ final class DateTimeSettingViewController: BaseViewController {
   // MARK: - Properties
   private let descriptionLabel: UILabel = {
     let label = UILabel()
-    label.text = "유통기한 임박 알람을 받을 날짜, 시간을 지정해주세요."
+    label.text = "유통기한 임박 알림을 받을 날짜, 시간을 지정해주세요."
     label.textAlignment = .center
     label.textColor = UIColor(fnColor: .gray3)
     label.font = .pretendard(size: 16, weight: ._400)
