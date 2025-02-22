@@ -23,8 +23,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     let window = UIWindow(windowScene: windowScene)
     self.window = window
     self.appCoordinator = AppCoordinator(appDIContainer: self.appDIContainer)
-    appCoordinator?.delegate = self
-    appCoordinator?.start()
+    self.appCoordinator?.delegate = self
+    self.appCoordinator?.start()
     window.makeKeyAndVisible()
   }
 }
@@ -32,6 +32,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 // MARK: - AppCoordinatorDelegate
 extension SceneDelegate: AppCoordinatorDelegate {
   func setRootViewController(_ viewController: UIViewController) {
-    window?.rootViewController = viewController
+    self.window?.rootViewController = viewController
   }
 }

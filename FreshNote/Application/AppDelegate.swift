@@ -43,4 +43,16 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
   ) {
     completionHandler([.banner, .badge, .sound, .list])
   }
+  
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+//    if let windowScene = UIApplication.shared.connectedScenes
+//      .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+//       let sceneDelegate = windowScene.delegate as? SceneDelegate {
+//      sceneDelegate.appCoordinator
+//    }
+  }
 }
