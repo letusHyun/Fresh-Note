@@ -103,6 +103,8 @@ extension ProductCoordinator {
     
     let actions = PhotoBottomSheetViewModelActions(presentPhotoLibrary: { [weak self] in
       self?.presentPhotoLibrary()
+    }, presentCameraAuthorizationWarning: { [weak self] in
+      self?.presentCameraAuthorizationWarning(presentingViewController: bottomSheetViewController)
     }, presentCamera: { [weak self] in
       self?.presentCamera()
     }, presentPhotoDetail: { [weak self] in
@@ -197,6 +199,14 @@ extension ProductCoordinator {
     camera.cameraCaptureMode = .photo
     camera.delegate = self
     self.photoBottomSheetViewController?.present(camera, animated: true, completion: nil)
+  }
+  
+  private func presentCameraAuthorizationWarning(presentingViewController: UIViewController) {
+    AlertBuilder(presentingViewController: presentingViewController)
+      .setTitle("카메라 권한 접근 실패")
+      .setMessage("설정 앱에서 카메라 권한을 재설정해주세요🙏")
+      .addActionConfirm("확인")
+      .present()
   }
 }
 
