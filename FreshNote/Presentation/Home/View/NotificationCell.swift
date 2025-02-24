@@ -55,8 +55,11 @@ extension NotificationCell {
 
 // MARK: - Helpers
 extension NotificationCell {
-  func configure(notification: Notification) {
-    descriptionLabel.text = "\(notification.productName)의 유통기한이 D-\(notification.dDay) 남았습니다."
+  func configure(notification: ProductNotification) {
+    descriptionLabel.text = NotificationHelper.makeBody(
+      productName: notification.productName,
+      remainingDay: notification.remainingDay
+    )
     
     if !notification.isViewed {
       contentView.backgroundColor = UIColor(hex: "#FFA03A", alpha: 0.3)

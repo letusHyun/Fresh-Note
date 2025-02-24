@@ -9,7 +9,8 @@ import UIKit
 
 final class OnboardingSceneDIContainer {
   struct Dependencies {
-//    let apiDataTransferService: DataTransferService
+    let apiDataTransferService: any DataTransferService
+    let firebaseNetworkService: any FirebaseNetworkService
   }
   
   // MARK: - Properties
@@ -22,31 +23,140 @@ final class OnboardingSceneDIContainer {
   
   
   // MARK: - Domain Layer
-  func makeAlarmSaveUseCase() -> any AlarmSaveUseCase {
-    return DefaultAlarmSaveUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  func makeSaveDateTimeUseCase() -> any SaveDateTimeUseCase {
+    return DefaultSaveDateTimeUseCase(
+      dateTimeRepository: self.makeDateTimeRepository(),
+      restorationStateRepository: self.makePushNotiRestorationStateRepository()
+    )
+  }
+  
+  func makeSignInUseCase() -> any SignInUseCase {
+    return DefaultSignInUseCase(
+      firebaseAuthRepository: self.makeFirebaseAuthRepository(),
+      refreshTokenRepository: self.makeRefreshTokenRepository(),
+      pushNotiRestorationStateRepository: self.makePushNotiRestorationStateRepository()
+    )
+  }
+  
+  func makeSaveUserProfileUseCase() -> any SaveUserProfileUseCase {
+    return DefaultSaveUserProfileUseCase(
+      userProfileRepository: self.makeUserProfileRepository(),
+      imageRepository: self.makeImageRepository()
+    )
+  }
+  
+  func makeCheckInitialStateUseCase() -> any CheckInitialStateUseCase {
+    return DefaultCheckInitialStateUseCase(
+      firstLaunchRepository: self.makeFirstLaunchRepository(),
+      refreshTokenRepository: self.makeRefreshTokenRepository(),
+      authRepository: self.makeFirebaseAuthRepository(),
+      dateTimeRepository: self.makeDateTimeRepository()
+    )
+  }
+//  func makeCheckDateTimeStateUseCase() -> any CheckDateTimeStateUseCase {
+//    return DefaultCheckDateTimeStateUseCase(dateTimeRepository: self.makeDateTimeRepository())
+//  }
+  
+  func makeFetchDateTimeUseCase() -> any FetchDateTimeUseCase {
+    return DefaultFetchDateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
+  }
+  
+  func makeUpdateDateTimeUseCase() -> any UpdateDateTimeUseCase {
+    return DefaultUpdateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
   }
   
   // MARK: - Data Layer
-  func makeFirestoreService() -> any FirestoreService {
-    return DefaultFirestoreService()
+  func makeFirstLaunchRepository() -> any FirstLaunchRepository {
+    DefaultFirstLaunchRepository(firstLaunchStorage: self.makeFirstLaunchStorage())
   }
   
+  func makeFirstLaunchStorage() -> any FirstLaunchStorage {
+    UserDefaultsFirstLaunchStorage()
+  }
+  
+  func makePushNotiRestorationStateStorage() -> any PushNotiRestorationStateStorage {
+    UserDefaultsPushNotiRestorationStateStorage()
+  }
+  func makePushNotiRestorationStateRepository() -> any PushNotiRestorationStateRepository {
+    DefaultPushNotiRestorationStateRepository(restoreStateStorage: self.makePushNotiRestorationStateStorage())
+  }
+  
+  func makeFirebaseAuthRepository() -> any FirebaseAuthRepository {
+    return DefaultFirebaseAuthRepository(
+      dateTimeCache: self.makeDateTimeStorage(),
+      firebaseNetworkService: self.dependencies.firebaseNetworkService
+    )
+  }
+  
+  func makeImageRepository() -> any ImageRepository {
+    return DefaultImageRepository(firebaseNetworkService: self.dependencies.firebaseNetworkService)
+  }
+  
+  func makeCoreDataStorage() -> any CoreDataStorage {
+    return PersistentCoreDataStorage.shared
+  }
+  
+  func makeUserProfileStorage() -> any UserProfileStorage {
+    return CoreDataUserProfileStorage(coreDataStorage: self.makeCoreDataStorage())
+  }
+  
+  func makeUserProfileRepository() -> any UserProfileRepository {
+    return DefaultUserProfileRepository(
+      userProfileStorage: self.makeUserProfileStorage(),
+      firebaseNetworkService: self.dependencies.firebaseNetworkService
+    )
+  }
+  
+//  func makeSignInStateStorage() -> any SignInStateStorage {
+//    return UserDefaultsSignInStateStorage()
+//  }
+//  
+//  func makeSignInStateRepository() -> any SignInStateRepository {
+//    return DefaultSignInStateRepository(signInStateStorage: self.makeSignInStateStorage())
+//  }
+  
   func makeDateTimeRepository() -> any DateTimeRepository {
-    return DefaultDateTimeRepository(service: self.makeFirestoreService())
+    return DefaultDateTimeRepository(
+      firebaseNetworkService: self.dependencies.firebaseNetworkService,
+      dateTimeStorage: self.makeDateTimeStorage()
+    )
+  }
+  
+  func makeDateTimeStorage() -> any DateTimeStorage {
+    return CoreDataDateTimeStorage(coreDataStorage: self.makeCoreDataStorage())
+  }
+  
+  func makeRefreshTokenRepository() -> any RefreshTokenRepository {
+    return DefaultRefreshTokenRepository(
+      dataTransferService: self.dependencies.apiDataTransferService,
+      cache: self.makeRefreshTokenStorage()
+    )
+  }
+  
+  func makeRefreshTokenStorage() -> any RefreshTokenStorage {
+    return KeychainRefreshTokenStorage()
   }
   
   // MARK: - Presentation Layer
   func makeOnboardingViewModel(
     actions: OnboardingViewModelActions
   ) -> OnboardingViewModel {
-    return DefaultOnboardingViewModel(actions: actions)
+    return DefaultOnboardingViewModel(
+      actions: actions,
+      signInUseCase: self.makeSignInUseCase(),
+      checkInitialStateUseCase: self.makeCheckInitialStateUseCase()
+    )
   }
   
   func makeDateTimeSettingViewModel(
-    actions: DateTimeSettingViewModelActions
+    actions: DateTimeSettingViewModelActions,
+    mode: DateTimeSettingViewModelMode
   ) -> DateTimeSettingViewModel {
-    // TODO: - DefaultRepository 분리해야함
-    return DefaultDateTimeSettingViewModel(actions: actions, alarmSaveUseCase: self.makeAlarmSaveUseCase())
+    return DefaultDateTimeSettingViewModel(
+      actions: actions,
+      mode: mode,
+      saveDateTimeUseCase: self.makeSaveDateTimeUseCase()
+    )
   }
 }
 
@@ -70,9 +180,10 @@ extension OnboardingSceneDIContainer: OnboardingCoordinatorDependencies {
 // MARK: - DateTimeSettingCoordinatorDependencies
 extension OnboardingSceneDIContainer: DateTimeSettingCoordinatorDependencies {
   func makeDateTimeSettingViewController(
-    actions: DateTimeSettingViewModelActions
+    actions: DateTimeSettingViewModelActions,
+    mode: DateTimeSettingViewModelMode
   ) -> DateTimeSettingViewController {
-    let viewModel = self.makeDateTimeSettingViewModel(actions: actions)
-    return DateTimeSettingViewController(viewModel: viewModel)
+    let viewModel = self.makeDateTimeSettingViewModel(actions: actions, mode: mode)
+    return DateTimeSettingViewController(viewModel: viewModel, mode: mode)
   }
 }

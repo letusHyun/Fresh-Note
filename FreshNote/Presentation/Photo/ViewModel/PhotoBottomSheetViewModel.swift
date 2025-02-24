@@ -4,20 +4,24 @@
 //
 //  Created by SeokHyun on 11/23/24.
 //
-
+import AVFoundation
 import Foundation
 
 struct PhotoBottomSheetViewModelActions {
-  let passData: (Data?) -> Void
+  let presentPhotoLibrary: () -> Void
+  let presentCameraAuthorizationWarning: () -> Void
+  let presentCamera: () -> Void
+  let presentPhotoDetail: () -> Void
+  let deleteImageAndDisMissBottomSheet: () -> Void
 }
 
 typealias PhotoBottomSheetViewModel = PhotoBottomSheetViewModelInput & PhotoBottomSheetViewModelOutput
 
 protocol PhotoBottomSheetViewModelInput {
-  func didTapAlbumButton() 
+  func didTapPhotoDetailButton()
+  func didTapAlbumButton()
   func didTapCameraButton()
   func didTapDeleteButton()
-  func didFinishPickingMediaWithInfo(data: Data?)
 }
 
 protocol PhotoBottomSheetViewModelOutput {
@@ -37,19 +41,39 @@ final class DefaultPhotoBottomSheetViewModel: PhotoBottomSheetViewModel {
   
   // MARK: - Input
   func didTapAlbumButton() {
-    // actions을 통해 bottomSheet 제거 + productVM에게 picker 띄우라고 알림 -> vm의 output으로 VC가 피커 띄움
-    print("사진 보관함 탭")
+    self.actions.presentPhotoLibrary()
   }
   
   func didTapCameraButton() {
-    print("사진 찍기 탭")
+    let status = AVCaptureDevice.authorizationStatus(for: .video)
+    
+    switch status {
+    case .authorized:
+      self.actions.presentCamera()
+    case .denied, .restricted:
+      self.actions.presentCameraAuthorizationWarning()
+      // 사메라 사용 불가 alert present
+    case .notDetermined:
+      AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+        DispatchQueue.main.async {
+          if granted {
+            self?.actions.presentCamera()
+          } else {
+            // 사메라 사용 불가 alert present
+            self?.actions.presentCameraAuthorizationWarning()
+          }
+        }
+      }
+    @unknown default:
+      break
+    }
   }
   
   func didTapDeleteButton() {
-    print("현재 사진 삭제 탭")
+    self.actions.deleteImageAndDisMissBottomSheet()
   }
   
-  func didFinishPickingMediaWithInfo(data: Data?) {
-    self.actions.passData(data)
+  func didTapPhotoDetailButton() {
+    self.actions.presentPhotoDetail()
   }
 }

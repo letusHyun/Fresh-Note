@@ -95,9 +95,10 @@ final class DynamicTextField: UITextField {
   }
   
   private func bind() {
-    NotificationCenter.default.publisher(for: UITextField.textDidChangeNotification, object: self)
-      .compactMap { ($0.object as? UITextField)?.text }
-      .map { text in
+    self.textEditingChangedPublisher
+      .compactMap { [weak self] text in
+        guard let self = self else { return nil }
+        
         let textWidth = text.size(withAttributes: [.font: self.font!]).width
         return max(100, textWidth + 40)
       }

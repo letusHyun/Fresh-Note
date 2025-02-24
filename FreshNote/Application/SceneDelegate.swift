@@ -11,6 +11,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
   // MARK: - Properties
   var window: UIWindow?
   private var appCoordinator: AppCoordinator?
+  private let appDIContainer = AppDIContainer()
   
   // MARK: - LifeCycle
   func scene(
@@ -21,9 +22,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     guard let windowScene = (scene as? UIWindowScene) else { return }
     let window = UIWindow(windowScene: windowScene)
     self.window = window
-    self.appCoordinator = AppCoordinator(dependencies: AppDIContainer())
-    appCoordinator?.delegate = self
-    appCoordinator?.start()
+    self.appCoordinator = AppCoordinator(appDIContainer: self.appDIContainer)
+    self.appCoordinator?.delegate = self
+    self.appCoordinator?.start()
     window.makeKeyAndVisible()
   }
 }
@@ -31,6 +32,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 // MARK: - AppCoordinatorDelegate
 extension SceneDelegate: AppCoordinatorDelegate {
   func setRootViewController(_ viewController: UIViewController) {
-    window?.rootViewController = viewController
+    self.window?.rootViewController = viewController
   }
 }

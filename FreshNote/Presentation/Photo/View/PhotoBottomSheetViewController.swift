@@ -42,11 +42,23 @@ final class PhotoBottomSheetViewController: UIViewController {
     return button
   }()
   
+  private lazy var photoDetailButton: PhotoBottomSheetButton = {
+    let button = PhotoBottomSheetButton(
+      title: "사진 전체 보기",
+      image: UIImage(systemName: "rectangle.center.inset.filled"),
+      color: .black
+    )
+    return button
+  }()
+  
   private var subscriptions = Set<AnyCancellable>()
+  private let shouldConfigurePhotoDetailButton: Bool
   
   // MARK: - LifeCycle
-  init(viewModel: any PhotoBottomSheetViewModel) {
+  init(viewModel: any PhotoBottomSheetViewModel, shouldConfigurePhotoDetailButton: Bool) {
     self.viewModel = viewModel
+    self.shouldConfigurePhotoDetailButton = shouldConfigurePhotoDetailButton
+    
     super.init(nibName: nil, bundle: nil)
   }
   
@@ -56,8 +68,8 @@ final class PhotoBottomSheetViewController: UIViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    setupLayout()
-    bind()
+    self.setupLayout()
+    self.bind()
   }
   
   deinit {
@@ -66,33 +78,44 @@ final class PhotoBottomSheetViewController: UIViewController {
   
   // MARK: - Private Helpers
   func bind() {
-    self.albumButton.publisher(for: UITapGestureRecognizer())
-      .receive(on: DispatchQueue.main)
+    self.albumButton.gesture()
       .sink { [weak self] _ in
-        let imagePickerController = UIImagePickerController()
-        imagePickerController.delegate = self
-        imagePickerController.sourceType = .photoLibrary
-        self?.present(imagePickerController, animated: true)
-//        self?.viewModel.didTapAlbumButton()
+        self?.viewModel.didTapAlbumButton()
       }
       .store(in: &self.subscriptions)
     
-    self.cameraButton.publisher(for: UITapGestureRecognizer())
-      .receive(on: DispatchQueue.main)
+    self.cameraButton.gesture()
       .sink { [weak self] _ in
         self?.viewModel.didTapCameraButton()
       }
       .store(in: &self.subscriptions)
     
-    self.deleteButton.publisher(for: UITapGestureRecognizer())
-      .receive(on: DispatchQueue.main)
+    self.deleteButton.gesture()
       .sink { [weak self] _ in
         self?.viewModel.didTapDeleteButton()
-      }.store(in: &self.subscriptions)
+      }
+      .store(in: &self.subscriptions)
+    
+    self.photoDetailButton.gesture()
+      .sink { [weak self] _ in
+        self?.viewModel.didTapPhotoDetailButton()
+      }
+      .store(in: &self.subscriptions)
   }
   
   
   private func setupLayout() {
+    var arrangedSubviews: [UIView] = [
+      self.albumButton,
+      self.cameraButton,
+      self.deleteButton
+    ]
+    
+    // default image 여부에 따라서 사진 전체보기 버튼 보이기/안보이기
+    if self.shouldConfigurePhotoDetailButton {
+      arrangedSubviews.insert(self.photoDetailButton, at: .zero)
+    }
+    
     let stackView: UIStackView = {
       let sv = UIStackView()
       sv.axis = .vertical
@@ -101,7 +124,13 @@ final class PhotoBottomSheetViewController: UIViewController {
       return sv
     }()
     
-    _=[self.albumButton, self.cameraButton, self.deleteButton].map { stackView.addArrangedSubview($0) }
+    arrangedSubviews.forEach { stackView.addArrangedSubview($0) }
+    
+    let buttonHeight: CGFloat = 48
+    
+    self.albumButton.snp.makeConstraints {
+      $0.height.equalTo(buttonHeight)
+    }
     
     self.view.addSubview(stackView)
     
@@ -109,22 +138,7 @@ final class PhotoBottomSheetViewController: UIViewController {
       $0.top.equalToSuperview().inset(20)
       $0.leading.trailing.equalToSuperview().inset(16.5)
       $0.bottom.equalToSuperview().inset(14)
-    }
-  }
-}
-
-extension PhotoBottomSheetViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-  func imagePickerController(
-    _ picker: UIImagePickerController,
-    didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
-  ) {
-    if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
-      let imageData = image.jpegData(compressionQuality: 0.8)
-      picker.dismiss(animated: true)
-      
-      self.viewModel.didFinishPickingMediaWithInfo(data: imageData)
-      // 여기서 받은 이미지를 vm -> Coordinator전달 후, coordinator에서 photoVM -> photoVC에게 전달
-      // vm을 거쳐야 하므로, Data타입으로 변환해서 사용하는것이 좋을 듯
+      $0.height.equalTo(buttonHeight * 3)
     }
   }
 }

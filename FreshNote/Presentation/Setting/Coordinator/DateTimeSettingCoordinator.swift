@@ -9,7 +9,8 @@ import UIKit
 
 protocol DateTimeSettingCoordinatorDependencies: AnyObject {
   func makeDateTimeSettingViewController(
-    actions: DateTimeSettingViewModelActions
+    actions: DateTimeSettingViewModelActions,
+    mode: DateTimeSettingViewModelMode
   ) -> DateTimeSettingViewController
 }
 
@@ -30,19 +31,23 @@ final class DateTimeSettingCoordinator: BaseCoordinator {
   }
   
   // MARK: - Start
-  func start() {
-    let actions = DateTimeSettingViewModelActions { [weak self] in
+  func start(mode: DateTimeSettingViewModelMode) {
+    let actions = DateTimeSettingViewModelActions(showHome: { [weak self] in
       self?.showHome()
-    }
-    let viewController = dependencies.makeDateTimeSettingViewController(actions: actions)
-    navigationController?.pushViewController(viewController, animated: true)
+    }, pop: { [weak self] in
+      self?.pop()
+    })
+    let viewController = self.dependencies.makeDateTimeSettingViewController(actions: actions, mode: mode)
+    self.navigationController?.pushViewController(viewController, animated: true)
   }
-}
-
-// MARK: - Private Helpers
-private extension DateTimeSettingCoordinator {
-  // todo 로그인 버튼 클릭하면 OnboardingCoordinator까지 제거한 뒤에 AppCoordinator에서 MainCoordinator를 실행해야 함
-  func showHome() {
-    finish()
+  
+  // MARK: - Private
+  private func showHome() {
+    self.finish()
+  }
+  
+  private func pop() {
+    self.navigationController?.popViewController(animated: true)
+    self.finish()
   }
 }

@@ -25,7 +25,7 @@ protocol CategoryBottomSheetViewModelOutput {
 
 final class DefaultCategoryBottomSheetViewModel: CategoryBottomSheetViewModel {
   // MARK: - Properties
-  private let categories: [String] = Category.allCases.map { $0.rawValue }
+  private let categories: [String]
   private let actions: CategoryBottomSheetViewModelActions
   
   // MARK: - Output
@@ -33,6 +33,7 @@ final class DefaultCategoryBottomSheetViewModel: CategoryBottomSheetViewModel {
   // MARK: - LifeCycle
   init(actions: CategoryBottomSheetViewModelActions) {
     self.actions = actions
+    self.categories = ProductCategory.allCases.map { $0.rawValue }
   }
   
   // MARK: - Input

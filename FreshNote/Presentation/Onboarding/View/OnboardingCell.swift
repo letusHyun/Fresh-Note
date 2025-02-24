@@ -14,13 +14,20 @@ final class OnboardingCell: UICollectionViewCell {
     return String(describing: Self.self)
   }
   
+  private let titleLabel: UILabel = {
+    let lb = UILabel()
+    lb.font = .pretendard(size: 22, weight: ._600)
+    lb.textColor = UIColor(fnColor: .gray3)
+    lb.textAlignment = .center
+    return lb
+  }()
+  
   private let descriptionLabel: UILabel = {
-    let label = UILabel()
-    label.font = .pretendard(size: 16, weight: ._600)
-    label.textColor = UIColor(fnColor: .gray3)
-    label.numberOfLines = 0
-    label.textAlignment = .center
-    return label
+    let lb = UILabel()
+    lb.font = .pretendard(size: 18, weight: ._500)
+    lb.textColor = UIColor(fnColor: .gray3)
+    lb.textAlignment = .center
+    return lb
   }()
   
   private let lottieView: LottieAnimationView = {
@@ -44,38 +51,46 @@ final class OnboardingCell: UICollectionViewCell {
 // MARK: - Configure
 extension OnboardingCell {
   func configure(with info: OnboardingCellInfo) {
-    descriptionLabel.text = info.description
-    lottieView.stop()
-    lottieView.animation = LottieAnimation.named(info.lottieName)
-    lottieView.play()
+    self.titleLabel.text = info.title
+    self.descriptionLabel.text = info.description
+    
+    self.lottieView.stop()
+    self.lottieView.animation = LottieAnimation.named(info.lottieName)
+    self.lottieView.play()
   }
 }
 
 // MARK: - Private Helpers
 private extension OnboardingCell {
   func setupUI() {
-    setupLayout()
+    self.setupLayout()
   }
   
   func setupLayout() {
-    contentView.addSubview(descriptionLabel)
-    contentView.addSubview(lottieView)
+    self.contentView.addSubview(self.lottieView)
+    self.contentView.addSubview(self.titleLabel)
+    self.contentView.addSubview(self.descriptionLabel)
     
-    descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-    lottieView.translatesAutoresizingMaskIntoConstraints = false
+    self.descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
+    self.titleLabel.translatesAutoresizingMaskIntoConstraints = false
+    self.lottieView.translatesAutoresizingMaskIntoConstraints = false
     
     NSLayoutConstraint.activate(
       [
-        lottieView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 70),
-        lottieView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-        lottieView.widthAnchor.constraint(equalToConstant: 300),
-        lottieView.heightAnchor.constraint(equalTo: lottieView.widthAnchor),
-        lottieView.bottomAnchor.constraint(equalTo: descriptionLabel.topAnchor, constant: -50)
+        self.lottieView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 70),
+        self.lottieView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+        self.lottieView.widthAnchor.constraint(equalToConstant: 300),
+        self.lottieView.heightAnchor.constraint(equalTo: lottieView.widthAnchor),
       ]
       +
       [
-        descriptionLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-        descriptionLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -100)
+        self.titleLabel.topAnchor.constraint(equalTo: self.lottieView.bottomAnchor, constant: 43),
+        self.titleLabel.centerXAnchor.constraint(equalTo: self.contentView.centerXAnchor),
+      ]
+      +
+      [
+        self.descriptionLabel.topAnchor.constraint(equalTo: self.titleLabel.bottomAnchor, constant: 23),
+        self.descriptionLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
       ]
     )
   }

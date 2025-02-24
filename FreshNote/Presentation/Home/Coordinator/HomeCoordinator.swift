@@ -5,6 +5,7 @@
 //  Created by SeokHyun on 10/28/24.
 //
 
+import Combine
 import UIKit
 
 protocol HomeCoordinatorDependencies: AnyObject {
@@ -21,6 +22,7 @@ final class HomeCoordinator: BaseCoordinator {
   // MARK: - Properties
   private let dependencies: any HomeCoordinatorDependencies
   
+//  private let productSubject = PassthroughSubject<Product?, Never>()
   
   // MARK: - LifeCycle
   init(navigationController: UINavigationController?, dependencies: any HomeCoordinatorDependencies) {
@@ -32,16 +34,19 @@ final class HomeCoordinator: BaseCoordinator {
 // MARK: - Start
 extension HomeCoordinator {
   func start() {
-    let actions = HomeViewModelActions(showNotificationPage: { [weak self] in
-      self?.showNotificationPage()
-    }, showSearchPage: { [weak self] in
-      self?.showSearchPage()
-    }, showProductPage: { [weak self] in
-      self?.showProductPage()
-    })
+    let actions = HomeViewModelActions(
+      showNotificationPage: { [weak self] in
+        self?.showNotificationPage()
+      }, showSearchPage: { [weak self] in
+        self?.showSearchPage()
+      }, showProductPage: { [weak self] product in
+        let mode: ProductViewModelMode = product.map { .edit($0) } ?? .create
+        self?.showProductPage(mode: mode)
+      }
+    )
     
     let homeViewController = self.dependencies.makeHomeViewController(actions: actions)
-    self.navigationController?.pushViewController(homeViewController, animated: true)
+    self.navigationController?.viewControllers = [homeViewController]
   }
 }
 
@@ -65,11 +70,12 @@ extension HomeCoordinator {
     childCoordinator.start()
   }
   
-  private func showProductPage() {
+  private func showProductPage(mode: ProductViewModelMode) {
     let childCoordinator = self.dependencies.makeProductCoordinator(
       navigationController: self.navigationController,
-      mode: .create
+      mode: mode
     )
+    
     childCoordinator.finishDelegate = self
     self.childCoordinators[childCoordinator.identifier] = childCoordinator
     childCoordinator.start()

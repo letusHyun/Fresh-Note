@@ -17,7 +17,7 @@ protocol NotificationViewModel: NotificaionViewModelInput, NotificationViewModel
 protocol NotificaionViewModelInput {
   func viewDidLoad()
   func numberOfRowsInSection() -> Int
-  func cellForRow(at indexPath: IndexPath) -> Notification
+  func cellForRow(at indexPath: IndexPath) -> ProductNotification
   func didSelectRow(at indexPath: IndexPath)
   func didTapBackButton()
 }
@@ -25,65 +25,71 @@ protocol NotificaionViewModelInput {
 protocol NotificationViewModelOutput {
   var reloadDataPublisher: AnyPublisher<Void, Never> { get }
   var reloadRowPublisher: AnyPublisher<IndexPath, Never> { get }
+  var errorPublisher: AnyPublisher<(any Error)?, Never> { get }
 }
 
 final class DefaultNotificationViewModel: NotificationViewModel {
   // MARK: - Properties
-  private var notifications: [Notification] = []
+  private var notifications: [ProductNotification] = []
   private let actions: NotificationViewModelActions
+  private let productNotificationUseCase: any ProductNotificationUseCase
+  private var subscriptions = Set<AnyCancellable>()
   
   // MARK: - Output
   private let reloadDataSubject = PassthroughSubject<Void, Never>()
   private let reloadRowSubject = PassthroughSubject<IndexPath, Never>()
+  @Published private var error: (any Error)?
   
   var reloadDataPublisher: AnyPublisher<Void, Never> {
-    reloadDataSubject.eraseToAnyPublisher()
+    self.reloadDataSubject.eraseToAnyPublisher()
   }
   var reloadRowPublisher: AnyPublisher<IndexPath, Never> {
-    reloadRowSubject.eraseToAnyPublisher()
+    self.reloadRowSubject.eraseToAnyPublisher()
   }
+  var errorPublisher: AnyPublisher<(any Error)?, Never> { self.$error.eraseToAnyPublisher() }
   
   // MARK: - LifeCycle
-  init(actions: NotificationViewModelActions) {
+  init(
+    actions: NotificationViewModelActions,
+    productNotificationUseCase: any ProductNotificationUseCase
+  ) {
     self.actions = actions
+    self.productNotificationUseCase = productNotificationUseCase
   }
   // MARK: - Input
   func viewDidLoad() {
-    // fetch api
-    
-    // mock
-    for i in 0..<20 {
-      let isViewed: Bool
-      if i % 2 == 0 {
-        isViewed = false
-        notifications.append(Notification(productName: "제품\(i+1)", dDay: i+1, isViewed: isViewed))
-      } else {
-        isViewed = true
-        notifications.append(Notification(productName: "제품\(i+1)", dDay: i+1, isViewed: isViewed))
+    self.productNotificationUseCase
+      .fetchProductNotifications()
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] completion in
+        guard case .failure(let error) = completion else { return }
+        self?.error = error
+      } receiveValue: { [weak self] productNotifications in
+        self?.notifications = productNotifications
+        self?.reloadDataSubject.send()
       }
-    }
-    reloadDataSubject.send()
+      .store(in: &self.subscriptions)
   }
   
   func numberOfRowsInSection() -> Int {
-    return notifications.count
+    return self.notifications.count
   }
   
-  func cellForRow(at indexPath: IndexPath) -> Notification {
-    return notifications[indexPath.row]
+  func cellForRow(at indexPath: IndexPath) -> ProductNotification {
+    return self.notifications[indexPath.row]
   }
   
   func didSelectRow(at indexPath: IndexPath) {
-    guard !notifications[indexPath.row].isViewed else { return }
+    guard !self.notifications[indexPath.row].isViewed else { return }
     // fetch api
         // 성공 시, 서버는 저장만 함
     
     // 성공 시
-    notifications[indexPath.row].isViewed.toggle()
-    reloadDataSubject.send()
+    self.notifications[indexPath.row].isViewed.toggle()
+    self.reloadDataSubject.send()
   }
   
   func didTapBackButton() {
-    actions.pop()
+    self.actions.pop()
   }
 }

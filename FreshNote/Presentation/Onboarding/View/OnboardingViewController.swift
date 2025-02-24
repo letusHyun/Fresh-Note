@@ -5,11 +5,11 @@
 //  Created by SeokHyun on 10/19/24.
 //
 
-import UIKit
 import AuthenticationServices
 import Combine
-import CryptoKit
-import FirebaseAuth
+import UIKit
+
+import SnapKit
 
 final class OnboardingViewController: BaseViewController {
   // MARK: - Properties
@@ -54,6 +54,8 @@ final class OnboardingViewController: BaseViewController {
   
   private let viewModel: any OnboardingViewModel
   
+  private let activityIndicatorView = ActivityIndicatorView()
+  
   // MARK: - LifeCycle
   init(viewModel: any OnboardingViewModel) {
     self.viewModel = viewModel
@@ -66,13 +68,27 @@ final class OnboardingViewController: BaseViewController {
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    addTargets()
-    setNavigationConfiguration()
-    setupCollectionView()
+    defer { self.viewModel.viewDidLoad() }
+    
+    self.addTargets()
+    self.setNavigationConfiguration()
+    self.setupCollectionView()
+    self.bind(to: self.viewModel)
+  }
+  
+  deinit {
+    print("DEBUG: \(Self.self) deinit")
   }
   
   // MARK: - SetupUI
   override func setupLayout() {
+    defer {
+      self.view.addSubview(self.activityIndicatorView)
+      self.activityIndicatorView.snp.makeConstraints {
+        $0.edges.equalToSuperview()
+      }
+    }
+    
     view.addSubview(freshNoteTitle)
     view.addSubview(collectionView)
     view.addSubview(pageControl)
@@ -93,14 +109,35 @@ final class OnboardingViewController: BaseViewController {
       collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
       collectionView.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -92)
     ] + [
-      pageControl.topAnchor.constraint(equalTo: collectionView.bottomAnchor),
-      pageControl.centerXAnchor.constraint(equalTo: safeArea.centerXAnchor),
+      self.pageControl.topAnchor.constraint(equalTo: collectionView.bottomAnchor),
+      self.pageControl.centerXAnchor.constraint(equalTo: safeArea.centerXAnchor),
     ] + [
-      appleLoginButton.bottomAnchor.constraint(equalTo: safeArea.bottomAnchor, constant: -20),
-      appleLoginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 26.5),
-      appleLoginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -26.5),
-      appleLoginButton.heightAnchor.constraint(equalToConstant: 60)
+      self.appleLoginButton.centerYAnchor.constraint(equalTo: self.pageControl.centerYAnchor),
+      self.appleLoginButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 26.5),
+      self.appleLoginButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -26.5),
+      self.appleLoginButton.heightAnchor.constraint(equalToConstant: 60)
     ])
+  }
+  
+  // MARK: - Private Helpers
+  func bind(to viewModel: any OnboardingViewModel) {
+    viewModel
+      .errorPublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] error in
+        guard let error = error else { return }
+        
+        print("error 발생: \(error)")
+      }
+      .store(in: &self.subscriptions)
+    
+    viewModel
+      .activityIndicatePublisher
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] shouldIndicate in
+        shouldIndicate ? self?.activityIndicatorView.startIndicating() : self?.activityIndicatorView.stopIndicating()
+      }
+      .store(in: &self.subscriptions)
   }
 }
 
@@ -170,91 +207,20 @@ extension OnboardingViewController {
   }
   
   private func addTargets() {
-//    kakaoLoginButton.addTarget(self, action: #selector(startButtonTapped), for: .touchUpInside)
     appleLoginButton.addTarget(self, action: #selector(appleButtonTapped), for: .touchUpInside)
   }
   
   private func setNavigationConfiguration() {
     navigationController?.navigationBar.isHidden = true
   }
-  
-//  private func signIn(credential: AuthCredential) -> AnyPublisher<AppleAuthResultModel, any Error> {
-//    return Future { promise in
-//      Auth.auth().signIn(with: credential) { result, error  in
-//        if let error = error {
-//          promise(.failure(error)); return
-//        }
-//        if let result {
-//          promise(.success(AppleAuthResultModel(user: result.user))); return
-//        }
-//      }
-//    }
-//    .eraseToAnyPublisher()
-//  }
-  
-  private func randomNonceString(length: Int = 32) -> String {
-    precondition(length > 0)
-    var randomBytes = [UInt8](repeating: 0, count: length)
-    let errorCode = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
-    if errorCode != errSecSuccess {
-      fatalError(
-        "Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(errorCode)"
-      )
-    }
-    
-    let charset: [Character] =
-    Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
-    
-    let nonce = randomBytes.map { byte in
-      // Pick a random character from the set, wrapping around if needed.
-      charset[Int(byte) % charset.count]
-    }
-    
-    return String(nonce)
-  }
-  
-  @available(iOS 13, *)
-  private func sha256(_ input: String) -> String {
-    let inputData = Data(input.utf8)
-    let hashedData = SHA256.hash(data: inputData)
-    let hashString = hashedData.compactMap {
-      String(format: "%02x", $0)
-    }.joined()
-    
-    return hashString
-  }
-}
-
-struct AppleAuthResultModel {
-  let uid: String
-  let email: String?
-  let photoURL: String?
-  
-  init(user: User) {
-    self.uid = user.uid
-    self.email = user.email
-    self.photoURL = user.photoURL?.absoluteString
-  }
 }
 
 // MARK: - Actions
 private extension OnboardingViewController {
-  @objc func startButtonTapped() {
-//    viewModel.didTapLoginButton()
-  }
-  
   @objc func appleButtonTapped() {
-
-    let appleIDProvider = ASAuthorizationAppleIDProvider()
-    let nonce = randomNonceString()
-    let request = appleIDProvider.createRequest()
-    request.requestedScopes = [.fullName, .email]
-    request.nonce = sha256(nonce)
-    let authController = ASAuthorizationController(authorizationRequests: [request])
-    
+    let authController = self.viewModel.makeASAuthorizationController()
     authController.presentationContextProvider = self
-    viewModel.didTapAppleButton(authController: authController, nonce: nonce)
-//    startSignInWithAppleFlow()
+    self.viewModel.didTapAppleButton(authController: authController)
   }
 }
 
@@ -262,7 +228,7 @@ private extension OnboardingViewController {
 extension OnboardingViewController: ASAuthorizationControllerPresentationContextProviding {
   func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
     guard let window = view.window else {
-      return UIWindow()
+      return ASPresentationAnchor()
     }
     return window
   }

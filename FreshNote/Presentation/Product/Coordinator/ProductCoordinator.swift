@@ -5,6 +5,7 @@
 //  Created by SeokHyun on 11/14/24.
 //
 
+import Combine
 import UIKit
 
 protocol ProductCoordinatorDependencies: AnyObject {
@@ -16,8 +17,17 @@ protocol ProductCoordinatorDependencies: AnyObject {
   func makeBottomSheetViewController(
     detent: BottomSheetViewController.Detent
   ) -> BottomSheetViewController
-  func makePhotoBottomSheetViewController(actions: PhotoBottomSheetViewModelActions) -> UIViewController
-  func makeCategoryBottomSheetViewController(actions: CategoryBottomSheetViewModelActions) -> UIViewController
+  
+  func makePhotoBottomSheetViewController(
+    actions: PhotoBottomSheetViewModelActions,
+    shouldConfigurePhotoDetailButton: Bool
+  ) -> UIViewController
+  
+  func makeCategoryBottomSheetViewController(
+    actions: CategoryBottomSheetViewModelActions
+  ) -> UIViewController
+  
+  func makePhotoDetailViewController(imageData: Data) -> UIViewController
 }
 
 final class ProductCoordinator: BaseCoordinator {
@@ -31,6 +41,13 @@ final class ProductCoordinator: BaseCoordinator {
   private var categoryBottomSheetViewController: UIViewController?
   
   private var bottomSheetViewController: BottomSheetViewController?
+  
+  private let imageDataSubject: PassthroughSubject<Data, Never> = PassthroughSubject()
+  
+  private let deleteImageSubject: PassthroughSubject<Void, Never> = PassthroughSubject()
+  
+  /// 업데이트 된 Product를 필요로 하는 곳에서 사용합니다.
+  var popCompletion: ((Product?) -> Void)?
   
   // MARK: - LifeCycle
   init(
@@ -51,16 +68,18 @@ final class ProductCoordinator: BaseCoordinator {
   // MARK: - Start
   func start() {
     let actions = ProductViewModelActions(
-      pop: { [weak self] in
+      pop: { [weak self] updatedProduct in
+        self?.popCompletion?(updatedProduct)
         self?.pop()
-      }, showPhotoBottomSheet: { [weak self] passDataHandler in
-        self?.showPhotoBottomSheet(passDataHandler: passDataHandler)
+      }, showPhotoBottomSheet: { [weak self] imageData in
+        self?.showPhotoBottomSheet(imageData: imageData)
       }, showCategoryBottomSheet: { [weak self] (animateCategoryHandler, passCategoryHandler) in
         self?.showCategoryBottomSheet(
           animateCategoryHandler: animateCategoryHandler,
           passCategoryHandler: passCategoryHandler
         )
-      }
+      }, imageDataPublisher: self.imageDataSubject.eraseToAnyPublisher(),
+      deleteImagePublisher: self.deleteImageSubject.eraseToAnyPublisher()
     )
     
     let viewController = self.dependencies.makeProductViewController(actions: actions, mode: mode)
@@ -75,19 +94,31 @@ extension ProductCoordinator {
     self.finish()
   }
   
-  private func showPhotoBottomSheet(passDataHandler: @escaping (Data?) -> Void) {
+  private func showPhotoBottomSheet(imageData: Data?) {
     let bottomSheetViewController = self.dependencies.makeBottomSheetViewController(detent: .small)
     bottomSheetViewController.dismissHandler = { [weak self] in
       self?.dismissPhotoBottomSheet()
     }
     self.bottomSheetViewController = bottomSheetViewController
     
-    let actions = PhotoBottomSheetViewModelActions(passData: { [weak self] data in
-      passDataHandler(data)
-      self?.bottomSheetViewController?.hideBottomSheetAndDismiss()
+    let actions = PhotoBottomSheetViewModelActions(presentPhotoLibrary: { [weak self] in
+      self?.presentPhotoLibrary()
+    }, presentCameraAuthorizationWarning: { [weak self] in
+      self?.presentCameraAuthorizationWarning(presentingViewController: bottomSheetViewController)
+    }, presentCamera: { [weak self] in
+      self?.presentCamera()
+    }, presentPhotoDetail: { [weak self] in
+      guard let imageData else { return }
+      
+      self?.presentPhotoDetail(imageData: imageData)
+    }, deleteImageAndDisMissBottomSheet: { [weak self] in
+      self?.deleteImageAndDisMissBottomSheet()
     })
     
-    let photoBottomSheetViewController = self.dependencies.makePhotoBottomSheetViewController(actions: actions)
+    let photoBottomSheetViewController = self.dependencies.makePhotoBottomSheetViewController(
+      actions: actions,
+      shouldConfigurePhotoDetailButton: imageData != nil
+    )
     self.photoBottomSheetViewController = photoBottomSheetViewController
     
     bottomSheetViewController.add(
@@ -97,6 +128,17 @@ extension ProductCoordinator {
     
     bottomSheetViewController.modalPresentationStyle = .overFullScreen
     self.navigationController?.topViewController?.present(bottomSheetViewController, animated: false)
+  }
+  
+  private func deleteImageAndDisMissBottomSheet() {
+    self.deleteImageSubject.send()
+    self.dismissPhotoBottomSheet()
+  }
+  
+  private func presentPhotoDetail(imageData: Data) {
+    let photoDetailViewController = self.dependencies.makePhotoDetailViewController(imageData: imageData)
+    self.dismissPhotoBottomSheet()
+    self.navigationController?.topViewController?.present(photoDetailViewController, animated: true)
   }
   
   private func showCategoryBottomSheet(
@@ -140,5 +182,49 @@ extension ProductCoordinator {
     self.bottomSheetViewController?.dismiss(animated: false)
     self.categoryBottomSheetViewController = nil
     self.bottomSheetViewController = nil
+  }
+  
+  private func presentPhotoLibrary() {
+    let imagePickerController = UIImagePickerController()
+    imagePickerController.delegate = self
+    imagePickerController.sourceType = .photoLibrary
+    self.photoBottomSheetViewController?.present(imagePickerController, animated: true)
+  }
+  
+  private func presentCamera() {
+    let camera = UIImagePickerController()
+    camera.sourceType = .camera
+    camera.allowsEditing = true
+    camera.cameraDevice = .rear
+    camera.cameraCaptureMode = .photo
+    camera.delegate = self
+    self.photoBottomSheetViewController?.present(camera, animated: true, completion: nil)
+  }
+  
+  private func presentCameraAuthorizationWarning(presentingViewController: UIViewController) {
+    AlertBuilder(presentingViewController: presentingViewController)
+      .setTitle("카메라 권한 접근 실패")
+      .setMessage("설정 앱에서 카메라 권한을 재설정해주세요🙏")
+      .addActionConfirm("확인")
+      .present()
+  }
+}
+
+// MARK: - UIImagePickerControllerDelegate, UINavigationControllerDelegate
+extension ProductCoordinator: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+  // 사진 찍고 Use Photo || 앨범에서 Pick Photo
+  func imagePickerController(
+    _ picker: UIImagePickerController,
+    didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
+  ) {
+    if let image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage,
+       let imageData = image.jpegData(compressionQuality: 0.5) {
+      
+      self.bottomSheetViewController?.hideBottomSheet()
+      picker.dismiss(animated: true) { [weak self] in
+        self?.dismissPhotoBottomSheet()
+        self?.imageDataSubject.send(imageData)
+      }
+    }
   }
 }

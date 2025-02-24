@@ -55,6 +55,15 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		131095EF2D12AE660007AB2D /* Exceptions for "FreshNote" folder in "FreshNoteTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Data/PersistentStorages/CoreDataStorage/CoreDataStorage.swift,
+				Infrastructure/Network/Firebase/FirebaseNetworkService.swift,
+				"Utils/Extension/Encodable+.swift",
+			);
+			target = 1383D2232CC3923A00F822A9 /* FreshNoteTests */;
+		};
 		1383D2362CC3923A00F822A9 /* Exceptions for "FreshNote" folder in "FreshNote" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -69,6 +78,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				1383D2362CC3923A00F822A9 /* Exceptions for "FreshNote" folder in "FreshNote" target */,
+				131095EF2D12AE660007AB2D /* Exceptions for "FreshNote" folder in "FreshNoteTests" target */,
 			);
 			path = FreshNote;
 			sourceTree = "<group>";
