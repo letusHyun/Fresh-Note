@@ -89,7 +89,7 @@ private extension OnboardingCell {
       ]
       +
       [
-        self.descriptionLabel.topAnchor.constraint(equalTo: self.titleLabel.bottomAnchor, constant: 5),
+        self.descriptionLabel.topAnchor.constraint(equalTo: self.titleLabel.bottomAnchor, constant: 23),
         self.descriptionLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
       ]
     )

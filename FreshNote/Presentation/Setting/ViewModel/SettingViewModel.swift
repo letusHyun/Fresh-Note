@@ -108,14 +108,6 @@ final class DefaultSettingViewModel: SettingViewModel {
   
   // MARK: - Private
   private func makeDataSource() -> [SettingDataSource] {
-    // 계정
-    let logout = SettingMenuItem(title: "로그아웃", action: { [weak self] in self?.actions.presentSignOutAlert() })
-    let deleteAccount = SettingMenuItem(
-      title: "회원탈퇴",
-      action: { [weak self] in self?.actions.showAccountDeletion() }
-    )
-    let accountSection = SettingDataSource(section: .account, items: [logout, deleteAccount])
-    
     // 설정
     let notification = SettingMenuItem(
       title: "알림 날짜 재설정",
@@ -128,6 +120,14 @@ final class DefaultSettingViewModel: SettingViewModel {
     let inquire = SettingMenuItem(title: "문의하기", action: { [weak self] in self?.actions.presentInquire() })
     let usageSection = SettingDataSource(section: .usage, items: [appVersion, inquire])
     
-    return [accountSection, settingSection, usageSection]
+    // 계정
+    let logout = SettingMenuItem(title: "로그아웃", action: { [weak self] in self?.actions.presentSignOutAlert() })
+    let deleteAccount = SettingMenuItem(
+      title: "회원탈퇴",
+      action: { [weak self] in self?.actions.showAccountDeletion() }
+    )
+    let accountSection = SettingDataSource(section: .account, items: [logout, deleteAccount])
+    
+    return [settingSection, usageSection, accountSection]
   }
 }

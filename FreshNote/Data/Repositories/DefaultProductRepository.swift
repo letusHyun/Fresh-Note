@@ -217,13 +217,11 @@ final class DefaultProductRepository: ProductRepository {
       .fetchProducts()
       .flatMap { [weak self] products -> AnyPublisher<[DocumentID], any Error> in
         guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
-        
+
         return products
           .publisher
-          .flatMap {
-            self.productStorage.deleteProduct(uid: $0.did.didString)
-          }
-          .collect(3)
+          .flatMap { self.productStorage.deleteProduct(uid: $0.did.didString) }
+          .collect()
           .map { _ in products.map { $0.did } }
           .eraseToAnyPublisher()
       }

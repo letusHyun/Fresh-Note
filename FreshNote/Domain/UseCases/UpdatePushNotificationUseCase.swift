@@ -81,7 +81,10 @@ final class DefaultUpdatePushNotificationUseCase: UpdatePushNotificationUseCase 
               .saveNotification(product: product)
           }
           .collect()
-          .map { _ in }
+          .map { _ in
+            print("호출되나?")
+            return
+          }
           .eraseToAnyPublisher()
       }
       .eraseToAnyPublisher()
