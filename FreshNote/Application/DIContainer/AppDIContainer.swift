@@ -47,9 +47,14 @@ final class AppDIContainer {
   }
   
   private func makeAPIDataTranferService() -> any DataTransferService {
+    let baseURLString: String
+#if DEBUG
+    baseURLString = "https://us-central1-freshnote-debug.cloudfunctions.net"
+#else
+    baseURLString = "https://us-central1-freshnote-6bee5.cloudfunctions.net"
+#endif
     let config = APIDataNetworkConfig(
-      // TODO: - URLString을 Bundle에서 불러오기
-      baseURL: URL(string:"https://us-central1-freshnote-6bee5.cloudfunctions.net")!
+      baseURL: URL(string: baseURLString)!
     )
     
     let apiDataNetwork = DefaultNetworkService(config: config)

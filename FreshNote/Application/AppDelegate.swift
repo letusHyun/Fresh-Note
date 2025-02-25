@@ -17,8 +17,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    FirebaseApp.configure()
-   
+    let firebaseConfigFile: String
+#if DEBUG
+    firebaseConfigFile = "GoogleService-Info-Debug"
+#else
+    firebaseConfigFile = "GoogleService-Info"
+#endif
+    if let path = Bundle.main.path(forResource: firebaseConfigFile, ofType: "plist"),
+       let options = FirebaseOptions(contentsOfFile: path) {
+      FirebaseApp.configure(options: options)
+    }
+
     let center = UNUserNotificationCenter.current()
     center.delegate = self
     

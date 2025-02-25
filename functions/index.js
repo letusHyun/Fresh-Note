@@ -115,34 +115,32 @@ exports.getRefreshToken = functions.https.onRequest(async (request, response) =>
 
 // Token 폐기
 exports.revokeToken = functions.https.onRequest(async (request, response) => {
-    try {
-        const refresh_token = request.query.refresh_token;
-        if (!refresh_token) {
-            response.status(400).send("Refresh token is required");
-            return;
-        }
+  response.set("Content-Type", "application/json");
+  try {
+      const refresh_token = request.query.refresh_token;
+      if (!refresh_token) {
+          return response.status(400).json({
+              status: false,
+              message: "Refresh token is required",
+              data: null
+          });
+      }
 
-        const client_secret = makeJWT();
-        const data = {
-            token: refresh_token,
-            client_id: "com.seokhyun.freshnote",
-            client_secret: client_secret,
-            token_type_hint: "refresh_token"
-        };
+      const client_secret = makeJWT();
+      const data = { token: refresh_token, client_id: "com.seokhyun.freshnote", client_secret: client_secret, token_type_hint: "refresh_token" };
+      await axios.post("https://appleid.apple.com/auth/revoke", qs.stringify(data), { headers: { "Content-Type": "application/x-www-form-urlencoded" } });
 
-        await axios.post(
-            "https://appleid.apple.com/auth/revoke",
-            qs.stringify(data),
-            {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded"
-                }
-            }
-        );
-
-        response.send("Token revoked successfully");
-    } catch (error) {
-        console.error("Error revoking token:", error);
-        response.status(500).send("Error revoking token: " + error.message);
-    }
+      response.status(200).json({
+          status: true,
+          message: "Token revoked successfully",
+          data: null // 추가 데이터가 없으므로 null
+      });
+  } catch (error) {
+      console.error("Error revoking token:", error);
+      response.status(500).json({
+          status: false,
+          message: "Error revoking token: " + error.message,
+          data: null
+      });
+  }
 });
