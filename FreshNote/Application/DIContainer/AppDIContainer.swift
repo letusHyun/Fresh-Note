@@ -47,14 +47,8 @@ final class AppDIContainer {
   }
   
   private func makeAPIDataTranferService() -> any DataTransferService {
-    let baseURLString: String
-#if DEBUG
-    baseURLString = "https://us-central1-freshnote-debug.cloudfunctions.net"
-#else
-    baseURLString = "https://us-central1-freshnote-6bee5.cloudfunctions.net"
-#endif
     let config = APIDataNetworkConfig(
-      baseURL: URL(string: baseURLString)!
+      baseURL: URL(string: Config.baseURL)!
     )
     
     let apiDataNetwork = DefaultNetworkService(config: config)
