@@ -17,16 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    let firebaseConfigFile: String
-#if DEBUG
-    firebaseConfigFile = "GoogleService-Info-Debug"
-#else
-    firebaseConfigFile = "GoogleService-Info"
-#endif
-    if let path = Bundle.main.path(forResource: firebaseConfigFile, ofType: "plist"),
-       let options = FirebaseOptions(contentsOfFile: path) {
-      FirebaseApp.configure(options: options)
-    }
+    FirebaseApp.configure()
 
     let center = UNUserNotificationCenter.current()
     center.delegate = self
@@ -51,17 +42,5 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
     completionHandler([.banner, .badge, .sound, .list])
-  }
-  
-  func userNotificationCenter(
-    _ center: UNUserNotificationCenter,
-    didReceive response: UNNotificationResponse,
-    withCompletionHandler completionHandler: @escaping () -> Void
-  ) {
-//    if let windowScene = UIApplication.shared.connectedScenes
-//      .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
-//       let sceneDelegate = windowScene.delegate as? SceneDelegate {
-//      sceneDelegate.appCoordinator
-//    }
   }
 }
