@@ -68,6 +68,8 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				"Resources/Debug/Secrets-Debug.xcconfig",
+				"Resources/Release/Secrets-Release.xcconfig",
 			);
 			target = 1383D20D2CC3923800F822A9 /* FreshNote */;
 		};
