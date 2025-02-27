@@ -8,20 +8,36 @@
 import UIKit
 
 final class AppDIContainer {
+  lazy var appConfiguration = AppConfiguration()
+  
+  // MARK: - Network
+  lazy var apiDataTransferService: any DataTransferService = {
+    let config = APIDataNetworkConfig(
+      baseURL: self.appConfiguration.baseURL
+    )
+    
+    let apiDataNetwork = DefaultNetworkService(config: config)
+    return DefaultDataTransferService(networkService: apiDataNetwork)
+  }()
+  
+  lazy var firebaseNetworkService: any FirebaseNetworkService = {
+    DefaultFirebaseNetworkService()
+  }()
+  
   // MARK: - Private
   private func makeMainSceneDIContainer() -> MainSceneDIContainer {
     return MainSceneDIContainer(
       dependencies: MainSceneDIContainer.Dependencies(
-        apiDataTransferService: self.makeAPIDataTranferService(),
-        firebaseNetworkService: self.makeFirebasNetworkService()
+        apiDataTransferService: self.apiDataTransferService,
+        firebaseNetworkService: self.firebaseNetworkService
       )
     )
   }
   
   private func makeOnboardingSceneDIContainer() -> OnboardingSceneDIContainer {
     let dependencies = OnboardingSceneDIContainer.Dependencies(
-      apiDataTransferService: self.makeAPIDataTranferService(),
-      firebaseNetworkService: self.makeFirebasNetworkService()
+      apiDataTransferService: self.apiDataTransferService,
+      firebaseNetworkService: self.firebaseNetworkService
     )
     
     return OnboardingSceneDIContainer(dependencies: dependencies)
@@ -29,13 +45,9 @@ final class AppDIContainer {
   
   private func makeDateTimeRepository() -> any DateTimeRepository {
     return DefaultDateTimeRepository(
-      firebaseNetworkService: self.makeFirebasNetworkService(),
+      firebaseNetworkService: self.firebaseNetworkService,
       dateTimeStorage: self.makeDateTimeStorage()
     )
-  }
-  
-  private func makeFirebasNetworkService() -> any FirebaseNetworkService {
-    return DefaultFirebaseNetworkService()
   }
   
   private func makeDateTimeStorage() -> any DateTimeStorage {
@@ -46,19 +58,9 @@ final class AppDIContainer {
     return PersistentCoreDataStorage.shared
   }
   
-  private func makeAPIDataTranferService() -> any DataTransferService {
-    let config = APIDataNetworkConfig(
-      // TODO: - URLString을 Bundle에서 불러오기
-      baseURL: URL(string:"https://us-central1-freshnote-6bee5.cloudfunctions.net")!
-    )
-    
-    let apiDataNetwork = DefaultNetworkService(config: config)
-    return DefaultDataTransferService(networkService: apiDataNetwork)
-  }
-  
   private func makeRefreshTokenRepository() -> any RefreshTokenRepository {
     return DefaultRefreshTokenRepository(
-      dataTransferService: self.makeAPIDataTranferService(),
+      dataTransferService: self.apiDataTransferService,
       cache: self.makeRefreshTokenStorage()
     )
   }
@@ -95,7 +97,7 @@ final class AppDIContainer {
   func makeFirebaseAuthRepository() -> any FirebaseAuthRepository {
     return DefaultFirebaseAuthRepository(
       dateTimeCache: self.makeDateTimeStorage(),
-      firebaseNetworkService: self.makeFirebasNetworkService()
+      firebaseNetworkService: self.firebaseNetworkService
     )
   }
   

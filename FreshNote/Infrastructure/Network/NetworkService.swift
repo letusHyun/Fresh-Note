@@ -12,7 +12,7 @@ enum NetworkError: Error {
   case error
   case urlGeneration
   case noData
-  case serverError
+  case serverError(String?)
   case notConnected
   case cancelled
   case generic(Error)
@@ -81,8 +81,8 @@ extension DefaultNetworkService: NetworkService {
               (200...299).contains(httpResponse.statusCode) else {
           let httpResponse = result.response as? HTTPURLResponse
           self?.logger.log(statusCode: httpResponse?.statusCode)
-          
-          throw NetworkError.serverError
+          let errorDescription = String(data: result.data, encoding: .utf8)
+          throw NetworkError.serverError(errorDescription)
         }
         return result.data
       }

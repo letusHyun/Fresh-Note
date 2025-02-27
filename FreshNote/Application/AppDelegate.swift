@@ -18,7 +18,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     FirebaseApp.configure()
-   
+
     let center = UNUserNotificationCenter.current()
     center.delegate = self
     
@@ -42,17 +42,5 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
     completionHandler([.banner, .badge, .sound, .list])
-  }
-  
-  func userNotificationCenter(
-    _ center: UNUserNotificationCenter,
-    didReceive response: UNNotificationResponse,
-    withCompletionHandler completionHandler: @escaping () -> Void
-  ) {
-//    if let windowScene = UIApplication.shared.connectedScenes
-//      .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
-//       let sceneDelegate = windowScene.delegate as? SceneDelegate {
-//      sceneDelegate.appCoordinator
-//    }
   }
 }
