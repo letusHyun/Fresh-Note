@@ -22,7 +22,6 @@ final class AppConfiguration {
       fatalError("Base URL not set in plist for this envirionment")
     }
     guard let url = URL(string: baseURLString) else {
-      print("baseURLString: \(baseURLString)")
       fatalError("Base URL is invalid")
     }
     return url
