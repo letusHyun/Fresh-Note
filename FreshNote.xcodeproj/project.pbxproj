@@ -422,10 +422,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.seokhyun.freshnote;
+				PRODUCT_BUNDLE_IDENTIFIER = com.seokhyun.freshnote.release;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = adhoc_freshnote;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "ad_Hoc freshnote";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = RELEASE;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
