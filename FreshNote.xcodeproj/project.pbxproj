@@ -68,8 +68,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				"Resources/Debug/Secrets-Debug.xcconfig",
-				"Resources/Release/Secrets-Release.xcconfig",
 			);
 			target = 1383D20D2CC3923800F822A9 /* FreshNote */;
 		};
@@ -358,6 +356,8 @@
 /* Begin XCBuildConfiguration section */
 		1383D2382CC3923A00F822A9 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 1383D2102CC3923800F822A9 /* FreshNote */;
+			baseConfigurationReferenceRelativePath = "Resources/Debug/Secrets-Debug.xcconfig";
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -397,6 +397,8 @@
 		};
 		1383D2392CC3923A00F822A9 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = 1383D2102CC3923800F822A9 /* FreshNote */;
+			baseConfigurationReferenceRelativePath = "Resources/Release/Secrets-Release.xcconfig";
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
