@@ -11,6 +11,7 @@ final class MainSceneDIContainer {
   struct Dependencies {
     let apiDataTransferService: any DataTransferService
     let firebaseNetworkService: any FirebaseNetworkService
+    let buildConfiguration: String
   }
   
   // MARK: - Properties
@@ -263,7 +264,8 @@ private extension MainSceneDIContainer {
   func makeRefreshTokenRepository() -> any RefreshTokenRepository {
     DefaultRefreshTokenRepository(
       dataTransferService: self.dependencies.apiDataTransferService,
-      cache: self.makeRefreshTokenStorage()
+      cache: self.makeRefreshTokenStorage(),
+      buildConfiguration: self.dependencies.buildConfiguration
     )
   }
   

@@ -29,7 +29,8 @@ final class AppDIContainer {
     return MainSceneDIContainer(
       dependencies: MainSceneDIContainer.Dependencies(
         apiDataTransferService: self.apiDataTransferService,
-        firebaseNetworkService: self.firebaseNetworkService
+        firebaseNetworkService: self.firebaseNetworkService,
+        buildConfiguration: self.appConfiguration.buildConfiguration
       )
     )
   }
@@ -37,7 +38,8 @@ final class AppDIContainer {
   private func makeOnboardingSceneDIContainer() -> OnboardingSceneDIContainer {
     let dependencies = OnboardingSceneDIContainer.Dependencies(
       apiDataTransferService: self.apiDataTransferService,
-      firebaseNetworkService: self.firebaseNetworkService
+      firebaseNetworkService: self.firebaseNetworkService,
+      buildConfiguration: self.appConfiguration.buildConfiguration
     )
     
     return OnboardingSceneDIContainer(dependencies: dependencies)
@@ -61,7 +63,8 @@ final class AppDIContainer {
   private func makeRefreshTokenRepository() -> any RefreshTokenRepository {
     return DefaultRefreshTokenRepository(
       dataTransferService: self.apiDataTransferService,
-      cache: self.makeRefreshTokenStorage()
+      cache: self.makeRefreshTokenStorage(),
+      buildConfiguration: self.appConfiguration.buildConfiguration
     )
   }
   

@@ -12,6 +12,7 @@ enum Environment {
   enum Keys {
     enum Plist: String {
       case baseURL = "BASE_URL"
+      case buildConfiguration = "BUILD_CONFIGURATION"
     }
   }
 }

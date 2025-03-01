@@ -11,6 +11,7 @@ final class OnboardingSceneDIContainer {
   struct Dependencies {
     let apiDataTransferService: any DataTransferService
     let firebaseNetworkService: any FirebaseNetworkService
+    let buildConfiguration: String
   }
   
   // MARK: - Properties
@@ -129,7 +130,8 @@ final class OnboardingSceneDIContainer {
   func makeRefreshTokenRepository() -> any RefreshTokenRepository {
     return DefaultRefreshTokenRepository(
       dataTransferService: self.dependencies.apiDataTransferService,
-      cache: self.makeRefreshTokenStorage()
+      cache: self.makeRefreshTokenStorage(),
+      buildConfiguration: self.dependencies.buildConfiguration
     )
   }
   

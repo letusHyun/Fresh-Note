@@ -17,15 +17,18 @@ final class DefaultRefreshTokenRepository: RefreshTokenRepository {
   private let dataTransferService: any DataTransferService
   private let backgroundQueue: DispatchQueue
   private let cache: any RefreshTokenStorage
+  private let buildConfiguration: String
   
   init(
     dataTransferService: any DataTransferService,
     backgroundQueue: DispatchQueue = .global(qos: .userInitiated),
-    cache: any RefreshTokenStorage
+    cache: any RefreshTokenStorage,
+    buildConfiguration: String
   ) {
     self.dataTransferService = dataTransferService
     self.backgroundQueue = backgroundQueue
     self.cache = cache
+    self.buildConfiguration = buildConfiguration
   }
   
   func revokeRefreshToken() -> AnyPublisher<Void, any Error> {
@@ -34,7 +37,9 @@ final class DefaultRefreshTokenRepository: RefreshTokenRepository {
         guard let self else {
           return Fail(error: RefreshTokenRepositoryError.encodingError).eraseToAnyPublisher()
         }
-        let requestDTO = RefreshTokenRevokeRequestDTO(refreshToken: tokenString)
+        
+        let requestDTO = RefreshTokenRevokeRequestDTO(refreshToken: tokenString, buildConfiguration: self.buildConfiguration)
+        
         let endpoint = APIEndpoints.revokeRefreshToken(with: requestDTO)
         
         return self.dataTransferService
@@ -51,7 +56,10 @@ final class DefaultRefreshTokenRepository: RefreshTokenRepository {
       return Fail(error: RefreshTokenRepositoryError.encodingError).eraseToAnyPublisher()
     }
     
-    let requestDTO = RefreshTokenRequestDTO(code: codeString)
+    let requestDTO = RefreshTokenRequestDTO(
+      code: codeString,
+      buildConfiguration: self.buildConfiguration
+    )
     let endpoint = APIEndpoints.getRefreshToken(with: requestDTO)
     
     return self.dataTransferService

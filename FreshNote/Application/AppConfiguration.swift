@@ -26,4 +26,11 @@ final class AppConfiguration {
     }
     return url
   }()
+  
+  lazy var buildConfiguration: String = {
+    guard let buildConfiguration = AppConfiguration.infoDictionary[Environment.Keys.Plist.buildConfiguration.rawValue] as? String else {
+      fatalError("build configuration not set in plist for this envirionment")
+    }
+    return buildConfiguration
+  }()
 }
