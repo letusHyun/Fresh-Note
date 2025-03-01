@@ -69,6 +69,8 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				"Resources/Debug/Secrets-Debug.xcconfig",
+				"Resources/Release/Secrets-Release.xcconfig",
 			);
 			target = 1383D20D2CC3923800F822A9 /* FreshNote */;
 		};
@@ -231,7 +233,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1610;
-				LastUpgradeCheck = 1600;
+				LastUpgradeCheck = 1610;
 				TargetAttributes = {
 					1383D20D2CC3923800F822A9 = {
 						CreatedOnToolsVersion = 16.0;
@@ -337,6 +339,7 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"${BUILT_PRODUCTS_DIR}/${PRODUCT_NAME}.app/GoogleService-Info.plist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
