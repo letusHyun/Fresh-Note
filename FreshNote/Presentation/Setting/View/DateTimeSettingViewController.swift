@@ -21,6 +21,7 @@ final class DateTimeSettingViewController: BaseViewController {
   private let descriptionLabel: UILabel = {
     let label = UILabel()
     label.text = "유통기한 임박 알림을 받을 날짜, 시간을 지정해주세요."
+    label.numberOfLines = .zero
     label.textAlignment = .center
     label.textColor = UIColor(fnColor: .gray3)
     label.font = .pretendard(size: 16, weight: ._400)
@@ -143,17 +144,26 @@ final class DateTimeSettingViewController: BaseViewController {
     self.view.addSubview(self.dateStackView)
     _=[self.dMinusLabel, self.dateTextField].map { self.dateStackView.addArrangedSubview($0) }
     self.view.addSubview(self.datePicker)
-    self.view.addSubview(self.completionButton)
     self.view.addSubview(self.endDateInformationLabel)
+    self.view.addSubview(self.completionButton)
     
     self.descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
     self.dateStackView.translatesAutoresizingMaskIntoConstraints = false
     self.datePicker.translatesAutoresizingMaskIntoConstraints = false
     self.completionButton.translatesAutoresizingMaskIntoConstraints = false
     
+    let topConstraint = NSLayoutConstraint(
+      item: self.descriptionLabel,
+      attribute: .centerY,
+      relatedBy: .equal,
+      toItem: self.view,
+      attribute: .centerY,
+      multiplier: 0.4,
+      constant: 0
+    )
     let safeArea = view.safeAreaLayoutGuide
     NSLayoutConstraint.activate([
-      self.descriptionLabel.topAnchor.constraint(equalTo: safeArea.topAnchor, constant: 168),
+      topConstraint,
       self.descriptionLabel.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 28),
       self.descriptionLabel.centerXAnchor.constraint(equalTo: self.view.centerXAnchor),
     ] + [
