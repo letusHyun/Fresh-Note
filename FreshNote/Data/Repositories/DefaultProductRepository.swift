@@ -16,8 +16,7 @@ final class DefaultProductRepository: ProductRepository {
   init(
     firebaseNetworkService: any FirebaseNetworkService,
     productStorage: any ProductStorage,
-//    backgroundQueue: DispatchQueue = DispatchQueue.global(qos: .userInitiated)
-    backgroundQueue: DispatchQueue = DispatchQueue(label: "시리얼큐")
+    backgroundQueue: DispatchQueue = DispatchQueue.global(qos: .userInitiated)
   ) {
     self.firebaseNetworkService = firebaseNetworkService
     self.productStorage = productStorage
@@ -28,11 +27,9 @@ final class DefaultProductRepository: ProductRepository {
     print("DEBUG: \(Self.self) deinit")
   }
   
-  /// 로그아웃 후, 로그인을 하면 localDB에 Products가 지워져있는 상태입니다.
-  /// 따라서 다시 localDB에 Products를 저장해야 합니다.
   func fetchProducts() -> AnyPublisher<[Product], any Error> {
-    // 1. 최초 로그인이 아니면, LocalDB fetch
-    // 2. 최초 로그인이면, Firestore fetch → LocalDB save
+    // 1. LocalDB fetch
+    // 2. Firestore fetch → LocalDB save
     return self.productStorage
       .fetchProducts()
       .flatMap { [weak self] products -> AnyPublisher<[Product], any Error> in
@@ -48,7 +45,6 @@ final class DefaultProductRepository: ProductRepository {
           
           let fullPath = FirestorePath.products(userID: userID)
           
-          // 최초 로그인이면
           // firestore fetch -> localDB save
           return self.firebaseNetworkService
             .getDocuments(collectionPath: fullPath)
@@ -125,7 +121,6 @@ final class DefaultProductRepository: ProductRepository {
       .eraseToAnyPublisher()
   }
   
-  // TODO: - 제품 update usecase, repository 구현하기, vm도 업데이트하는 것으로 수정하기
   func updateProduct(product: Product) -> AnyPublisher<Product, any Error> {
     guard let userID = FirebaseUserManager.shared.userID else {
       return Fail(error: FirebaseUserError.invalidUid).eraseToAnyPublisher()
