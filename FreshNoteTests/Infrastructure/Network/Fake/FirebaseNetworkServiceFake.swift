@@ -5,6 +5,7 @@
 //  Created by SeokHyun on 12/18/24.
 //
 
+@testable import Fresh_Note_Dev
 import Combine
 import Foundation
 
