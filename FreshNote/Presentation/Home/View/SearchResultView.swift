@@ -56,6 +56,7 @@ final class SearchResultView: UIView {
       .receive(on: DispatchQueue.main)
       .sink { [weak self] error in
         guard let error = error else { return }
+        print("SearchResultView error 발생: \(error)")
         self?.activityIndicatorView.stopIndicating()
       }
       .store(in: &self.subscriptions)
