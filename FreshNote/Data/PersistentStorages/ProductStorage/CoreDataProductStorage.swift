@@ -191,7 +191,7 @@ extension CoreDataProductStorage: ProductStorage {
     return self.coreDataStorage.performBackgroundTask { context in
       let request = ProductEntity.fetchRequest()
       request.predicate = NSPredicate(
-        format: "\(ProductEntity.PropertyName.name.rawValue) == %@",
+        format: "\(ProductEntity.PropertyName.name.rawValue) CONTAINS[c] %@",
         keyword
       )
       
