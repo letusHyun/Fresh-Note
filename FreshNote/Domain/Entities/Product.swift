@@ -11,7 +11,7 @@ struct Product {
   let did: DocumentID
   let name: String
   let expirationDate: Date
-  let category: String
+  let category: ProductCategory
   let memo: String?
   let imageURL: URL?
   let isPinned: Bool

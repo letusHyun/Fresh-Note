@@ -6,51 +6,54 @@
 //
 
 @testable import Fresh_Note_Dev
-import Foundation
 import Combine
+import Foundation
 
 final class FirebaseAuthRepositoryMock: FirebaseAuthRepository {
-  private(set) var deleteAccountCalled = false
-  private(set) var signInCalled = false
-  private(set) var signOutCalled = false
-  private(set) var checkSignOutStateCalled = false
-  private(set) var reauthenticateCalled = false
+  private(set) var signInCallCount = 0
+  private(set) var reauthenticateCallCount = 0
+  private(set) var signOutCallCount = 0
+  private(set) var deleteAccountCallCount = 0
+  private(set) var checkSignOutStateCallCount = 0
   
-  var deleteAccountResult: AnyPublisher<Void, any Error>!
+  private(set) var lastIdToken: String?
+  private(set) var lastNonce: String?
+  private(set) var lastFullName: PersonNameComponents?
+  
   var signInResult: AnyPublisher<Void, any Error>!
-  var signOutResult: AnyPublisher<Void, any Error>!
-  var checkSignOutStateResult: AnyPublisher<Bool, Never>!
   var reauthenticateResult: AnyPublisher<Void, any Error>!
+  var signOutResult: AnyPublisher<Void, any Error>!
+  var deleteAccountResult: AnyPublisher<Void, any Error>!
+  var checkSignOutStateResult: AnyPublisher<Bool, Never>!
   
-  func deleteAccount() -> AnyPublisher<Void, any Error> {
-    self.deleteAccountCalled = true
-    return self.deleteAccountResult
+  func signIn(idToken: String, nonce: String, fullName: PersonNameComponents?) -> AnyPublisher<Void, any Error> {
+    signInCallCount += 1
+    lastIdToken = idToken
+    lastNonce = nonce
+    lastFullName = fullName
+    return signInResult
   }
   
-  func signIn(
-    idToken: String,
-    nonce: String, fullName: PersonNameComponents?
-  ) -> AnyPublisher<Void, any Error> {
-    self.signInCalled = true
-    return self.signInResult
+  func reauthenticate(idToken: String, nonce: String, fullName: PersonNameComponents?) -> AnyPublisher<Void, any Error> {
+    reauthenticateCallCount += 1
+    lastIdToken = idToken
+    lastNonce = nonce
+    lastFullName = fullName
+    return reauthenticateResult
   }
   
   func signOut() -> AnyPublisher<Void, any Error> {
-    self.signOutCalled = true
-    return self.signInResult
+    signOutCallCount += 1
+    return signOutResult
+  }
+  
+  func deleteAccount() -> AnyPublisher<Void, any Error> {
+    deleteAccountCallCount += 1
+    return deleteAccountResult
   }
   
   func checkSignOutState() -> AnyPublisher<Bool, Never> {
-    self.checkSignOutStateCalled = true
-    return self.checkSignOutStateResult
-  }
-  
-  func reauthenticate(
-    idToken: String,
-    nonce: String,
-    fullName: PersonNameComponents?
-  ) -> AnyPublisher<Void, any Error> {
-    self.reauthenticateCalled = true
-    return self.reauthenticateResult
+    checkSignOutStateCallCount += 1
+    return checkSignOutStateResult
   }
 }

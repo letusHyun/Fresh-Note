@@ -50,9 +50,10 @@ final class DefaultUpdatePushNotificationUseCase: UpdatePushNotificationUseCase 
   }
   
   func updateNotification(product: Product) -> AnyPublisher<Void, any Error> {
-    self.deletePushNotificationUseCase
-      .deleteNotification(productID: product.did)
-      
+    // 먼저 알림을 삭제
+    self.deletePushNotificationUseCase.deleteNotification(productID: product.did)
+    
+    // 그 다음 새 알림을 저장
     return self.savePushNotificationUseCase
       .saveNotification(product: product)
   }
@@ -66,10 +67,12 @@ final class DefaultUpdatePushNotificationUseCase: UpdatePushNotificationUseCase 
       .fetchProducts(sort: .default)
       .flatMap { [weak self] products -> AnyPublisher<Void, any Error> in
         guard let self else { return Fail(error: CommonError.referenceError).eraseToAnyPublisher() }
-        let productIDs = products.map { $0.did }
-        self.deletePushNotificationUseCase
-          .deleteAllNotifications(productIDs: productIDs)
         
+        // 먼저 모든 알림 삭제
+        let productIDs = products.map { $0.did }
+        self.deletePushNotificationUseCase.deleteAllNotifications(productIDs: productIDs)
+        
+        // 그 다음 각 제품에 대해 알림을 저장
         return Publishers
           .Sequence(sequence: products)
           .flatMap(maxPublishers: .max(3)) { [weak self] product -> AnyPublisher<Void, any Error> in
@@ -81,10 +84,7 @@ final class DefaultUpdatePushNotificationUseCase: UpdatePushNotificationUseCase 
               .saveNotification(product: product)
           }
           .collect()
-          .map { _ in
-            print("호출되나?")
-            return
-          }
+          .map { _ in }
           .eraseToAnyPublisher()
       }
       .eraseToAnyPublisher()

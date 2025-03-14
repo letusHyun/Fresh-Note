@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23507" systemVersion="24B83" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="23507" systemVersion="24D70" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="DateTimeEntity" representedClassName="DateTimeEntity" syncable="YES">
         <attribute name="date" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="hour" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -24,9 +24,5 @@
         <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="keyword" optional="YES" attributeType="String"/>
         <attribute name="uuidString" optional="YES" attributeType="String"/>
-    </entity>
-    <entity name="UserProfileEntity" representedClassName="UserProfileEntity" syncable="YES">
-        <attribute name="imageURLString" optional="YES" attributeType="String"/>
-        <attribute name="name" optional="YES" attributeType="String"/>
     </entity>
 </model>

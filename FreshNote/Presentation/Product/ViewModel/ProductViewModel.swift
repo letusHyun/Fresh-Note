@@ -197,7 +197,7 @@ final class DefaultProductViewModel: ProductViewModel {
         did: fetchedProduct.did,
         name: name,
         expirationDate: date,
-        category: category,
+        category: ProductCategory(rawValue: category) ?? .건강,
         memo: memo,
         imageURL: fetchedProduct.imageURL,
         isPinned: fetchedProduct.isPinned,

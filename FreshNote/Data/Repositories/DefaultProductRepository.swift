@@ -81,7 +81,7 @@ final class DefaultProductRepository: ProductRepository {
       memo: product.memo,
       imageURLString: urlString,
       expirationDate: product.expirationDate,
-      category: product.category,
+      category: product.category.rawValue,
       isPinned: product.isPinned,
       didString: didString,
       creationDate: product.creationDate
@@ -135,7 +135,7 @@ final class DefaultProductRepository: ProductRepository {
       memo: product.memo,
       imageURLString: urlString,
       expirationDate: product.expirationDate,
-      category: product.category,
+      category: product.category.rawValue,
       isPinned: product.isPinned,
       didString: didString,
       creationDate: product.creationDate
@@ -168,7 +168,7 @@ final class DefaultProductRepository: ProductRepository {
       memo: product.memo,
       imageURLString: urlString,
       expirationDate: product.expirationDate,
-      category: product.category,
+      category: product.category.rawValue,
       isPinned: product.isPinned,
       didString: didString,
       creationDate: product.creationDate
@@ -234,7 +234,7 @@ extension DefaultProductRepository {
       did: did,
       name: dto.name,
       expirationDate: dto.expirationDate,
-      category: dto.category,
+      category: ProductCategory(rawValue: dto.category) ?? ProductCategory.건강,
       memo: dto.memo,
       imageURL: imageURL,
       isPinned: dto.isPinned,

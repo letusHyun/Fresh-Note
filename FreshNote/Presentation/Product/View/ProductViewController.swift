@@ -492,7 +492,7 @@ extension ProductViewController {
     self.titleTextField.text = product.name
     self.titleTextFieldTextSubject.send(self.titleTextField.text ?? "")
     
-    self.categoryTextField.text = product.category
+    self.categoryTextField.text = product.category.rawValue
     self.categoryTextFieldTextSubject.send(self.categoryTextField.text ?? "")
     
     let dateFormatManager = DateFormatManager()

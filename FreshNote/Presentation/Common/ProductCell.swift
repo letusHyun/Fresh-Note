@@ -115,7 +115,7 @@ extension ProductCell {
     self.configureBorderColor(at: product.expirationDate)
     self.expirationDateLabel.text = self.dateFormatter.string(from: product.expirationDate)
     self.nameLabel.text = product.name
-    self.categoryLabel.text = product.category
+    self.categoryLabel.text = product.category.rawValue
     self.memoLabel.text = product.memo
   }
   

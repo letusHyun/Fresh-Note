@@ -100,7 +100,7 @@ extension DefaultSaveProductUseCase {
       did: DocumentID(),
       name: requestValue.name,
       expirationDate: requestValue.expirationDate,
-      category: requestValue.category,
+      category: ProductCategory(rawValue: requestValue.category) ?? .건강,
       memo: requestValue.memo,
       imageURL: url,
       isPinned: requestValue.isPinned,

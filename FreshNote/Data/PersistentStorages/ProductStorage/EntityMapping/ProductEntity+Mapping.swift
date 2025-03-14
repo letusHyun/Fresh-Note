@@ -14,7 +14,7 @@ extension ProductEntity {
     self.name = product.name
     self.memo = product.memo
     self.isPinned = product.isPinned
-    self.category = product.category
+    self.category = product.category.rawValue
     self.expirationDate = product.expirationDate
     self.didString = product.did.didString
     self.createdAt = createdAt
@@ -36,7 +36,7 @@ extension ProductEntity {
       did: DocumentID(from: self.didString) ?? DocumentID(),
       name: self.name,
       expirationDate: self.expirationDate,
-      category: self.category,
+      category: ProductCategory(rawValue: self.category) ?? .건강,
       memo: self.memo,
       imageURL: imageURL,
       isPinned: self.isPinned,

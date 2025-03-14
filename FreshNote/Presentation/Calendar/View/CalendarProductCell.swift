@@ -122,7 +122,7 @@ final class CalendarProductCell: UICollectionViewCell {
   // MARK: - Configure
   func configure(with product: Product) {
     self.titleLabel.text = product.name
-    self.categoryLabel.text = product.category
+    self.categoryLabel.text = product.category.rawValue
     let expiration = self.formatterManager.string(from: product.expirationDate)
     self.expirationLabel.text = expiration
   }

@@ -160,7 +160,7 @@ extension CoreDataProductStorage: ProductStorage {
         entity.isPinned = updatedProduct.isPinned
         entity.expirationDate = updatedProduct.expirationDate
         entity.createdAt = updatedProduct.creationDate
-        entity.category = updatedProduct.category
+        entity.category = updatedProduct.category.rawValue
         
         try context.save()
         return updatedProduct

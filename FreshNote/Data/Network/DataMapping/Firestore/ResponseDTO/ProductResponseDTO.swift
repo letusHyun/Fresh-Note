@@ -24,7 +24,7 @@ extension ProductResponseDTO {
       did: did,
       name: self.name,
       expirationDate: self.expirationDate,
-      category: self.category,
+      category: ProductCategory(rawValue: self.category) ?? .건강,
       memo: self.memo,
       imageURL: url,
       isPinned: self.isPinned,

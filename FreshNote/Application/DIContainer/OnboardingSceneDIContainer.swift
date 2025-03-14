@@ -39,13 +39,6 @@ final class OnboardingSceneDIContainer {
     )
   }
   
-  func makeSaveUserProfileUseCase() -> any SaveUserProfileUseCase {
-    return DefaultSaveUserProfileUseCase(
-      userProfileRepository: self.makeUserProfileRepository(),
-      imageRepository: self.makeImageRepository()
-    )
-  }
-  
   func makeCheckInitialStateUseCase() -> any CheckInitialStateUseCase {
     return DefaultCheckInitialStateUseCase(
       firstLaunchRepository: self.makeFirstLaunchRepository(),
@@ -54,9 +47,6 @@ final class OnboardingSceneDIContainer {
       dateTimeRepository: self.makeDateTimeRepository()
     )
   }
-//  func makeCheckDateTimeStateUseCase() -> any CheckDateTimeStateUseCase {
-//    return DefaultCheckDateTimeStateUseCase(dateTimeRepository: self.makeDateTimeRepository())
-//  }
   
   func makeFetchDateTimeUseCase() -> any FetchDateTimeUseCase {
     return DefaultFetchDateTimeUseCase(dateTimeRepository: self.makeDateTimeRepository())
@@ -96,25 +86,6 @@ final class OnboardingSceneDIContainer {
   func makeCoreDataStorage() -> any CoreDataStorage {
     return PersistentCoreDataStorage.shared
   }
-  
-  func makeUserProfileStorage() -> any UserProfileStorage {
-    return CoreDataUserProfileStorage(coreDataStorage: self.makeCoreDataStorage())
-  }
-  
-  func makeUserProfileRepository() -> any UserProfileRepository {
-    return DefaultUserProfileRepository(
-      userProfileStorage: self.makeUserProfileStorage(),
-      firebaseNetworkService: self.dependencies.firebaseNetworkService
-    )
-  }
-  
-//  func makeSignInStateStorage() -> any SignInStateStorage {
-//    return UserDefaultsSignInStateStorage()
-//  }
-//  
-//  func makeSignInStateRepository() -> any SignInStateRepository {
-//    return DefaultSignInStateRepository(signInStateStorage: self.makeSignInStateStorage())
-//  }
   
   func makeDateTimeRepository() -> any DateTimeRepository {
     return DefaultDateTimeRepository(

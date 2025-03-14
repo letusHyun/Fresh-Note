@@ -10,12 +10,12 @@ import Combine
 import Foundation
 
 final class FirebaseDeletionRepositoryMock: FirebaseDeletionRepository {
-  private(set) var deleteUserWithAllDataCalled = false
+  private(set) var deleteUserWithAllDataCallCount = 0
   
   var deleteUserWithAllDataResult: AnyPublisher<Void, any Error>!
   
   func deleteUserWithAllData() -> AnyPublisher<Void, any Error> {
-    self.deleteUserWithAllDataCalled = true
+    self.deleteUserWithAllDataCallCount += 1
     return self.deleteUserWithAllDataResult
   }
 }
