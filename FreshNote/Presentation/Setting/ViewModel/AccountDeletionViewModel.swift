@@ -59,7 +59,9 @@ final class DefaultAccountDeletionViewModel: NSObject, AccountDeletionViewModel 
   
   // MARK: - Input
   func didTapDeleteAccountButton(authController: ASAuthorizationController) {
-    return Future<Void, any Error> { promise in
+    return Future<Void, any Error> { [weak self] promise in
+      guard let self else { return }
+      
       authController.delegate = self
       self.authPromise = promise // trigger 저장
       // 1. 재인증을 먼저 수행
