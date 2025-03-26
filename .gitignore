@@ -26,7 +26,6 @@ xcuserdata/
 ### SwiftPM ###
 Packages
 xcuserdata
-*.xcodeproj
 
 
 ### Xcode ###
