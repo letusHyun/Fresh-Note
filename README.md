@@ -1,6 +1,6 @@
 # 🍃 Fresh Note - 신선함을 담는 메모장
 
-<img width="77" alt="iOS 16.0" src="https://img.shields.io/badge/iOS-16.0+-silver"> <img width="83" alt="Xcode 16.1" src="https://img.shields.io/badge/Xcode-15.2-blue"> <img width="77" alt="Swift 5.0" src="https://img.shields.io/badge/Swift-5.9-orange">
+<img width="77" alt="iOS 16.0" src="https://img.shields.io/badge/iOS-16.0+-silver"> <img width="83" alt="Xcode 16.1" src="https://img.shields.io/badge/Xcode-16.1-blue"> <img width="77" alt="Swift 5.0" src="https://img.shields.io/badge/Swift-5.0-orange">
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/placeholder_main_image.png" width=900>
@@ -97,25 +97,26 @@
 
 </div> 
 
+
 ## 📱 Fresh Note 화면
 
 <div align="center">
   <table>
     <tr>
       <td align="center"><img src="https://github.com/user-attachments/assets/83a6c5c7-7529-4321-baa0-62851b9a062b" width="200"/><br><b>로그인 화면</b></td>
+      <td align="center"><img src="https://github.com/user-attachments/assets/efcbd7cb-6fa4-4501-ac85-79aa3545eb94" width="200"/><br><b>날짜설정 화면</b></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/44ea51ab-5a47-411f-adc5-9c3170e8e5e8" width="200"/><br><b>홈 화면</b></td>
-      <td align="center"><img src="https://github.com/user-attachments/assets/37550544-c6fe-456e-8dd0-0b9770f566be" width="200"/><br><b>제품 등록 화면</b></td>
-      <td align="center"><img src="https://github.com/user-attachments/assets/4ba75f64-43f3-40ce-81b9-0eec3534401b" width="200"/><br><b>사진 바텀시트 화면</b></td>
+      <td align="center"><img src="https://github.com/user-attachments/assets/37550544-c6fe-456e-8dd0-0b9770f566be" width="200"/><br><b>제품등록 화면</b></td>
     </tr>
     <tr>
+      <td align="center"><img src="https://github.com/user-attachments/assets/4ba75f64-43f3-40ce-81b9-0eec3534401b" width="200"/><br><b>사진 상세 화면</b></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/023baa3b-b432-4c5a-bddf-31a6c9156d38" width="200"/><br><b>사진 전체 화면</b></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/ddb595bb-47f0-4ec9-877b-b1f0a80c46a1" width="200"/><br><b>검색 화면</b></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/b8ba88d5-57fd-4807-8c04-159f8828d55a" width="200"/><br><b>캘린더 화면</b></td>
-      <td align="center"><img src="https://github.com/user-attachments/assets/8b87f020-19c3-436d-95f5-916290fce4cc" width="200"/><br><b>핀 화면</b></td>
     </tr>
     <tr>
+      <td align="center"><img src="https://github.com/user-attachments/assets/8b87f020-19c3-436d-95f5-916290fce4cc" width="200"/><br><b>핀 화면</b></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/71f5bf7d-a044-4b4f-9984-558aea2a4689" width="200"/><br><b>카테고리 화면</b></td>
-      <td align="center"><img src="https://github.com/user-attachments/assets/6d3ef3d5-4f59-4d35-a269-0fc4ba8d95f5" width="200"/><br><b>버전 정보 화면</b></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/f04f98fa-36da-4113-95aa-391e10d38950" width="200"/><br><b>로그아웃 화면</b></td>
       <td align="center"><img src="https://github.com/user-attachments/assets/8bdae28c-ea20-4a6c-8179-9818d3cf38d8" width="200"/><br><b>회원탈퇴 화면</b></td>
     </tr>
